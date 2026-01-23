@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-OCR Document Intelligence</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔍 AI-OCR Document Intelligence</h1>
+            <p>Professional OCR tizim - Jadval ma'lumotlarini tahlil qilish va tahrirlash</p>
+        </header>
+
+        <div class="upload-section">
+            <h2>📤 Rasm yuklash</h2>
+            <div class="upload-area" id="uploadArea">
+                <input type="file" id="fileInput" accept="image/*" hidden>
+                <div class="upload-content">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                    <p>Rasmni bu yerga torting yoki <span class="link">tanlang</span></p>
+                    <small>JPG, PNG, JPEG formatlari qo'llab-quvvatlanadi</small>
+                </div>
+            </div>
+            <div class="upload-controls">
+                <select id="fileType">
+                    <option value="boshqa">Boshqa</option>
+                    <option value="passport">Passport</option>
+                    <option value="id">ID karta</option>
+                    <option value="ariza">Ariza</option>
+                </select>
+                <select id="language">
+                    <option value="auto">Avtomatik</option>
+                    <option value="uzb">O'zbek</option>
+                    <option value="eng">Ingliz</option>
+                    <option value="kor">Koreys</option>
+                </select>
+                <button id="uploadBtn" class="btn btn-primary">Yuklash va OCR</button>
+            </div>
+        </div>
+
+        <div class="loading" id="loading" style="display: none;">
+            <div class="spinner"></div>
+            <p>OCR qilinmoqda...</p>
+        </div>
+
+        <div class="results-section" id="resultsSection" style="display: none;">
+            <div class="document-info">
+                <h2>📄 Hujjat ma'lumotlari</h2>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="label">Til:</span>
+                        <span class="value" id="detectedLanguage">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Ishonch:</span>
+                        <span class="value" id="confidence">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Sarlavha:</span>
+                        <span class="value" id="title">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Yil:</span>
+                        <span class="value" id="year">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-section">
+                <h2>📊 Ma'lumotlar</h2>
+                <div class="table-container">
+                    <table id="dataTable" class="data-table">
+                        <thead id="tableHeader">
+                            <tr>
+                                <th>Sana</th>
+                                <th>Temir (철)</th>
+                                <th>Mis (동)</th>
+                                <th>Jami</th>
+                                <th>Harakatlar</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                            <!-- Jadval qatorlari bu yerga qo'shiladi -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="raw-text-section">
+                <h2>📝 OCR matni</h2>
+                <pre id="rawText" class="raw-text"></pre>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
