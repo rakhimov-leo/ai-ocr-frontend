@@ -1,104 +1,410 @@
 <!DOCTYPE html>
-<html lang="uz">
+<html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI-OCR Document Intelligence</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>AI-OCR 시스템</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📄</text></svg>">
+    <link rel="stylesheet" href="styles.css?v=6">
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>🔍 AI-OCR Document Intelligence</h1>
-            <p>Professional OCR tizim - Jadval ma'lumotlarini tahlil qilish va tahrirlash</p>
+    <!-- Login Screen -->
+    <div id="loginScreen" class="screen active">
+        <div class="login-container">
+                <div class="login-card">
+                <h1>AI-OCR 시스템</h1>
+                <p class="subtitle">로그인</p>
+                
+                <div id="loginFormContainer">
+                    <form id="loginForm">
+                    <div class="form-group">
+                        <label>사용자명</label>
+                        <input type="text" id="username" placeholder="admin 또는 user" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>비밀번호</label>
+                        <input type="password" id="password" placeholder="비밀번호" required>
+                    </div>
+                    
+                    <div id="loginError" class="error" style="display: none;"></div>
+                    
+                    <button type="submit" class="btn-primary">로그인</button>
+                </form>
+                
+                <div class="login-hint">
+                    <p><strong>테스트 계정:</strong></p>
+                    <p>관리자: admin / admin123</p>
+                    <p>사용자: user / user123</p>
+                </div>
+                
+                <div class="login-switch">
+                    <p>새 계정이 필요하신가요? <a href="#" id="showSignup">회원가입</a></p>
+                </div>
+                </div>
+                
+                <div id="signupFormContainer" style="display: none;">
+                    <form id="signupForm">
+                        <div class="form-group">
+                            <label>사용자명</label>
+                            <input type="text" id="signupUsername" placeholder="사용자명" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>이메일 (선택사항)</label>
+                            <input type="email" id="signupEmail" placeholder="email@example.com">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>비밀번호</label>
+                            <input type="password" id="signupPassword" placeholder="최소 6자 이상" required minlength="6">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>비밀번호 확인</label>
+                            <input type="password" id="signupPasswordConfirm" placeholder="비밀번호를 다시 입력하세요" required minlength="6">
+                        </div>
+                        
+                        <div id="signupError" class="error" style="display: none;"></div>
+                        
+                        <button type="submit" class="btn-primary">회원가입</button>
+                    </form>
+                    
+                    <div class="login-switch">
+                        <p>이미 계정이 있으신가요? <a href="#" id="showLogin">로그인</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="appScreen" class="screen">
+        <!-- Top Navigation Bar (Modern LocoHub Style) -->
+        <header class="top-nav-modern">
+            <div class="nav-container">
+                <div class="nav-left">
+                    <div class="logo-modern">
+                        <div class="logo-icon-triangle">▲</div>
+                        <span class="logo-text-modern">AI-OCR</span>
+                    </div>
+                </div>
+                <nav class="nav-links-modern">
+                    <a href="#" data-page="dashboard" class="nav-link-modern active">Home</a>
+                    <a href="#" data-page="documents" class="nav-link-modern">Documents</a>
+                    <a href="#" data-page="upload" class="nav-link-modern">Upload</a>
+                    <a href="#" data-page="profile" class="nav-link-modern">Me</a>
+                    <a href="#" data-page="admin" class="nav-link-modern" id="adminNavLink" style="display: none;">Admin</a>
+                </nav>
+                <div class="nav-right-modern">
+                    <div class="nav-icons-modern">
+                        <span class="nav-icon-modern">⊞</span>
+                        <span class="nav-icon-modern">🔔</span>
+                        <span class="nav-icon-modern">🇺🇸</span>
+                        <span class="nav-icon-modern">🌙</span>
+                    </div>
+                    <div class="profile-picture-modern">
+                        <div class="avatar-circle-modern">👤</div>
+                    </div>
+                </div>
+            </div>
         </header>
-
-        <div class="upload-section">
-            <h2>📤 Rasm yuklash</h2>
-            <div class="upload-area" id="uploadArea">
-                <input type="file" id="fileInput" accept="image/*" hidden>
-                <div class="upload-content">
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                        <polyline points="17 8 12 3 7 8"></polyline>
-                        <line x1="12" y1="3" x2="12" y2="15"></line>
-                    </svg>
-                    <p>Rasmni bu yerga torting yoki <span class="link">tanlang</span></p>
-                    <small>JPG, PNG, JPEG formatlari qo'llab-quvvatlanadi</small>
+        
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <div class="sidebar-profile">
+                <div class="profile-avatar">
+                    <div class="avatar-circle">👤</div>
+                </div>
+                <div class="profile-info">
+                    <div class="profile-name" id="sidebarUsername">Admin</div>
+                    <div class="profile-phone">📱 <span id="sidebarPhone">-</span></div>
+                    <div class="profile-role" id="sidebarRole">ADMIN</div>
                 </div>
             </div>
-            <div class="upload-controls">
-                <select id="fileType">
-                    <option value="boshqa">Boshqa</option>
-                    <option value="passport">Passport</option>
-                    <option value="id">ID karta</option>
-                    <option value="ariza">Ariza</option>
-                </select>
-                <select id="language">
-                    <option value="auto">Avtomatik</option>
-                    <option value="uzb">O'zbek</option>
-                    <option value="eng">Ingliz</option>
-                    <option value="kor">Koreys</option>
-                </select>
-                <button id="uploadBtn" class="btn btn-primary">Yuklash va OCR</button>
+            
+            <div class="sidebar-section" id="manageListingsSection" style="display: none;">
+                <h3 class="sidebar-section-title">목록 관리</h3>
+                <ul class="nav-menu">
+                    <li><a href="#" data-page="dashboard" class="nav-link">❤️ 즐겨찾기</a></li>
+                    <li><a href="#" data-page="documents" class="nav-link">🔍 최근 방문</a></li>
+                    <li><a href="#" class="nav-link">👥 팔로워</a></li>
+                    <li><a href="#" class="nav-link">👤 팔로잉</a></li>
+                </ul>
             </div>
-        </div>
-
-        <div class="loading" id="loading" style="display: none;">
-            <div class="spinner"></div>
-            <p>OCR qilinmoqda...</p>
-        </div>
-
-        <div class="results-section" id="resultsSection" style="display: none;">
-            <div class="document-info">
-                <h2>📄 Hujjat ma'lumotlari</h2>
-                <div class="info-grid">
-                    <div class="info-item">
-                        <span class="label">Til:</span>
-                        <span class="value" id="detectedLanguage">-</span>
+            
+            <div class="sidebar-section" id="manageAccountSection" style="display: none;">
+                <h3 class="sidebar-section-title">계정 관리</h3>
+                <ul class="nav-menu">
+                    <li><a href="#" id="sidebarLogoutBtn" class="nav-link logout-link">🚪 로그아웃</a></li>
+                </ul>
+            </div>
+        </nav>
+        
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Profile Page (Default - Top) -->
+            <div id="profilePage" class="page active">
+                <!-- Profile Header (Next to Sidebar Profile) -->
+                <div class="profile-header-section">
+                    <h1>내 정보</h1>
+                    <p class="welcome-text">다시 만나서 반갑습니다!</p>
+                </div>
+                
+                <div class="profile-content-grid">
+                    <div class="profile-section">
+                        <h2>사진</h2>
+                        <div class="photo-section">
+                            <div class="profile-photo-large">
+                                <div class="avatar-circle-large">👤</div>
+                            </div>
+                            <div class="photo-actions">
+                                <button class="btn-upload">프로필 사진 업로드</button>
+                                <p class="photo-hint">사진은 JPG, JPEG, PNG 또는 WebP 형식이어야 합니다!</p>
+                            </div>
+                        </div>
                     </div>
-                    <div class="info-item">
-                        <span class="label">Ishonch:</span>
-                        <span class="value" id="confidence">-</span>
+                    
+                    <div class="profile-section">
+                        <h2>사용자 정보</h2>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>사용자명</label>
+                                <input type="text" id="profileUsername" value="Admin" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label>전화번호</label>
+                                <input type="text" id="profilePhone" value="-" readonly>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group full-width">
+                                <label>이메일</label>
+                                <input type="email" id="profileEmail" value="-" readonly>
+                            </div>
+                        </div>
                     </div>
-                    <div class="info-item">
-                        <span class="label">Sarlavha:</span>
-                        <span class="value" id="title">-</span>
+                </div>
+            </div>
+            
+            <!-- Dashboard (NPS Style) -->
+            <div id="dashboardPage" class="page">
+                <!-- Featured Information Section -->
+                <div class="featured-section">
+                    <div class="featured-content">
+                        <h1 class="featured-title">2026년 AI-OCR 시스템, 이렇게 달라집니다</h1>
+                        <ul class="featured-list">
+                            <li>○ (정확도 향상) OCR 정확도 95% → 98%</li>
+                            <li>○ (사용자 신뢰 제고) 실시간 검증 시스템 도입</li>
+                            <li>○ (성능 강화) 처리 속도 2배 향상</li>
+                        </ul>
+                        <p class="featured-description">다국어 지원 확대, 저소득층 무료 서비스 대상 확대까지</p>
+                        <a href="#" class="featured-link">자세히 보기 >></a>
+                        <div class="featured-pagination">
+                            <span>3/4</span>
+                            <button>||</button>
+                            <button><</button>
+                            <button>></button>
+                            <button>+</button>
+                        </div>
+                        <div class="featured-buttons">
+                            <button class="btn-individual">개인</button>
+                            <button class="btn-workplace">사업장 ↗</button>
+                        </div>
                     </div>
-                    <div class="info-item">
-                        <span class="label">Yil:</span>
-                        <span class="value" id="year">-</span>
+                    <div class="featured-illustration">
+                        <div class="illustration-item">⏰</div>
+                        <div class="illustration-item">📅</div>
+                        <div class="illustration-item">💰</div>
+                        <div class="illustration-item">🧮</div>
+                    </div>
+                </div>
+                
+                <!-- Main Content Grid -->
+                <div class="dashboard-grid">
+                    <!-- News & Information Box -->
+                    <div class="news-box">
+                        <div class="box-header">
+                            <h2>소식·정보</h2>
+                            <button class="btn-more">더보기 +</button>
+                        </div>
+                        <div class="box-tabs">
+                            <button class="tab active">새소식</button>
+                            <button class="tab">보도자료</button>
+                            <button class="tab">홍보센터</button>
+                            <button class="tab">채용공고</button>
+                        </div>
+                        <div class="news-list">
+                            <div class="news-item">
+                                <span class="news-date">2026-01-12</span>
+                                <span class="news-title">2026년 AI-OCR 시스템 업데이트 안내</span>
+                            </div>
+                            <div class="news-item">
+                                <span class="news-date">2026-01-14</span>
+                                <span class="news-title">새로운 문서 인식 기능 추가</span>
+                            </div>
+                            <div class="news-item">
+                                <span class="news-date">2025-12-29</span>
+                                <span class="news-title">비대면 채널을 통한 서비스 안내</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Frequently Used Services -->
+                    <div class="services-box">
+                        <h2>자주 찾는 서비스</h2>
+                        <div class="services-grid">
+                            <div class="service-item">
+                                <div class="service-icon">📦</div>
+                                <span>내 문서 알아보기</span>
+                            </div>
+                            <div class="service-item">
+                                <div class="service-icon">📍</div>
+                                <span>지사찾기</span>
+                            </div>
+                            <div class="service-item">
+                                <div class="service-icon">🔍</div>
+                                <span>서식찾기</span>
+                            </div>
+                            <div class="service-item">
+                                <div class="service-icon">🧮</div>
+                                <span>계산기</span>
+                            </div>
+                            <div class="service-item">
+                                <div class="service-icon">💻</div>
+                                <span>알기쉬운 안내</span>
+                            </div>
+                            <div class="service-item">
+                                <div class="service-icon">📁</div>
+                                <span>웹팩스 조회</span>
+                            </div>
+                            <div class="service-item">
+                                <div class="service-icon">📊</div>
+                                <span>통계</span>
+                            </div>
+                            <div class="service-item">
+                                <div class="service-icon">💬</div>
+                                <span>채팅상담</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="table-section">
-                <h2>📊 Ma'lumotlar</h2>
-                <div class="table-container">
-                    <table id="dataTable" class="data-table">
-                        <thead id="tableHeader">
+            <!-- Documents -->
+            <div id="documentsPage" class="page">
+                <div class="page-header">
+                    <h1>문서</h1>
+                    <a href="#" data-page="upload" class="btn-primary">+ 새 문서</a>
+                </div>
+                
+                <div class="documents-table">
+                    <table>
+                        <thead>
                             <tr>
-                                <th>Sana</th>
-                                <th>Temir (철)</th>
-                                <th>Mis (동)</th>
-                                <th>Jami</th>
-                                <th>Harakatlar</th>
+                                <th>ID</th>
+                                <th>파일 유형</th>
+                                <th>상태</th>
+                                <th>신뢰도</th>
+                                <th>생성일</th>
+                                <th>작업</th>
                             </tr>
                         </thead>
-                        <tbody id="tableBody">
-                            <!-- Jadval qatorlari bu yerga qo'shiladi -->
+                        <tbody id="documentsTableBody">
+                            <tr><td colspan="6" class="loading">로딩 중...</td></tr>
                         </tbody>
                     </table>
                 </div>
             </div>
 
-            <div class="raw-text-section">
-                <h2>📝 OCR matni</h2>
-                <pre id="rawText" class="raw-text"></pre>
+            <!-- Document Detail -->
+            <div id="documentDetailPage" class="page">
+                <button onclick="showPage('documents')" class="btn-back">← 뒤로</button>
+                <div id="documentDetailContent"></div>
             </div>
-        </div>
+
+            <!-- Upload -->
+            <div id="uploadPage" class="page">
+                <h1>문서 업로드</h1>
+                
+                <form id="uploadForm" class="upload-form">
+                    <div class="form-group">
+                        <label>파일</label>
+                        <input type="file" id="fileInput" accept="image/*" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>파일 유형</label>
+                        <select id="fileType">
+                            <option value="boshqa">기타</option>
+                            <option value="passport">여권</option>
+                            <option value="id">신분증</option>
+                            <option value="ariza">신청서</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>언어</label>
+                        <select id="language">
+                            <option value="auto">자동</option>
+                            <option value="uzb">우즈벡어</option>
+                            <option value="eng">영어</option>
+                            <option value="kor">한국어</option>
+                        </select>
+                    </div>
+                    
+                    <div id="uploadError" class="error" style="display: none;"></div>
+                    
+                    <button type="submit" class="btn-primary" id="uploadBtn">업로드</button>
+                </form>
+            </div>
+
+            <!-- Admin Panel -->
+            <div id="adminPage" class="page">
+                <!-- Profile Header (Next to Sidebar Profile) -->
+                <div class="profile-header-section">
+                    <h1>내 정보</h1>
+                    <p class="welcome-text">다시 만나서 반갑습니다!</p>
+                </div>
+                
+                <div class="profile-content-grid">
+                    <div class="profile-section">
+                        <h2>사진</h2>
+                        <div class="photo-section">
+                            <div class="profile-photo-large">
+                                <div class="avatar-circle-large">👤</div>
+                            </div>
+                            <div class="photo-actions">
+                                <button class="btn-upload">프로필 사진 업로드</button>
+                                <p class="photo-hint">사진은 JPG, JPEG, PNG 또는 WebP 형식이어야 합니다!</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="profile-section">
+                        <h2>사용자 정보</h2>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>사용자명</label>
+                                <input type="text" id="adminProfileUsername" value="Admin" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label>전화번호</label>
+                                <input type="text" id="adminProfilePhone" value="-" readonly>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group full-width">
+                                <label>이메일</label>
+                                <input type="email" id="adminProfileEmail" value="-" readonly>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
     </div>
 
-    <script src="app.js"></script>
+    <script src="app.js?v=6"></script>
 </body>
 </html>
