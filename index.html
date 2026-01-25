@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <title>AI-OCR 시스템</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📄</text></svg>">
     <link rel="stylesheet" href="styles.css?v=6">
@@ -91,11 +91,10 @@
                     </div>
                 </div>
                 <nav class="nav-links-modern" id="navLinks">
-                    <a href="#" data-page="dashboard" class="nav-link-modern active">Home</a>
+                    <a href="#" data-page="dashboard" class="nav-link-modern">Home</a>
                     <a href="#" data-page="documents" class="nav-link-modern">Documents</a>
                     <a href="#" data-page="upload" class="nav-link-modern">Upload</a>
-                    <a href="#" data-page="profile" class="nav-link-modern">Me</a>
-                    <a href="#" data-page="admin" class="nav-link-modern" id="adminNavLink" style="display: none;">Admin</a>
+                    <a href="#" data-page="admin" class="nav-link-modern" id="adminNavLink">My Page</a>
                 </nav>
                 <div class="nav-right-modern">
                     <div class="nav-icons-modern">
@@ -117,7 +116,7 @@
         <!-- Sidebar -->
         <nav class="sidebar" id="sidebar">
             <button class="mobile-menu-toggle" id="sidebarClose">✕</button>
-            <div class="sidebar-profile">
+            <div class="sidebar-profile" id="sidebarProfile" style="display: none;">
                 <div class="profile-avatar">
                     <div class="avatar-circle">👤</div>
                 </div>
@@ -148,52 +147,8 @@
         
         <!-- Main Content -->
         <main class="main-content">
-            <!-- Profile Page (Default - Top) -->
-            <div id="profilePage" class="page active">
-                <!-- Profile Header (Next to Sidebar Profile) -->
-                <div class="profile-header-section">
-                    <h1>내 정보</h1>
-                    <p class="welcome-text">다시 만나서 반갑습니다!</p>
-                </div>
-                
-                <div class="profile-content-grid">
-                    <div class="profile-section">
-                        <h2>사진</h2>
-                        <div class="photo-section">
-                            <div class="profile-photo-large">
-                                <div class="avatar-circle-large">👤</div>
-                            </div>
-                            <div class="photo-actions">
-                                <button class="btn-upload">프로필 사진 업로드</button>
-                                <p class="photo-hint">사진은 JPG, JPEG, PNG 또는 WebP 형식이어야 합니다!</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="profile-section">
-                        <h2>사용자 정보</h2>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>사용자명</label>
-                                <input type="text" id="profileUsername" value="Admin" readonly>
-                            </div>
-                            <div class="form-group">
-                                <label>전화번호</label>
-                                <input type="text" id="profilePhone" value="-" readonly>
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group full-width">
-                                <label>이메일</label>
-                                <input type="email" id="profileEmail" value="-" readonly>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
             <!-- Dashboard (NPS Style) -->
-            <div id="dashboardPage" class="page">
+            <div id="dashboardPage" class="page active">
                 <!-- Featured Information Section -->
                 <div class="featured-section">
                     <div class="featured-content">
@@ -364,7 +319,7 @@
                 </form>
             </div>
 
-            <!-- Admin Panel -->
+            <!-- My Page (Admin Panel) -->
             <div id="adminPage" class="page">
                 <!-- Profile Header (Next to Sidebar Profile) -->
                 <div class="profile-header-section">

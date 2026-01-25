@@ -11,6 +11,8 @@ body {
     color: #333;
     min-height: 100vh;
     position: relative;
+    overflow-x: hidden; /* Horizontal scroll'ni oldini olish */
+    width: 100%;
 }
 
 body::before {
@@ -25,6 +27,18 @@ body::before {
     opacity: 0.3;
     z-index: 0;
     pointer-events: none;
+}
+
+/* Mobile'da background'ni yaxshilash */
+@media (max-width: 768px) {
+    body::before {
+        opacity: 0.2; /* Mobile'da biroz kamroq */
+    }
+    
+    body {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background-attachment: scroll; /* Mobile'da fixed ishlamaydi */
+    }
 }
 
 /* ==================== LOGIN SCREEN ==================== */
@@ -171,6 +185,8 @@ body::before {
 
 #appScreen.active {
     display: flex;
+    width: 100%;
+    overflow-x: hidden;
 }
 
 /* ==================== TOP NAVIGATION (Modern LocoHub Style) ==================== */
@@ -196,6 +212,7 @@ body::before {
     justify-content: space-between;
     align-items: center;
     gap: 30px;
+    flex-wrap: wrap;
 }
 
 .nav-left {
@@ -245,8 +262,9 @@ body::before {
     color: #4ade80;
 }
 
+/* Faqat active bo'lganda yashil rang va chiziq */
 .nav-link-modern.active {
-    color: #4ade80;
+    color: #4ade80 !important;
 }
 
 .nav-link-modern.active::after {
@@ -258,6 +276,11 @@ body::before {
     height: 2px;
     background: #4ade80;
     border-radius: 2px;
+}
+
+/* Active bo'lmagan link'lar uchun chiziq bo'lmasligi kerak */
+.nav-link-modern:not(.active)::after {
+    display: none;
 }
 
 .nav-right-modern {
@@ -441,8 +464,12 @@ body::before {
     flex: 1;
     padding: 100px 40px 40px 40px;
     overflow-y: auto;
+    overflow-x: hidden;
     position: relative;
     z-index: 1;
+    width: 100%;
+    box-sizing: border-box;
+    background: transparent; /* Background transparent qilish */
 }
 
 /* Profile Header Section (Next to Sidebar Profile) */
@@ -1174,31 +1201,52 @@ body::before {
     /* Top Navigation - Mobile */
     .top-nav-modern {
         padding: 10px 15px;
+        width: calc(100% - 20px);
+        top: 10px;
+        left: 50%;
+        transform: translateX(-50%);
     }
     
     .nav-container {
         flex-wrap: wrap;
-        gap: 10px;
+        gap: 8px;
+    }
+    
+    .nav-left {
+        flex: 0 0 auto;
+    }
+    
+    .nav-right-modern {
+        flex: 0 0 auto;
+        margin-left: auto;
     }
     
     .nav-links-modern {
-        display: none; /* Mobile'da yashirish */
-        flex-direction: column;
+        display: flex !important; /* Mobile'da ham ko'rinadi */
+        flex-direction: row;
+        flex-wrap: wrap;
         width: 100%;
-        background: white;
-        padding: 15px;
-        border-radius: 8px;
-        margin-top: 10px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        background: transparent;
+        padding: 8px 0;
+        border-radius: 0;
+        margin-top: 8px;
+        box-shadow: none;
+        gap: 5px;
+        justify-content: center;
+        order: 3; /* Nav container'ning oxiriga qo'yish */
     }
     
     .nav-links-modern.active {
-        display: flex;
+        display: flex !important;
     }
     
     .nav-link-modern {
-        padding: 12px;
-        border-bottom: 1px solid #eee;
+        padding: 6px 10px;
+        border-bottom: none;
+        font-size: 0.85em;
+        white-space: nowrap;
+        flex: 0 0 auto;
+        min-width: fit-content;
     }
     
     .nav-right-modern {
@@ -1242,36 +1290,53 @@ body::before {
     
     /* Sidebar Close Button - Mobile */
     #sidebarClose {
-        display: none; /* Desktop'da yashirish */
+        display: block !important;
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background: rgba(255, 255, 255, 0.9);
+        border: none;
+        border-radius: 50%;
+        width: 35px;
+        height: 35px;
+        font-size: 20px;
+        cursor: pointer;
+        z-index: 1001;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     }
     
-    @media (max-width: 768px) {
-        #sidebarClose {
-            display: block !important;
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            background: rgba(255, 255, 255, 0.9);
-            border: none;
-            border-radius: 50%;
-            width: 35px;
-            height: 35px;
-            font-size: 20px;
-            cursor: pointer;
-            z-index: 1001;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        }
-        
-        #sidebarClose:hover {
-            background: rgba(255, 255, 255, 1);
-        }
+    #sidebarClose:hover {
+        background: rgba(255, 255, 255, 1);
     }
     
     /* Main Content - Mobile */
     .main-content {
-        padding: 15px;
+        padding: 80px 15px 15px 15px;
         width: 100%;
         margin-left: 0;
+        margin-top: 0;
+        background: transparent;
+        position: relative;
+        z-index: 1;
+    }
+    
+    /* Mobile'da barcha content'lar ko'rinadigan qilish */
+    .page {
+        position: relative;
+        z-index: 2;
+    }
+    
+    .featured-section,
+    .news-box,
+    .services-box,
+    .documents-table,
+    .upload-form,
+    .profile-content-grid {
+        position: relative;
+        z-index: 2;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
     
     /* Login Card - Mobile */
@@ -1296,10 +1361,30 @@ body::before {
     .featured-section {
         flex-direction: column;
         padding: 20px 15px;
+        background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%) !important;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .featured-content {
+        position: relative;
+        z-index: 2;
     }
     
     .featured-title {
         font-size: 1.2em;
+        color: #0066cc !important;
+        font-weight: 700 !important;
+    }
+    
+    .featured-list li {
+        color: #333 !important;
+        font-weight: 500;
+    }
+    
+    .featured-description {
+        color: #555 !important;
+        font-weight: 500;
     }
     
     /* Services Grid - Mobile */
@@ -1384,11 +1469,29 @@ body::before {
     }
     
     .featured-title {
-        font-size: 1em;
+        font-size: 1.1em;
+        color: #0066cc !important;
+        font-weight: 700 !important;
     }
     
     .featured-list {
+        font-size: 0.95em;
+    }
+    
+    .featured-list li {
+        color: #333 !important;
+        font-weight: 500;
+    }
+    
+    .featured-description {
+        color: #555 !important;
+        font-weight: 500;
         font-size: 0.9em;
+    }
+    
+    .featured-link {
+        color: #0066cc !important;
+        font-weight: 600 !important;
     }
     
     .documents-table table {
@@ -1399,5 +1502,99 @@ body::before {
     .btn-primary {
         width: 100%;
         padding: 12px;
+    }
+    
+    .top-nav-modern {
+        padding: 8px 10px;
+        width: calc(100% - 20px);
+    }
+    
+    .logo-modern {
+        font-size: 0.9em;
+    }
+    
+    .nav-link-modern {
+        font-size: 0.8em;
+        padding: 6px 8px;
+    }
+    
+    .nav-links-modern {
+        gap: 3px;
+        padding: 5px 0;
+    }
+}
+
+/* Juda kichik telefonlar (360px dan kichik) */
+@media (max-width: 360px) {
+    .login-card {
+        padding: 15px 10px;
+    }
+    
+    .login-card h1 {
+        font-size: 1.2em;
+    }
+    
+    .top-nav-modern {
+        padding: 5px 8px;
+        width: calc(100% - 16px);
+    }
+    
+    .logo-text-modern {
+        font-size: 0.85em;
+    }
+    
+    .nav-link-modern {
+        font-size: 0.85em;
+        padding: 8px;
+    }
+    
+    .main-content {
+        padding: 8px;
+    }
+    
+    .page-header h1 {
+        font-size: 1.2em;
+    }
+}
+
+/* Katta telefonlar va kichik tablet'lar (481px - 768px) */
+@media (min-width: 481px) and (max-width: 768px) {
+    .services-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .main-content {
+        padding: 20px;
+    }
+}
+
+/* Landscape mode (yatay) - telefonlar */
+@media (max-width: 768px) and (orientation: landscape) {
+    .top-nav-modern {
+        padding: 8px 15px;
+    }
+    
+    .sidebar {
+        width: 300px;
+    }
+    
+    .main-content {
+        padding: 15px;
+    }
+}
+
+/* Katta ekranlar (1920px dan katta) */
+@media (min-width: 1920px) {
+    .top-nav-modern {
+        max-width: 1800px;
+    }
+    
+    .main-content {
+        max-width: 1600px;
+        margin: 0 auto;
     }
 }

@@ -74,18 +74,14 @@ async function handleLogin(e) {
             headerUsernameNavEl.setAttribute('title', `${username} (${data.role})`);
         }
         
-        // Admin nav link (admin uchun "Me" linkini ko'rsatish)
+        // My Page link'ni ko'rsatish (barcha user'lar uchun)
         const adminNavLink = document.getElementById('adminNavLink');
-        if (adminNavLink && data.role === 'admin') {
+        if (adminNavLink) {
             adminNavLink.style.display = 'inline-block';
         }
         
-        // Profile sahifasini yuklash (admin uchun admin page, user uchun profile page)
-        if (data.role === 'admin') {
-            showPage('admin');
-        } else {
-            showPage('profile');
-        }
+        // My Page'ga o'tish (barcha user'lar uchun)
+        showPage('admin');
         
     } catch (error) {
         errorDiv.textContent = error.message;
@@ -197,19 +193,18 @@ function checkAuth() {
             headerUsernameNavEl.setAttribute('title', `${usernameValue} (${role})`);
         }
         
-        // Admin nav link
+        // Sidebar profile card'ni yashirish (showPage funksiyasida ko'rsatiladi)
+        const sidebarProfile = document.getElementById('sidebarProfile');
+        if (sidebarProfile) sidebarProfile.style.display = 'none';
+        
+        // My Page link'ni ko'rsatish (barcha user'lar uchun)
         const adminNavLink = document.getElementById('adminNavLink');
-        if (adminNavLink && role === 'admin') {
+        if (adminNavLink) {
             adminNavLink.style.display = 'inline-block';
         }
         
-        // Admin sidebar link
-        const adminLink = document.getElementById('adminLink');
-        if (adminLink && role === 'admin') {
-            adminLink.style.display = 'block';
-        }
-        
-        showPage('profile');
+        // My Page'ga o'tish (barcha user'lar uchun)
+        showPage('admin');
     }
 }
 
@@ -249,7 +244,17 @@ async function apiCall(endpoint, options = {}) {
 function showPage(pageName) {
     // Barcha sahifalarni yashirish
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+    
+    // Barcha navigation link'lardan active class'ni olib tashlash (barcha turdagi)
+    document.querySelectorAll('.nav-link').forEach(l => {
+        l.classList.remove('active');
+    });
+    document.querySelectorAll('.nav-link-modern').forEach(l => {
+        l.classList.remove('active');
+    });
+    document.querySelectorAll('.nav-top-link').forEach(l => {
+        l.classList.remove('active');
+    });
     
     // Tanlangan sahifani ko'rsatish
     const page = document.getElementById(`${pageName}Page`);
@@ -257,27 +262,47 @@ function showPage(pageName) {
         page.classList.add('active');
     }
     
-    // Nav link'ni active qilish
-    const navLink = document.querySelector(`[data-page="${pageName}"]`);
-    if (navLink) {
-        navLink.classList.add('active');
-    }
+    // Faqat hozirgi page'ning nav link'ini active qilish (top navigation)
+    // Barcha nav-link-modern link'larni topib, faqat to'g'ri birini active qilish
+    const allTopNavLinks = document.querySelectorAll('.nav-links-modern .nav-link-modern');
+    allTopNavLinks.forEach(link => {
+        const linkPage = link.getAttribute('data-page');
+        if (linkPage === pageName) {
+            link.classList.add('active');
+        } else {
+            link.classList.remove('active');
+        }
+    });
+    
+    // Faqat hozirgi page'ning sidebar nav link'ini active qilish
+    const allSidebarLinks = document.querySelectorAll('.sidebar .nav-link');
+    allSidebarLinks.forEach(link => {
+        const linkPage = link.getAttribute('data-page');
+        if (linkPage === pageName) {
+            link.classList.add('active');
+        } else {
+            link.classList.remove('active');
+        }
+    });
     
     currentPage = pageName;
     
-    // Sidebar section'larni ko'rsatish/yashirish (faqat profile sahifasida)
+    // Sidebar profile card'ni ko'rsatish/yashirish (faqat admin page'da)
+    const sidebarProfile = document.getElementById('sidebarProfile');
+    if (pageName === 'admin') {
+        // Faqat admin page'da profile card'ni ko'rsatish
+        if (sidebarProfile) sidebarProfile.style.display = 'block';
+    } else {
+        // Boshqa sahifalarda profile card'ni yashirish
+        if (sidebarProfile) sidebarProfile.style.display = 'none';
+    }
+    
+    // Sidebar section'larni yashirish (My Page'da kerak emas)
     const manageListingsSection = document.getElementById('manageListingsSection');
     const manageAccountSection = document.getElementById('manageAccountSection');
     
-    if (pageName === 'profile') {
-        // Profile sahifasida section'larni ko'rsatish
-        if (manageListingsSection) manageListingsSection.style.display = 'block';
-        if (manageAccountSection) manageAccountSection.style.display = 'block';
-    } else {
-        // Boshqa sahifalarda section'larni yashirish
-        if (manageListingsSection) manageListingsSection.style.display = 'none';
-        if (manageAccountSection) manageAccountSection.style.display = 'none';
-    }
+    if (manageListingsSection) manageListingsSection.style.display = 'none';
+    if (manageAccountSection) manageAccountSection.style.display = 'none';
     
     // Sahifa yuklanganda ma'lumotlarni yuklash
     if (pageName === 'dashboard') {
@@ -286,8 +311,6 @@ function showPage(pageName) {
         loadDocuments();
     } else if (pageName === 'admin') {
         loadAdminPanel();
-    } else if (pageName === 'profile') {
-        loadProfile();
     }
 }
 
@@ -554,14 +577,7 @@ async function loadAdminPanel() {
 
 // ==================== PROFILE ====================
 
-function loadProfile() {
-    const username = localStorage.getItem('username') || 'user';
-    const role = localStorage.getItem('user_role') || 'user';
-    
-    document.getElementById('profileUsername').value = username;
-    document.getElementById('profilePhone').value = '-';
-    document.getElementById('profileEmail').value = '-';
-}
+// loadProfile funksiyasi olib tashlandi - endi loadAdminPanel ishlatiladi
 
 // ==================== EVENT LISTENERS ====================
 
@@ -592,26 +608,12 @@ document.addEventListener('DOMContentLoaded', () => {
         sidebarLogoutBtn.addEventListener('click', handleLogout);
     }
     
-    // Top navigation links
-    document.querySelectorAll('.nav-top-link').forEach(link => {
+    // Top navigation links (nav-link-modern)
+    document.querySelectorAll('.nav-link-modern').forEach(link => {
         link.addEventListener('click', (e) => {
             e.preventDefault();
-            // Remove active from all
-            document.querySelectorAll('.nav-top-link').forEach(l => l.classList.remove('active'));
-            // Add active to clicked
-            link.classList.add('active');
-            
             const page = link.getAttribute('data-page');
             if (page) {
-                // Update sidebar active if needed
-                document.querySelectorAll('.sidebar .nav-link').forEach(l => {
-                    if (l.getAttribute('data-page') === page) {
-                        l.classList.add('active');
-                    } else {
-                        l.classList.remove('active');
-                    }
-                });
-                
                 showPage(page);
             }
         });
@@ -623,27 +625,15 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             const page = link.getAttribute('data-page');
             if (page) {
-                // Update top nav active
-                document.querySelectorAll('.nav-top-link').forEach(l => {
-                    if (l.getAttribute('data-page') === page) {
-                        l.classList.add('active');
-                    } else {
-                        l.classList.remove('active');
-                    }
-                });
-                
-                // Update sidebar active
-                document.querySelectorAll('.sidebar .nav-link').forEach(l => l.classList.remove('active'));
-                link.classList.add('active');
-                
                 showPage(page);
             }
         });
     });
     
     // Data-page attribute'ga ega barcha elementlar (masalan, "+ Yangi Document" tugmasi)
+    // Lekin navigation link'larni o'tkazib yuborish (ular allaqachon event listener'ga ega)
     document.querySelectorAll('[data-page]').forEach(element => {
-        if (!element.classList.contains('nav-link')) {
+        if (!element.classList.contains('nav-link') && !element.classList.contains('nav-link-modern')) {
             element.addEventListener('click', (e) => {
                 e.preventDefault();
                 const page = element.getAttribute('data-page');
