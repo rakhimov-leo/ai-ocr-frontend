@@ -6,6 +6,7 @@
     <title>AI-OCR 시스템</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📄</text></svg>">
     <link rel="stylesheet" href="styles.css?v=6">
+    <script src="translations.js"></script>
 </head>
 <body>
     <!-- Login Screen -->
@@ -97,10 +98,22 @@
                     <a href="#" data-page="admin" class="nav-link-modern" id="adminNavLink">My Page</a>
                 </nav>
                 <div class="nav-right-modern">
+                    <!-- Language Selector -->
+                    <div class="language-selector-container">
+                        <select id="languageSelector" class="language-selector">
+                            <option value="ko">한국어</option>
+                            <option value="en">English</option>
+                            <option value="uz">O'zbek</option>
+                            <option value="ru">Русский</option>
+                            <option value="mn">Монгол</option>
+                            <option value="zh">中文</option>
+                            <option value="vi">Tiếng Việt</option>
+                            <option value="th">ไทย</option>
+                        </select>
+                    </div>
                     <div class="nav-icons-modern">
                         <span class="nav-icon-modern">⊞</span>
                         <span class="nav-icon-modern">🔔</span>
-                        <span class="nav-icon-modern">🇺🇸</span>
                         <span class="nav-icon-modern">🌙</span>
                     </div>
                     <div class="profile-picture-modern">
@@ -366,6 +379,7 @@
     </div>
 
     <script src="config.js"></script>
+    <script src="translations.js"></script>
     <script src="app.js?v=6"></script>
 </body>
 </html>
