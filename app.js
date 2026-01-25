@@ -260,9 +260,12 @@ function checkAuth() {
             adminNavLinkMobile.style.display = 'inline-block';
         }
         
-        // Saved page'ni restore qilish yoki default dashboard'ga o'tish
-        const savedPage = localStorage.getItem('currentPage') || 'dashboard';
-        showPage(savedPage);
+        // Refresh'da current page'ni restore qilish
+        // Kichik kutish - DOM to'liq yuklanguncha
+        setTimeout(() => {
+            const savedPage = localStorage.getItem('currentPage') || 'dashboard';
+            showPage(savedPage);
+        }, 100);
     } else {
         // Token yo'q bo'lsa, login screen'ni ko'rsatish
         const loginScreen = document.getElementById('loginScreen');
@@ -596,13 +599,26 @@ async function viewDocument(id) {
         let userEditedData = {};
         let isEdited = false;
         
-        // Metadata'ni topish (turli joylardan)
-        if (extractedData.metadata) {
-            userEditedData = extractedData.metadata.user_edited_data || {};
+        // Metadata'ni topish (turli joylardan - backend turli formatlarda qaytarishi mumkin)
+        // 1. extractedData.metadata (eng keng tarqalgan)
+        if (extractedData.metadata && extractedData.metadata.user_edited_data) {
+            userEditedData = extractedData.metadata.user_edited_data;
             isEdited = extractedData.metadata.is_edited || false;
-        } else if (doc.metadata) {
-            userEditedData = doc.metadata.user_edited_data || {};
+        }
+        // 2. doc.metadata (ba'zi backend'larda to'g'ridan-to'g'ri)
+        else if (doc.metadata && doc.metadata.user_edited_data) {
+            userEditedData = doc.metadata.user_edited_data;
             isEdited = doc.metadata.is_edited || false;
+        }
+        // 3. extractedData.user_edited_data (to'g'ridan-to'g'ri)
+        else if (extractedData.user_edited_data) {
+            userEditedData = extractedData.user_edited_data;
+            isEdited = extractedData.is_edited || false;
+        }
+        // 4. doc.user_edited_data (to'g'ridan-to'g'ri)
+        else if (doc.user_edited_data) {
+            userEditedData = doc.user_edited_data;
+            isEdited = doc.is_edited || false;
         }
         
         console.log('🔍 User edited data check:', {
@@ -610,7 +626,10 @@ async function viewDocument(id) {
             userEditedData: userEditedData,
             isEdited: isEdited,
             extractedDataMetadata: extractedData.metadata,
-            docMetadata: doc.metadata
+            docMetadata: doc.metadata,
+            extractedDataUserEdited: extractedData.user_edited_data,
+            docUserEdited: doc.user_edited_data,
+            fullDoc: doc  // To'liq doc obyektini ko'rish uchun
         });
         
         // Agar user tahrirlagan bo'lsa, extractedData.fields'ni yangilash
@@ -1069,32 +1088,53 @@ function formatPassportData(extractedData, isAdmin = false, documentId = null) {
         let rawValue = '';
         let confidence = null;
         
-        // Normalized format
-        if (normalized[fieldName]) {
-            rawValue = normalized[fieldName];
-        }
-        // Passport format
-        else if (passport[fieldName]) {
-            rawValue = passport[fieldName];
-        }
-        // Simplified format
-        else if (simplified[fieldName]) {
-            rawValue = simplified[fieldName];
-        }
-        // Fields format
-        else {
-            for (const name of [fieldName, ...altNames]) {
-                if (fields[name]) {
-                    if (typeof fields[name] === 'object' && fields[name].value !== undefined) {
-                        rawValue = fields[name].value;
-                        confidence = fields[name].confidence;
-                        break;
-                    } else if (typeof fields[name] === 'string') {
-                        rawValue = fields[name];
-                        break;
-                    }
+        // Fields format - birinchi tekshirish (chunki backend'dan yangilangan fields kelishi mumkin)
+        // Bu eng muhim, chunki user tahrirlagan ma'lumotlar fields'da bo'lishi mumkin
+        for (const name of [fieldName, ...altNames]) {
+            if (fields[name]) {
+                if (typeof fields[name] === 'object' && fields[name].value !== undefined) {
+                    rawValue = fields[name].value;
+                    confidence = fields[name].confidence;
+                    break;
+                } else if (typeof fields[name] === 'string') {
+                    rawValue = fields[name];
+                    break;
                 }
             }
+        }
+        
+        // Agar fields'da topilmasa, boshqa formatlardan olish
+        if (!rawValue) {
+            // Normalized format
+            if (normalized[fieldName]) {
+                rawValue = normalized[fieldName];
+            }
+            // Passport format
+            else if (passport[fieldName]) {
+                rawValue = passport[fieldName];
+            }
+            // Simplified format
+            else if (simplified[fieldName]) {
+                rawValue = simplified[fieldName];
+            }
+        }
+        
+        // Debug: field value topilganini ko'rsatish
+        if (rawValue && fieldName === 'place_of_birth') {
+            console.log('🔍 getFieldValue - place_of_birth:', {
+                rawValue: rawValue,
+                fieldName: fieldName,
+                altNames: altNames,
+                foundInFields: !!fields[fieldName] || altNames.some(name => !!fields[name])
+            });
+        }
+        if (rawValue && fieldName === 'authority') {
+            console.log('🔍 getFieldValue - authority:', {
+                rawValue: rawValue,
+                fieldName: fieldName,
+                altNames: altNames,
+                foundInFields: !!fields[fieldName] || altNames.some(name => !!fields[name])
+            });
         }
         
         // Tozalash
@@ -1535,24 +1575,60 @@ async function reprocessDocument(documentId) {
 
 let currentEditingDocumentId = null;
 
-function openEditPassportModal(documentId) {
+// Global scope'ga qo'shish (onclick event'lar uchun)
+window.openEditPassportModal = function(documentId) {
     currentEditingDocumentId = documentId;
     const modal = document.getElementById('editPassportModal');
     const errorDiv = document.getElementById('editPassportError');
-    errorDiv.style.display = 'none';
+    if (errorDiv) errorDiv.style.display = 'none';
     
     // Document ma'lumotlarini yuklash va form'ni to'ldirish
     loadDocumentForEdit(documentId);
     
-    modal.style.display = 'flex';
-}
+    // Modal ochilganda, barcha inputlarni editable qilish (readonly/disabled olib tashlash)
+    setTimeout(() => {
+        const allInputs = modal.querySelectorAll('input, textarea, select');
+        allInputs.forEach(input => {
+            // Barcha bloklovchi atributlarni olib tashlash
+            input.removeAttribute('readonly');
+            input.removeAttribute('disabled');
+            input.removeAttribute('readOnly');
+            input.removeAttribute('disabled');
+            
+            // CSS style'larni tozalash va editable qilish
+            input.style.backgroundColor = '#fff';
+            input.style.border = '1px solid #4f46e5';
+            input.style.cursor = 'text';
+            input.style.pointerEvents = 'auto';
+            input.style.opacity = '1';
+            input.style.userSelect = 'text';
+            input.style.webkitUserSelect = 'text';
+            
+            // Input elementini to'g'ridan-to'g'ri editable qilish
+            input.readOnly = false;
+            input.disabled = false;
+            
+            console.log('✅ Input made editable:', {
+                id: input.id,
+                type: input.type,
+                readOnly: input.readOnly,
+                disabled: input.disabled,
+                value: input.value ? input.value.substring(0, 20) + '...' : 'empty'
+            });
+        });
+        console.log('✅ All inputs made editable:', allInputs.length);
+    }, 300); // DOM to'liq yuklanguncha kutish (200ms dan 300ms ga oshirdik)
+    
+    if (modal) modal.style.display = 'flex';
+};
 
-function closeEditPassportModal() {
+// Global scope'ga qo'shish (onclick event'lar uchun)
+window.closeEditPassportModal = function() {
     const modal = document.getElementById('editPassportModal');
-    modal.style.display = 'none';
+    if (modal) modal.style.display = 'none';
     // currentEditingDocumentId'ni faqat modal yopilganda tozalash
     // savePassportData'da viewDocument chaqirilgandan keyin tozalanadi
-}
+};
 
 async function loadDocumentForEdit(documentId) {
     try {
@@ -1696,16 +1772,74 @@ async function loadDocumentForEdit(documentId) {
             fullAuthority = getFieldValue('authority', ['kim_tomonidan_berilgan']) || '';
         }
         
-        document.getElementById('editSurname').value = fullSurname;
-        document.getElementById('editGivenName').value = fullGivenName;
-        document.getElementById('editPassportNo').value = getFieldValue('passport_no', ['passport_number', 'passport_raqami']) || '';
-        document.getElementById('editDateOfBirth').value = getFieldValue('date_of_birth', ['dob', 'tugilgan_sanasi']) || '';
-        document.getElementById('editDateOfIssue').value = getFieldValue('date_of_issue', ['issue_date', 'berilgan_vaqti']) || '';
-        document.getElementById('editDateOfExpiry').value = getFieldValue('date_of_expiry', ['expiry', 'amal_qilish_muddati']) || '';
-        document.getElementById('editNationality').value = getFieldValue('nationality', ['millati']) || '';
-        document.getElementById('editSex').value = getFieldValue('sex', ['jinsi']) || '';
-        document.getElementById('editPlaceOfBirth').value = fullPlaceOfBirth;
-        document.getElementById('editAuthority').value = fullAuthority;
+        // Input elementlarini olish va readonly/disabled olib tashlash
+        const editSurnameEl = document.getElementById('editSurname');
+        const editGivenNameEl = document.getElementById('editGivenName');
+        const editPassportNoEl = document.getElementById('editPassportNo');
+        const editDateOfBirthEl = document.getElementById('editDateOfBirth');
+        const editDateOfIssueEl = document.getElementById('editDateOfIssue');
+        const editDateOfExpiryEl = document.getElementById('editDateOfExpiry');
+        const editNationalityEl = document.getElementById('editNationality');
+        const editSexEl = document.getElementById('editSex');
+        const editPlaceOfBirthEl = document.getElementById('editPlaceOfBirth');
+        const editAuthorityEl = document.getElementById('editAuthority');
+        
+        // Barcha inputlarni editable qilish
+        [editSurnameEl, editGivenNameEl, editPassportNoEl, editDateOfBirthEl, 
+         editDateOfIssueEl, editDateOfExpiryEl, editNationalityEl, editSexEl, 
+         editPlaceOfBirthEl, editAuthorityEl].forEach(input => {
+            if (input) {
+                // Barcha bloklovchi atributlarni olib tashlash
+                input.removeAttribute('readonly');
+                input.removeAttribute('disabled');
+                input.removeAttribute('readOnly');
+                
+                // JavaScript property'larni ham o'zgartirish
+                input.readOnly = false;
+                input.disabled = false;
+                
+                // CSS style'larni tozalash va editable qilish
+                input.style.backgroundColor = '#fff';
+                input.style.border = '1px solid #4f46e5';
+                input.style.cursor = 'text';
+                input.style.pointerEvents = 'auto';
+                input.style.opacity = '1';
+                input.style.userSelect = 'text';
+                input.style.webkitUserSelect = 'text';
+                input.style.MozUserSelect = 'text';
+                input.style.msUserSelect = 'text';
+                
+                // Input elementini to'g'ridan-to'g'ri editable qilish
+                input.setAttribute('contenteditable', 'false'); // contenteditable emas, faqat readonly/disabled olib tashlash
+                
+                console.log('✅ Input made editable in loadDocumentForEdit:', {
+                    id: input.id,
+                    type: input.type || input.tagName,
+                    readOnly: input.readOnly,
+                    disabled: input.disabled,
+                    hasValue: !!input.value
+                });
+            }
+        });
+        
+        // Ma'lumotlarni to'ldirish
+        if (editSurnameEl) editSurnameEl.value = fullSurname;
+        if (editGivenNameEl) editGivenNameEl.value = fullGivenName;
+        if (editPassportNoEl) editPassportNoEl.value = getFieldValue('passport_no', ['passport_number', 'passport_raqami']) || '';
+        if (editDateOfBirthEl) editDateOfBirthEl.value = getFieldValue('date_of_birth', ['dob', 'tugilgan_sanasi']) || '';
+        if (editDateOfIssueEl) editDateOfIssueEl.value = getFieldValue('date_of_issue', ['issue_date', 'berilgan_vaqti']) || '';
+        if (editDateOfExpiryEl) editDateOfExpiryEl.value = getFieldValue('date_of_expiry', ['expiry', 'amal_qilish_muddati']) || '';
+        if (editNationalityEl) editNationalityEl.value = getFieldValue('nationality', ['millati']) || '';
+        if (editSexEl) editSexEl.value = getFieldValue('sex', ['jinsi']) || '';
+        if (editPlaceOfBirthEl) editPlaceOfBirthEl.value = fullPlaceOfBirth;
+        if (editAuthorityEl) editAuthorityEl.value = fullAuthority;
+        
+        console.log('✅ Form filled and inputs made editable:', {
+            surname: fullSurname,
+            givenName: fullGivenName,
+            placeOfBirth: fullPlaceOfBirth,
+            authority: fullAuthority
+        });
         
     } catch (error) {
         console.error('Document yuklash xatosi:', error);
@@ -1732,19 +1866,48 @@ async function savePassportData() {
     // Faqat fields qismini yangilaymiz
     const existingExtractedData = { ...originalData };
     
+    // Form ma'lumotlarini yig'ish - inputlarni tekshirish
+    const editSurnameEl = document.getElementById('editSurname');
+    const editGivenNameEl = document.getElementById('editGivenName');
+    const editPassportNoEl = document.getElementById('editPassportNo');
+    const editDateOfBirthEl = document.getElementById('editDateOfBirth');
+    const editDateOfIssueEl = document.getElementById('editDateOfIssue');
+    const editDateOfExpiryEl = document.getElementById('editDateOfExpiry');
+    const editNationalityEl = document.getElementById('editNationality');
+    const editSexEl = document.getElementById('editSex');
+    const editPlaceOfBirthEl = document.getElementById('editPlaceOfBirth');
+    const editAuthorityEl = document.getElementById('editAuthority');
+    
+    // Debug: input elementlarini tekshirish
+    console.log('🔍 Input elements check:', {
+        editSurname: !!editSurnameEl,
+        editGivenName: !!editGivenNameEl,
+        editPassportNo: !!editPassportNoEl,
+        editDateOfBirth: !!editDateOfBirthEl,
+        editDateOfIssue: !!editDateOfIssueEl,
+        editDateOfExpiry: !!editDateOfExpiryEl,
+        editNationality: !!editNationalityEl,
+        editSex: !!editSexEl,
+        editPlaceOfBirth: !!editPlaceOfBirthEl,
+        editAuthority: !!editAuthorityEl
+    });
+    
     // Form ma'lumotlarini yig'ish
     const userEditedData = {
-        surname: document.getElementById('editSurname').value.trim(),
-        given_name: document.getElementById('editGivenName').value.trim(),
-        passport_no: document.getElementById('editPassportNo').value.trim(),
-        date_of_birth: document.getElementById('editDateOfBirth').value.trim(),
-        date_of_issue: document.getElementById('editDateOfIssue').value.trim(),
-        date_of_expiry: document.getElementById('editDateOfExpiry').value.trim(),
-        nationality: document.getElementById('editNationality').value.trim(),
-        sex: document.getElementById('editSex').value.trim(),
-        place_of_birth: document.getElementById('editPlaceOfBirth').value.trim(),
-        authority: document.getElementById('editAuthority').value.trim()
+        surname: editSurnameEl ? editSurnameEl.value.trim() : '',
+        given_name: editGivenNameEl ? editGivenNameEl.value.trim() : '',
+        passport_no: editPassportNoEl ? editPassportNoEl.value.trim() : '',
+        date_of_birth: editDateOfBirthEl ? editDateOfBirthEl.value.trim() : '',
+        date_of_issue: editDateOfIssueEl ? editDateOfIssueEl.value.trim() : '',
+        date_of_expiry: editDateOfExpiryEl ? editDateOfExpiryEl.value.trim() : '',
+        nationality: editNationalityEl ? editNationalityEl.value.trim() : '',
+        sex: editSexEl ? editSexEl.value.trim() : '',
+        place_of_birth: editPlaceOfBirthEl ? editPlaceOfBirthEl.value.trim() : '',
+        authority: editAuthorityEl ? editAuthorityEl.value.trim() : ''
     };
+    
+    // Debug: yig'ilgan ma'lumotlarni ko'rsatish
+    console.log('🔍 Collected userEditedData:', userEditedData);
     
     // is_edited flag'ni aniqlash - foydalanuvchi biror maydonni o'zgartirganmi?
     let isEdited = false;
@@ -1912,6 +2075,21 @@ async function savePassportData() {
         
         const responseData = await response.json();
         console.log('✅ Backend response:', responseData);
+        console.log('🔍 Backend response metadata check:', {
+            hasMetadata: !!responseData.metadata,
+            hasExtractedDataMetadata: !!(responseData.extracted_data && responseData.extracted_data.metadata),
+            metadata: responseData.metadata,
+            extractedDataMetadata: responseData.extracted_data?.metadata,
+            hasFields: !!(responseData.extracted_data && responseData.extracted_data.fields),
+            fieldsKeys: responseData.extracted_data?.fields ? Object.keys(responseData.extracted_data.fields) : [],
+            fullResponse: responseData
+        });
+        
+        // Backend'dan qaytgan ma'lumotlarni tekshirish
+        // Agar backend extracted_data.fields'ni yangilagan bo'lsa, bu ma'lumotlar allaqachon yangilangan
+        if (responseData.extracted_data && responseData.extracted_data.fields) {
+            console.log('✅ Backend returned updated fields:', responseData.extracted_data.fields);
+        }
         
         // Muvaffaqiyatli saqlandi
         alert('문서가 성공적으로 저장되었습니다!');
@@ -1926,7 +2104,7 @@ async function savePassportData() {
         // Document'ni qayta yuklash (kutish vaqtini qo'shish, backend yangilanishini kutish uchun)
         if (savedDocumentId) {
             // Kichik kutish - backend yangilanishini kutish uchun
-            await new Promise(resolve => setTimeout(resolve, 500));
+            await new Promise(resolve => setTimeout(resolve, 1000)); // 500ms dan 1000ms ga oshirdik
             await viewDocument(savedDocumentId);
             console.log('✅ Document reloaded after save');
         } else {
@@ -1947,7 +2125,8 @@ async function savePassportData() {
 
 // ==================== DELETE DOCUMENT ====================
 
-async function deleteDocument(documentId) {
+// Global scope'ga qo'shish (onclick event'lar uchun)
+window.deleteDocument = async function(documentId) {
     // Tasdiqlash
     if (!confirm('정말로 이 문서를 삭제하시겠습니까? (Bu hujjatni o\'chirishni tasdiqlaysizmi?)\n\n참고: 문서는 관리자에게 여전히 표시됩니다.')) {
         return;
@@ -1981,15 +2160,16 @@ async function deleteDocument(documentId) {
         console.error('삭제 오류:', error);
         alert('삭제 중 오류가 발생했습니다: ' + error.message);
     }
-}
+};
 
 // ==================== EDIT DOCUMENT (Boshqa turlar uchun) ====================
 
-function openEditDocumentModal(documentId) {
+// Global scope'ga qo'shish (onclick event'lar uchun)
+window.openEditDocumentModal = function(documentId) {
     // Hozircha faqat passport uchun edit modal mavjud
     // Boshqa turlar uchun ham qo'shish mumkin
     alert('이 문서 유형의 편집 기능은 아직 개발 중입니다.');
-}
+};
 
 // ==================== UPLOAD ====================
 
