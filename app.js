@@ -80,8 +80,8 @@ async function handleLogin(e) {
             adminNavLink.style.display = 'inline-block';
         }
         
-        // My Page'ga o'tish (barcha user'lar uchun)
-        showPage('admin');
+        // Home page'ga o'tish (default)
+        showPage('dashboard');
         
     } catch (error) {
         errorDiv.textContent = error.message;
@@ -203,8 +203,8 @@ function checkAuth() {
             adminNavLink.style.display = 'inline-block';
         }
         
-        // My Page'ga o'tish (barcha user'lar uchun)
-        showPage('admin');
+        // Home page'ga o'tish (default)
+        showPage('dashboard');
     }
 }
 

@@ -215,6 +215,13 @@ body::before {
     flex-wrap: wrap;
 }
 
+/* Mobile'da nav-container gap'ni kamaytirish */
+@media (max-width: 768px) {
+    .nav-container {
+        gap: 8px; /* Mobile'da gap kamaytirildi */
+    }
+}
+
 .nav-left {
     display: flex;
     align-items: center;
@@ -1241,11 +1248,11 @@ body::before {
         flex-wrap: wrap;
         width: 100%;
         background: transparent;
-        padding: 5px 0;
+        padding: 3px 0;
         border-radius: 0;
-        margin-top: 5px;
+        margin-top: 3px;
         box-shadow: none;
-        gap: 4px;
+        gap: 2px; /* Masofani yaqinroq qilish */
         justify-content: center;
         order: 3; /* Nav container'ning oxiriga qo'yish */
     }
@@ -1255,12 +1262,13 @@ body::before {
     }
     
     .nav-link-modern {
-        padding: 4px 8px;
+        padding: 3px 6px; /* Masofani yaqinroq qilish */
         border-bottom: none;
         font-size: 0.8em;
         white-space: nowrap;
         flex: 0 0 auto;
         min-width: fit-content;
+        margin: 0; /* Margin'ni olib tashlash */
     }
     
     .nav-right-modern {
@@ -1325,7 +1333,7 @@ body::before {
     
     /* Main Content - Mobile (pastga tushirildi) */
     .main-content {
-        padding: 100px 15px 15px 15px; /* Navigation bar'ni o'tkazib o'tish uchun ko'proq padding */
+        padding: 75px 15px 15px 15px; /* Navigation bar'ni o'tkazib o'tish uchun o'rtacha padding */
         width: 100%;
         margin-left: 0;
         margin-top: 0;
@@ -1336,12 +1344,12 @@ body::before {
     
     /* Dashboard page - Mobile */
     #dashboardPage {
-        padding-top: 20px;
+        padding-top: 10px; /* O'rtacha masofa */
     }
     
     /* Featured section - Mobile (pastga tushirildi) */
     .featured-section {
-        margin-top: 20px;
+        margin-top: 15px; /* O'rtacha masofa */
     }
     
     /* Mobile'da barcha content'lar ko'rinadigan qilish */
@@ -1388,7 +1396,7 @@ body::before {
         background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%) !important;
         position: relative;
         z-index: 1;
-        margin-top: 20px; /* Navigation bar'dan pastga tushirish */
+        margin-top: 15px; /* Navigation bar'dan pastga tushirish - o'rtacha masofa */
     }
     
     .featured-content {
@@ -1398,7 +1406,7 @@ body::before {
     
     /* Dashboard page - Mobile (pastga tushirish) */
     #dashboardPage {
-        padding-top: 10px;
+        padding-top: 10px; /* O'rtacha masofa */
     }
     
     .featured-title {
@@ -1560,17 +1568,22 @@ body::before {
     }
     
     .nav-links-modern {
-        gap: 2px;
-        padding: 4px 0;
-        margin-top: 4px;
+        gap: 1px; /* Masofani juda yaqin qilish */
+        padding: 3px 0;
+        margin-top: 3px;
+    }
+    
+    .nav-link-modern {
+        padding: 3px 5px; /* Masofani yaqinroq qilish */
+        margin: 0;
     }
     
     .main-content {
-        padding: 90px 10px 10px 10px;
+        padding: 70px 10px 10px 10px; /* O'rtacha masofa */
     }
     
     .featured-section {
-        margin-top: 15px;
+        margin-top: 12px; /* O'rtacha masofa */
     }
 }
 
