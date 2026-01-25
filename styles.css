@@ -201,7 +201,7 @@ body::before {
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border-radius: 15px;
-    padding: 10px 20px; /* Kichikroq padding */
+    padding: 12px 20px; /* 2 qator uchun biroz kattaroq padding */
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
     z-index: 1000;
     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -209,16 +209,49 @@ body::before {
 
 .nav-container {
     display: flex;
+    flex-direction: column; /* 2 qatorga bo'lish */
+    gap: 10px; /* Qatorlar orasidagi masofa */
+    width: 100%;
+}
+
+.nav-row {
+    display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 20px; /* Gap kamaytirildi */
-    flex-wrap: wrap;
+    gap: 20px;
+    width: 100%;
+}
+
+.nav-row-first {
+    /* Birinchi qator: logo va right icons */
+    flex-wrap: nowrap;
+}
+
+.nav-row-second {
+    /* Ikkinchi qator: navigation links */
+    justify-content: center;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1); /* Qatorlar orasida chiziq */
+    margin-top: 0;
 }
 
 /* Mobile'da nav-container gap'ni kamaytirish */
 @media (max-width: 768px) {
     .nav-container {
         gap: 8px; /* Mobile'da gap kamaytirildi */
+    }
+    
+    .nav-row {
+        gap: 8px;
+    }
+    
+    .nav-row-second {
+        gap: 6px;
+        padding-top: 6px;
+    }
+    
+    .nav-links-modern {
+        gap: 6px;
     }
 }
 
@@ -251,8 +284,9 @@ body::before {
     display: flex;
     gap: 20px; /* Gap kamaytirildi */
     align-items: center;
-    flex: 1;
     justify-content: center;
+    flex-wrap: wrap; /* Kichik ekranlarda wrap qilish */
+    width: 100%;
 }
 
 .nav-link-modern {
@@ -1289,7 +1323,7 @@ body::before {
     
     /* Top Navigation - Mobile (kichikroq) */
     .top-nav-modern {
-        padding: 6px 10px; /* Yana kichikroq */
+        padding: 8px 12px; /* 2 qator uchun padding */
         width: calc(100% - 20px);
         top: 10px;
         left: 50%;
@@ -1361,43 +1395,29 @@ body::before {
         margin-left: auto;
     }
     
-    .nav-links-modern {
-        display: none; /* Mobile'da default yashirilgan */
-        position: absolute;
-        top: 100%;
-        left: 0;
-        right: 0;
-        flex-direction: column;
-        width: 100%;
-        background: rgba(60, 70, 65, 0.98);
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        padding: 15px 20px;
-        border-radius: 0 0 15px 15px;
-        margin-top: 10px;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-        gap: 0;
-        justify-content: flex-start;
-        z-index: 998; /* Top nav'dan past, lekin content'dan yuqori */
-        max-height: calc(100vh - 100px);
-        overflow-y: auto;
+    .nav-row-second {
+        display: flex; /* Mobile'da ham ko'rinadi */
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        padding-top: 8px;
     }
     
-    .nav-links-modern.active {
-        display: flex !important;
+    .nav-links-modern {
+        flex-direction: row;
+        width: 100%;
+        gap: 6px;
+        flex-wrap: wrap;
+        justify-content: center;
     }
     
     .nav-link-modern {
-        padding: 12px 15px; /* Mobile'da kattaroq padding */
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        font-size: 0.95em;
+        padding: 6px 12px; /* Mobile'da kichikroq padding */
+        font-size: 0.85em;
         white-space: nowrap;
         flex: 0 0 auto;
         min-width: fit-content;
         margin: 0;
-        width: 100%;
-        text-align: left;
-        border-radius: 8px;
+        text-align: center;
+        border-radius: 6px;
         transition: background 0.3s;
     }
     
@@ -1472,7 +1492,7 @@ body::before {
     
     /* Main Content - Mobile (pastga tushirildi) */
     .main-content {
-        padding: 75px 15px 15px 15px; /* Navigation bar'ni o'tkazib o'tish uchun o'rtacha padding */
+        padding: 90px 15px 15px 15px; /* 2 qatorli navigation uchun biroz ko'proq padding */
         width: 100%;
         margin-left: 0;
         margin-top: 0;
@@ -1773,7 +1793,7 @@ body::before {
     }
     
     .top-nav-modern {
-        padding: 6px 10px;
+        padding: 6px 10px; /* 2 qator uchun padding */
         width: calc(100% - 16px);
         top: 8px;
         border-radius: 12px;
@@ -1797,20 +1817,22 @@ body::before {
         padding: 4px 6px;
     }
     
+    .nav-row-second {
+        padding-top: 5px;
+    }
+    
     .nav-links-modern {
-        gap: 0;
-        padding: 10px 15px;
-        margin-top: 10px;
+        gap: 4px;
     }
     
     .nav-link-modern {
-        padding: 10px 12px; /* Kichik ekranlar uchun */
+        padding: 5px 8px; /* Kichik ekranlar uchun */
         margin: 0;
-        font-size: 0.9em;
+        font-size: 0.8em;
     }
     
     .main-content {
-        padding: 70px 10px 10px 10px; /* O'rtacha masofa */
+        padding: 85px 10px 10px 10px; /* 2 qatorli navigation uchun biroz ko'proq padding */
     }
     
     .featured-section {
@@ -1886,7 +1908,7 @@ body::before {
     }
     
     .top-nav-modern {
-        padding: 5px 8px;
+        padding: 6px 10px; /* 2 qator uchun padding */
         width: calc(100% - 16px);
     }
     

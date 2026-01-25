@@ -653,25 +653,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const sidebar = document.getElementById('sidebar');
     const sidebarClose = document.getElementById('sidebarClose');
     
-    // Navigation menu toggle function
-    function toggleNavMenu() {
-        if (navLinks) {
-            const isActive = navLinks.classList.toggle('active');
-            // Body scroll'ni to'xtatish/yechish
-            if (isActive && window.innerWidth <= 768) {
-                document.body.classList.add('menu-open');
-            } else {
-                document.body.classList.remove('menu-open');
-            }
-        }
-    }
+    // Navigation menu toggle function (faqat sidebar uchun)
+    // nav-row-second endi har doim ko'rinadi, shuning uchun toggle kerak emas
     
-    if (mobileMenuToggle) {
-        mobileMenuToggle.addEventListener('click', (e) => {
-            e.stopPropagation();
-            toggleNavMenu();
-        });
-    }
+    // Navigation menu toggle endi faqat sidebar uchun ishlatiladi
+    // nav-row-second har doim ko'rinadi
     
     // Sidebar toggle (mobile)
     const sidebarOverlay = document.getElementById('sidebarOverlay');
@@ -709,15 +695,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    // Navigation menu link'lariga click qilganda menu'ni yopish
-    if (navLinks) {
-        navLinks.addEventListener('click', (e) => {
-            if (e.target.classList.contains('nav-link-modern') && window.innerWidth <= 768) {
-                navLinks.classList.remove('active');
-                document.body.classList.remove('menu-open');
-            }
-        });
-    }
+    // Navigation menu link'lariga click qilganda menu'ni yopish (faqat sidebar uchun)
+    // nav-row-second har doim ko'rinadi, shuning uchun yopish kerak emas
     
     // Sidebar'ni yopish (link bosilganda)
     const sidebarLinks = document.querySelectorAll('.sidebar .nav-link');
@@ -731,37 +710,21 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
     
-    // Nav links'ni yopish (link bosilganda - mobile)
-    const topNavLinks = document.querySelectorAll('.nav-links-modern .nav-link-modern');
-    topNavLinks.forEach(link => {
-        link.addEventListener('click', () => {
-            if (window.innerWidth <= 768 && navLinks) {
-                navLinks.classList.remove('active');
-                document.body.classList.remove('menu-open');
-            }
-        });
-    });
+    // Nav links endi har doim ko'rinadi, shuning uchun yopish kerak emas
     
-    // Window resize - mobile menu'ni yopish
+    // Window resize - sidebar'ni yopish
     window.addEventListener('resize', () => {
         if (window.innerWidth > 768) {
-            if (navLinks) navLinks.classList.remove('active');
             if (sidebar) sidebar.classList.remove('active');
             if (sidebarOverlay) sidebarOverlay.classList.remove('active');
             document.body.classList.remove('menu-open');
         }
     });
     
-    // Click outside navigation menu to close it
+    // Click outside sidebar to close it
     document.addEventListener('click', (e) => {
         if (window.innerWidth <= 768) {
-            const isClickInsideNav = navLinks && (navLinks.contains(e.target) || e.target === mobileMenuToggle);
             const isClickInsideSidebar = sidebar && (sidebar.contains(e.target) || e.target === mobileMenuToggle);
-            
-            if (!isClickInsideNav && navLinks && navLinks.classList.contains('active')) {
-                navLinks.classList.remove('active');
-                document.body.classList.remove('menu-open');
-            }
             
             if (!isClickInsideSidebar && sidebar && sidebar.classList.contains('active')) {
                 sidebar.classList.remove('active');
