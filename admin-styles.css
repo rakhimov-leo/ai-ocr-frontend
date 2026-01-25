@@ -1,0 +1,628 @@
+/* ==================== ADMIN VERIFICATION PAGE ==================== */
+
+.admin-header {
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    margin-bottom: 30px;
+}
+
+.admin-header h1 {
+    color: #0066cc;
+    margin: 0 0 10px 0;
+    font-size: 2em;
+}
+
+.admin-subtitle {
+    color: #666;
+    margin: 0;
+    font-size: 1.1em;
+}
+
+.admin-verification-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.admin-verification-layout {
+    display: grid;
+    grid-template-columns: 400px 1fr;
+    gap: 30px;
+    margin-top: 30px;
+}
+
+.admin-image-panel {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    position: sticky;
+    top: 20px;
+    height: fit-content;
+}
+
+.admin-image-panel h3 {
+    margin-bottom: 15px;
+    color: #0066cc;
+    font-size: 1.2em;
+}
+
+.admin-image-container {
+    text-align: center;
+}
+
+.admin-image-container img {
+    max-width: 100%;
+    max-height: 600px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    cursor: pointer;
+    transition: transform 0.3s;
+}
+
+.admin-image-container img:hover {
+    transform: scale(1.02);
+}
+
+.admin-image-placeholder {
+    padding: 60px 20px;
+    text-align: center;
+    color: #999;
+    border: 2px dashed #ddd;
+    border-radius: 8px;
+}
+
+.admin-comparison-panel {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.admin-comparison-panel h3 {
+    margin-bottom: 20px;
+    color: #0066cc;
+    font-size: 1.2em;
+}
+
+.comparison-table-container {
+    overflow-x: auto;
+}
+
+.comparison-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95em;
+}
+
+.comparison-table thead {
+    background: #f8f9fa;
+}
+
+.comparison-table th {
+    padding: 12px;
+    text-align: left;
+    font-weight: 600;
+    color: #2d3748;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.comparison-table td {
+    padding: 12px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.comparison-table tbody tr:hover {
+    background: #f7fafc;
+}
+
+/* Highlighting - foydalanuvchi tahrirlagan maydonlar */
+.row-highlighted {
+    background: #eff6ff !important;
+    border-left: 4px solid #0066cc;
+}
+
+.row-highlighted:hover {
+    background: #dbeafe !important;
+}
+
+.cell-highlighted {
+    background: #dbeafe;
+    color: #0066cc;
+    font-weight: 600;
+    padding: 8px 12px;
+    border-radius: 4px;
+}
+
+.row-expired {
+    background: #fef2f2 !important;
+    border-left: 4px solid #ef4444;
+}
+
+.status-expired {
+    color: #ef4444;
+    font-weight: 700;
+    font-size: 1.05em;
+}
+
+.status-match {
+    color: #10b981;
+    font-weight: 600;
+}
+
+.status-mismatch {
+    color: #ef4444;
+    font-weight: 600;
+}
+
+.status-partial {
+    color: #f59e0b;
+    font-weight: 600;
+}
+
+.status-empty {
+    color: #9ca3af;
+}
+
+.admin-action-sidebar {
+    grid-column: 1 / -1;
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    margin-top: 30px;
+}
+
+.admin-action-sidebar h3 {
+    margin-bottom: 20px;
+    color: #0066cc;
+    font-size: 1.3em;
+    border-bottom: 2px solid #e2e8f0;
+    padding-bottom: 10px;
+}
+
+.admin-doc-info-box {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.admin-doc-info-box p {
+    margin: 8px 0;
+    font-size: 0.95em;
+}
+
+.admin-log-section {
+    margin-bottom: 20px;
+}
+
+.admin-log-section h4 {
+    margin-bottom: 10px;
+    color: #2d3748;
+    font-size: 1em;
+}
+
+.log-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #e2e8f0;
+    font-size: 0.9em;
+}
+
+.log-label {
+    color: #666;
+    font-weight: 500;
+}
+
+.log-value {
+    color: #2d3748;
+}
+
+.admin-user-history {
+    margin-bottom: 20px;
+}
+
+.admin-user-history h4 {
+    margin-bottom: 10px;
+    color: #2d3748;
+    font-size: 1em;
+}
+
+.user-history-list {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.history-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #e2e8f0;
+    font-size: 0.9em;
+}
+
+.history-item:last-child {
+    border-bottom: none;
+}
+
+.history-doc-id {
+    font-weight: 600;
+    color: #0066cc;
+    cursor: pointer;
+}
+
+.history-doc-id:hover {
+    text-decoration: underline;
+}
+
+.history-date {
+    color: #666;
+}
+
+.history-status {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.85em;
+    font-weight: 600;
+}
+
+.history-status.status-approved {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.history-status.status-rejected {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.history-status.status-pending {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.admin-action-buttons {
+    display: flex;
+    gap: 15px;
+    margin-top: 25px;
+}
+
+.btn-approve {
+    flex: 1;
+    padding: 15px;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.1em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.btn-approve:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+}
+
+.btn-reject {
+    flex: 1;
+    padding: 15px;
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.1em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.btn-reject:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(239, 68, 68, 0.4);
+}
+
+/* Verified/Rejected Messages */
+.admin-verified-message {
+    margin-top: 25px;
+    padding: 20px;
+    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+    border-radius: 12px;
+    border: 2px solid #10b981;
+    text-align: center;
+}
+
+.verified-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.verified-icon {
+    font-size: 2em;
+    color: #10b981;
+    font-weight: bold;
+}
+
+.verified-text {
+    font-size: 1.2em;
+    font-weight: 600;
+    color: #065f46;
+}
+
+.verified-info {
+    margin: 8px 0;
+    color: #047857;
+    font-size: 0.95em;
+}
+
+.admin-rejected-message {
+    margin-top: 25px;
+    padding: 20px;
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+    border-radius: 12px;
+    border: 2px solid #ef4444;
+    text-align: center;
+}
+
+.rejected-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.rejected-icon {
+    font-size: 2em;
+    color: #ef4444;
+    font-weight: bold;
+}
+
+.rejected-text {
+    font-size: 1.2em;
+    font-weight: 600;
+    color: #991b1b;
+}
+
+.rejected-info {
+    margin: 8px 0;
+    color: #dc2626;
+    font-size: 0.95em;
+}
+
+/* Admin Documents List */
+.admin-documents-section {
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    margin-top: 30px;
+}
+
+.admin-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.admin-section-header h2 {
+    color: #0066cc;
+    margin: 0;
+}
+
+.admin-filters {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-filter {
+    padding: 8px 16px;
+    background: #f8f9fa;
+    border: 2px solid #e2e8f0;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9em;
+    font-weight: 500;
+    color: #2d3748;
+    transition: all 0.3s;
+}
+
+.btn-filter:hover {
+    background: #e2e8f0;
+}
+
+.btn-filter.active {
+    background: #0066cc;
+    color: white;
+    border-color: #0066cc;
+}
+
+.admin-documents-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.admin-document-card {
+    background: white;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.admin-document-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    border-color: #0066cc;
+}
+
+.admin-document-card.pending {
+    border-left: 4px solid #f59e0b;
+}
+
+.admin-document-card.approved {
+    border-left: 4px solid #10b981;
+}
+
+.admin-document-card.rejected {
+    border-left: 4px solid #ef4444;
+}
+
+.admin-document-card.card-edited {
+    border: 2px solid #0066cc;
+    box-shadow: 0 4px 12px rgba(0, 102, 204, 0.2);
+}
+
+.admin-document-card.card-expired {
+    border-left: 4px solid #ef4444;
+    background: #fef2f2;
+}
+
+.admin-doc-badges {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.badge-edited {
+    background: #dbeafe;
+    color: #0066cc;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8em;
+    font-weight: 600;
+}
+
+.badge-expired {
+    background: #fee2e2;
+    color: #ef4444;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8em;
+    font-weight: 600;
+}
+
+.admin-doc-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.admin-doc-id {
+    font-size: 1.2em;
+    font-weight: 600;
+    color: #0066cc;
+}
+
+.admin-doc-status {
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-size: 0.85em;
+    font-weight: 600;
+}
+
+.admin-doc-status.status-pending {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.admin-doc-status.status-approved {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.admin-doc-status.status-rejected {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.admin-doc-info {
+    font-size: 0.9em;
+    color: #666;
+}
+
+.admin-doc-info p {
+    margin: 5px 0;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #999;
+    font-size: 1.1em;
+}
+
+.loading-small {
+    text-align: center;
+    color: #999;
+    font-size: 0.9em;
+    padding: 10px;
+}
+
+.no-history {
+    text-align: center;
+    color: #999;
+    font-size: 0.9em;
+    padding: 10px;
+}
+
+/* Mobile responsive for admin verification */
+@media (max-width: 1024px) {
+    .admin-verification-layout {
+        grid-template-columns: 1fr;
+    }
+    
+    .admin-image-panel {
+        position: relative;
+        top: 0;
+    }
+    
+    .admin-image-container img {
+        max-height: 400px;
+    }
+}
+
+@media (max-width: 768px) {
+    .admin-documents-list {
+        grid-template-columns: 1fr;
+    }
+    
+    .admin-action-buttons {
+        flex-direction: column;
+    }
+    
+    .admin-filters {
+        flex-wrap: wrap;
+    }
+    
+    .comparison-table {
+        font-size: 0.85em;
+    }
+    
+    .comparison-table th,
+    .comparison-table td {
+        padding: 8px;
+    }
+}

@@ -25,15 +25,28 @@ async function handleLogin(e) {
     }
     
     try {
+        console.log('Login boshlanmoqda...', { username, API_BASE_URL });
+        
         const response = await fetch(`${API_BASE_URL}/auth/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, password })
         });
         
+        console.log('Response status:', response.status, response.statusText);
+        
         if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.detail || '로그인 오류');
+            let errorMessage = '로그인 오류';
+            try {
+                const error = await response.json();
+                errorMessage = error.detail || error.message || '로그인 오류';
+            } catch (e) {
+                // JSON parse xatosi
+                const text = await response.text();
+                errorMessage = text || `서버 오류 (${response.status})`;
+            }
+            console.error('Login xatosi:', errorMessage);
+            throw new Error(errorMessage);
         }
         
         const data = await response.json();
@@ -75,8 +88,23 @@ async function handleLogin(e) {
         showPage('dashboard');
         
     } catch (error) {
-        errorDiv.textContent = error.message;
+        console.error('Login catch xatosi:', error);
+        let errorMessage = error.message || '로그인 중 오류가 발생했습니다';
+        
+        // Network xatolari uchun
+        if (error.name === 'TypeError' && error.message.includes('fetch')) {
+            errorMessage = '서버에 연결할 수 없습니다. 백엔드가 실행 중인지 확인하세요. (Backend ishlamayapti)';
+        }
+        
+        errorDiv.textContent = errorMessage;
         errorDiv.style.display = 'block';
+        
+        // Error div'ni qizil rangga o'zgartirish
+        errorDiv.style.color = '#ef4444';
+        errorDiv.style.backgroundColor = '#fee2e2';
+        errorDiv.style.padding = '10px';
+        errorDiv.style.borderRadius = '5px';
+        errorDiv.style.marginTop = '10px';
     }
 }
 
@@ -564,6 +592,104 @@ async function viewDocument(id) {
         const extractedData = doc.extracted_data || {};
         const table = extractedData.table || {};
         
+        // User edited data'ni olish (metadata'dan yoki extracted_data.metadata'dan)
+        let userEditedData = {};
+        let isEdited = false;
+        
+        // Metadata'ni topish (turli joylardan)
+        if (extractedData.metadata) {
+            userEditedData = extractedData.metadata.user_edited_data || {};
+            isEdited = extractedData.metadata.is_edited || false;
+        } else if (doc.metadata) {
+            userEditedData = doc.metadata.user_edited_data || {};
+            isEdited = doc.metadata.is_edited || false;
+        }
+        
+        console.log('🔍 User edited data check:', {
+            hasUserEditedData: Object.keys(userEditedData).length > 0,
+            userEditedData: userEditedData,
+            isEdited: isEdited,
+            extractedDataMetadata: extractedData.metadata,
+            docMetadata: doc.metadata
+        });
+        
+        // Agar user tahrirlagan bo'lsa, extractedData.fields'ni yangilash
+        if (isEdited && userEditedData && Object.keys(userEditedData).length > 0) {
+            // Fields'ni user_edited_data bilan yangilash
+            if (!extractedData.fields) {
+                extractedData.fields = {};
+            }
+            
+            // User edited data'ni fields'ga qo'shish
+            Object.keys(userEditedData).forEach(key => {
+                if (userEditedData[key]) {
+                    // Field mapping
+                    const fieldMappings = {
+                        'surname': ['surname', 'familiya'],
+                        'given_name': ['given_names', 'ism'],
+                        'passport_no': ['passport_number', 'passport_raqami'],
+                        'date_of_birth': ['date_of_birth', 'tugilgan_sanasi'],
+                        'date_of_issue': ['date_of_issue', 'berilgan_vaqti'],
+                        'date_of_expiry': ['date_of_expiry', 'amal_qilish_muddati'],
+                        'nationality': ['nationality', 'millati'],
+                        'sex': ['sex', 'jinsi'],
+                        'place_of_birth': ['place_of_birth', 'tugilgan_joyi'],
+                        'authority': ['authority', 'kim_tomonidan_berilgan']
+                    };
+                    
+                    const fieldNames = fieldMappings[key] || [key];
+                    fieldNames.forEach(fieldName => {
+                        extractedData.fields[fieldName] = {
+                            value: userEditedData[key],
+                            confidence: 100.0
+                        };
+                    });
+                }
+            });
+            
+            console.log('✅ User edited data applied to extractedData.fields:', extractedData.fields);
+        }
+        
+        // Original rasm URL'ni tayyorlash
+        let imageUrl = null;
+        console.log('Document file_path:', doc.file_path); // Debug
+        
+        if (doc.file_path) {
+            // Backend'dan rasm URL'ni olish
+            const baseUrl = API_BASE_URL.replace('/api', '');
+            
+            // file_path format: "uploads/documents/filename.jpg" yoki to'liq path
+            let filePath = doc.file_path;
+            
+            // Agar file_path "uploads/" bilan boshlanmasa, qo'shish
+            if (!filePath.startsWith('uploads/') && !filePath.startsWith('/uploads/')) {
+                filePath = `uploads/${filePath}`;
+            }
+            
+            // Boshidagi "/" ni olib tashlash
+            filePath = filePath.replace(/^\/+/, '');
+            
+            // URL yaratish
+            imageUrl = `${baseUrl}/${filePath}`;
+            
+            // URL encoding qo'shish (fayl nomidagi maxsus belgilar uchun)
+            // Lekin encodeURIComponent butun URL'ni buzadi, shuning uchun faqat fayl nomini encode qilamiz
+            const pathParts = imageUrl.split('/');
+            const fileName = pathParts[pathParts.length - 1];
+            const encodedFileName = encodeURIComponent(fileName);
+            pathParts[pathParts.length - 1] = encodedFileName;
+            imageUrl = pathParts.join('/');
+            
+            console.log('Image URL:', imageUrl); // Debug
+        } else if (doc.image_url) {
+            imageUrl = doc.image_url;
+        } else if (doc.file_name) {
+            // Agar file_name bo'lsa
+            const baseUrl = API_BASE_URL.replace('/api', '');
+            const encodedFileName = encodeURIComponent(doc.file_name);
+            imageUrl = `${baseUrl}/uploads/documents/${encodedFileName}`;
+        }
+        
         let html = `
             <h1>문서 #${doc.id}</h1>
             <div class="document-info-card">
@@ -575,9 +701,57 @@ async function viewDocument(id) {
             </div>
         `;
         
-        // Passport ma'lumotlarini ko'rsatish (agar passport bo'lsa)
-        if (doc.file_type === 'passport' || extractedData.passport || extractedData.simplified || extractedData.fields) {
+        // Original rasm ko'rsatish (har doim ko'rsatish)
+        html += `
+            <div class="document-image-section" style="margin: 30px 0; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                <h3 style="margin-bottom: 15px; color: #0066cc;">원본 이미지 (Original Image)</h3>
+                ${imageUrl ? `
+                    <div style="position: relative; display: inline-block; cursor: pointer;" onclick="openImageModal('${imageUrl}')">
+                        <img src="${imageUrl}" 
+                             alt="Document Image" 
+                             id="documentImage_${doc.id}"
+                             style="max-width: 300px; max-height: 400px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: transform 0.3s; display: block;"
+                             onmouseover="this.style.transform='scale(1.05)'"
+                             onmouseout="this.style.transform='scale(1)'"
+                             onerror="this.onerror=null; this.style.display='none'; const errorDiv = this.nextElementSibling; if(errorDiv) errorDiv.style.display='block';">
+                        <div style="display: none; padding: 20px; text-align: center; color: #999;">
+                            <p>이미지를 불러올 수 없습니다</p>
+                            <p style="font-size: 0.85em; margin-top: 10px;">URL: ${imageUrl}</p>
+                        </div>
+                        <div style="position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.7); color: white; padding: 5px 10px; border-radius: 5px; font-size: 0.85em; pointer-events: none;">
+                            🔍 클릭하여 확대
+                        </div>
+                    </div>
+                ` : `
+                    <div style="padding: 40px; text-align: center; color: #999; border: 2px dashed #ddd; border-radius: 8px;">
+                        <p>이미지를 불러올 수 없습니다</p>
+                        <p style="font-size: 0.85em; margin-top: 10px;">파일 경로: ${doc.file_path || 'N/A'}</p>
+                    </div>
+                `}
+            </div>
+        `;
+        
+        // Passport ma'lumotlarini ko'rsatish (agar passport bo'lsa yoki extractedData'da passport ma'lumotlari bo'lsa)
+        // file_type 'boshqa' bo'lsa ham, agar extractedData'da passport ma'lumotlari bo'lsa, ko'rsatish
+        const hasPassportData = doc.file_type === 'passport' || 
+                                extractedData.passport || 
+                                extractedData.simplified || 
+                                extractedData.fields ||
+                                extractedData.normalized;
+        
+        if (hasPassportData) {
+            console.log('🔍 Formatting passport data for user:', { 
+                isAdmin, 
+                documentId: doc.id, 
+                fileType: doc.file_type,
+                hasPassport: !!extractedData.passport,
+                hasSimplified: !!extractedData.simplified,
+                hasFields: !!extractedData.fields,
+                hasNormalized: !!extractedData.normalized,
+                extractedData 
+            });
             const passportHtml = formatPassportData(extractedData, isAdmin, doc.id);
+            console.log('🔍 Passport HTML result:', passportHtml ? 'HTML generated' : 'Empty HTML');
             if (passportHtml) {
                 html += passportHtml;
             }
@@ -670,6 +844,67 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+// ==================== IMAGE MODAL ====================
+
+// Image Modal funksiyasi (rasmni kattalashtirish uchun)
+function openImageModal(imageUrl) {
+    console.log('Opening image modal with URL:', imageUrl);
+    
+    // Modal yaratish yoki mavjud modal'ni ishlatish
+    let modal = document.getElementById('imageModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'imageModal';
+        modal.className = 'modal-overlay';
+        modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center; z-index: 2000;';
+        modal.innerHTML = `
+            <div class="image-modal-content" style="position: relative; max-width: 90vw; max-height: 90vh; background: white; border-radius: 12px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+                <button onclick="closeImageModal()" style="position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.5); color: white; border: none; border-radius: 50%; width: 35px; height: 35px; font-size: 1.5em; cursor: pointer; z-index: 10; transition: background 0.3s;">&times;</button>
+                <img src="" alt="Document Image" style="max-width: 100%; max-height: 85vh; border-radius: 8px; display: block; margin: 0 auto;">
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+    
+    // Rasm URL'ni yangilash
+    const img = modal.querySelector('img');
+    if (img) {
+        img.src = imageUrl;
+        img.onerror = function() {
+            this.style.display = 'none';
+            const errorDiv = document.createElement('div');
+            errorDiv.style.cssText = 'padding: 40px; text-align: center; color: #999;';
+            errorDiv.innerHTML = '<p>이미지를 불러올 수 없습니다</p><p style="font-size: 0.85em; margin-top: 10px;">URL: ' + imageUrl + '</p>';
+            modal.querySelector('.image-modal-content').appendChild(errorDiv);
+        };
+    }
+    
+    modal.style.display = 'flex';
+    
+    // Modal tashqarisiga bosilganda yopish
+    modal.onclick = (e) => {
+        if (e.target === modal) {
+            closeImageModal();
+        }
+    };
+    
+    // ESC tugmasi bilan yopish
+    const escHandler = (e) => {
+        if (e.key === 'Escape') {
+            closeImageModal();
+            document.removeEventListener('keydown', escHandler);
+        }
+    };
+    document.addEventListener('keydown', escHandler);
+}
+
+function closeImageModal() {
+    const modal = document.getElementById('imageModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
 }
 
 // ==================== PII MASKING FUNCTIONS ====================
@@ -792,9 +1027,47 @@ function formatPassportData(extractedData, isAdmin = false, documentId = null) {
         return cleanedLines.join(' ').trim();
     };
     
+    // Helper function: confidence score'ni olish
+    const getFieldConfidence = (fieldName, altNames = []) => {
+        for (const name of [fieldName, ...altNames]) {
+            if (fields[name] && typeof fields[name] === 'object' && fields[name].confidence !== undefined) {
+                return fields[name].confidence;
+            }
+        }
+        return null;
+    };
+    
+    // Helper function: confidence rangini aniqlash
+    const getConfidenceColor = (confidence) => {
+        if (!confidence) return 'gray';
+        if (confidence >= 95) return 'green';
+        if (confidence >= 90) return 'yellow';
+        return 'red';
+    };
+    
+    // Helper function: Kirill harflarni transliteratsiya qilish (masalan, АХМЕДОВ -> AKHMEDOV)
+    const transliterate = (text) => {
+        if (!text || typeof text !== 'string') return '';
+        
+        const translitMap = {
+            'А': 'A', 'Б': 'B', 'В': 'V', 'Г': 'G', 'Д': 'D', 'Е': 'E', 'Ё': 'YO',
+            'Ж': 'ZH', 'З': 'Z', 'И': 'I', 'Й': 'Y', 'К': 'K', 'Л': 'L', 'М': 'M',
+            'Н': 'N', 'О': 'O', 'П': 'P', 'Р': 'R', 'С': 'S', 'Т': 'T', 'У': 'U',
+            'Ф': 'F', 'Х': 'KH', 'Ц': 'TS', 'Ч': 'CH', 'Ш': 'SH', 'Щ': 'SHCH',
+            'Ъ': '', 'Ы': 'Y', 'Ь': '', 'Э': 'E', 'Ю': 'YU', 'Я': 'YA',
+            'Қ': 'Q', 'Ғ': 'GH', 'Ҳ': 'H', 'Ў': 'O\'', 'Ң': 'NG'
+        };
+        
+        return text.split('').map(char => {
+            const upper = char.toUpperCase();
+            return translitMap[upper] || (upper === char ? char : char.toUpperCase());
+        }).join('');
+    };
+    
     // Helper function: field value'ni olish va tozalash
-    const getFieldValue = (fieldName, altNames = []) => {
+    const getFieldValue = (fieldName, altNames = [], includeTranslit = false) => {
         let rawValue = '';
+        let confidence = null;
         
         // Normalized format
         if (normalized[fieldName]) {
@@ -814,6 +1087,7 @@ function formatPassportData(extractedData, isAdmin = false, documentId = null) {
                 if (fields[name]) {
                     if (typeof fields[name] === 'object' && fields[name].value !== undefined) {
                         rawValue = fields[name].value;
+                        confidence = fields[name].confidence;
                         break;
                     } else if (typeof fields[name] === 'string') {
                         rawValue = fields[name];
@@ -824,18 +1098,87 @@ function formatPassportData(extractedData, isAdmin = false, documentId = null) {
         }
         
         // Tozalash
-        return cleanFieldValue(rawValue);
+        const cleaned = cleanFieldValue(rawValue);
+        
+        // Auto-formatting: UPPERCASE (pasport standarti)
+        const formatted = cleaned ? cleaned.toUpperCase().trim() : '';
+        
+        // Transliteratsiya qo'shish (masalan, АХМЕДОВ (AKHMEDOV))
+        if (includeTranslit && formatted) {
+            const translit = transliterate(formatted);
+            if (translit && translit !== formatted) {
+                return `${formatted} (${translit})`;
+            }
+        }
+        
+        return formatted;
     };
     
-    // Ma'lumotlarni topish (barcha variantlarni tekshirish)
-    let surname = getFieldValue('surname', ['familiya']);
-    let givenName = getFieldValue('given_name', ['given_names', 'ism']);
+    // Ma'lumotlarni topish (barcha variantlarni tekshirish) - transliteratsiya bilan
+    // Debug: extractedData'ni tekshirish
+    console.log('🔍 formatPassportData - extractedData:', {
+        'hasPassport': !!extractedData.passport,
+        'hasSimplified': !!extractedData.simplified,
+        'hasFields': !!extractedData.fields,
+        'hasNormalized': !!extractedData.normalized,
+        'fields keys': extractedData.fields ? Object.keys(extractedData.fields) : [],
+        'normalized keys': extractedData.normalized ? Object.keys(extractedData.normalized) : []
+    });
+    
+    let surname = getFieldValue('surname', ['familiya'], true); // includeTranslit = true
+    let givenName = getFieldValue('given_name', ['given_names', 'ism'], true);
+    let patronymic = getFieldValue('patronymic', ['otasining_ismi'], true);
     let passportNo = getFieldValue('passport_no', ['passport_number', 'passport_raqami']);
     let dateOfBirth = getFieldValue('date_of_birth', ['dob', 'tugilgan_sanasi']);
     let dateOfIssue = getFieldValue('date_of_issue', ['issue_date', 'berilgan_vaqti']);
     let dateOfExpiry = getFieldValue('date_of_expiry', ['expiry', 'amal_qilish_muddati']);
     let nationality = getFieldValue('nationality', ['millati']);
     let sex = getFieldValue('sex', ['jinsi']);
+    let placeOfBirth = getFieldValue('place_of_birth', ['tugilgan_joyi']);
+    let authority = getFieldValue('authority', ['kim_tomonidan_berilgan']);
+    
+    // Debug: topilgan ma'lumotlarni ko'rsatish
+    console.log('🔍 formatPassportData - extracted values:', {
+        surname, givenName, patronymic, passportNo,
+        dateOfBirth, dateOfIssue, dateOfExpiry,
+        nationality, sex, placeOfBirth, authority
+    });
+    
+    // Confidence score'larni olish
+    const surnameConfidence = getFieldConfidence('surname', ['familiya']);
+    const givenNameConfidence = getFieldConfidence('given_name', ['given_names', 'ism']);
+    const patronymicConfidence = getFieldConfidence('patronymic', ['otasining_ismi']);
+    const passportNoConfidence = getFieldConfidence('passport_no', ['passport_number', 'passport_raqami']);
+    const dateOfBirthConfidence = getFieldConfidence('date_of_birth', ['dob', 'tugilgan_sanasi']);
+    const dateOfIssueConfidence = getFieldConfidence('date_of_issue', ['issue_date', 'berilgan_vaqti']);
+    const dateOfExpiryConfidence = getFieldConfidence('date_of_expiry', ['expiry', 'amal_qilish_muddati']);
+    const nationalityConfidence = getFieldConfidence('nationality', ['millati']);
+    const sexConfidence = getFieldConfidence('sex', ['jinsi']);
+    const placeOfBirthConfidence = getFieldConfidence('place_of_birth', ['tugilgan_joyi']);
+    const authorityConfidence = getFieldConfidence('authority', ['kim_tomonidan_berilgan']);
+    
+    // Amal qilish muddatini tekshirish
+    const isExpired = (() => {
+        if (!dateOfExpiry) return false;
+        try {
+            // DateOfExpiry format: "2009-06-15" yoki "15.06.2009"
+            let expiryDate;
+            if (dateOfExpiry.includes('-')) {
+                expiryDate = new Date(dateOfExpiry);
+            } else if (dateOfExpiry.includes('.')) {
+                const parts = dateOfExpiry.split('.');
+                if (parts.length === 3) {
+                    expiryDate = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+                }
+            }
+            if (expiryDate && !isNaN(expiryDate.getTime())) {
+                return expiryDate < new Date();
+            }
+        } catch (e) {
+            console.error('Date parsing error:', e);
+        }
+        return false;
+    })();
     
     // Agar ma'lumotlar bo'sh bo'lsa, qaytarish
     // Lekin to'liq bo'lmasa ham, mavjud ma'lumotlarni ko'rsatish
@@ -845,6 +1188,39 @@ function formatPassportData(extractedData, isAdmin = false, documentId = null) {
     }
     
     // Mask qilish (admin bo'lmasa va allaqachon mask qilinmagan bo'lsa)
+    // Helper: mask qilinganini tekshirish
+    const isAlreadyMasked = (value) => {
+        if (!value || typeof value !== 'string') return false;
+        return value.includes('*') || value.includes('X') || /[A-Z]{2}\*+[A-Z]/.test(value);
+    };
+    
+    // Helper: surname mask qilish
+    const maskSurname = (value, admin, alreadyMasked) => {
+        if (admin || alreadyMasked) return value;
+        if (!value || value.length < 3) return value;
+        const first = value.substring(0, 2);
+        const last = value.substring(value.length - 1);
+        return first + '*'.repeat(Math.max(0, value.length - 3)) + last;
+    };
+    
+    // Helper: given name mask qilish
+    const maskGivenName = (value, admin, alreadyMasked) => {
+        if (admin || alreadyMasked) return value;
+        if (!value || value.length < 3) return value;
+        const first = value.substring(0, 2);
+        const last = value.substring(value.length - 1);
+        return first + '*'.repeat(Math.max(0, value.length - 3)) + last;
+    };
+    
+    // Helper: passport number mask qilish
+    const maskPassportNumber = (value, admin, alreadyMasked) => {
+        if (admin || alreadyMasked) return value;
+        if (!value || value.length < 4) return value;
+        const first = value.substring(0, 2);
+        const last = value.substring(value.length - 2);
+        return first + '*'.repeat(Math.max(0, value.length - 4)) + last;
+    };
+    
     const surnameMasked = isAlreadyMasked(surname);
     const givenNameMasked = isAlreadyMasked(givenName);
     const passportNoMasked = isAlreadyMasked(passportNo);
@@ -853,80 +1229,192 @@ function formatPassportData(extractedData, isAdmin = false, documentId = null) {
     const maskedGivenName = givenName ? maskGivenName(String(givenName), isAdmin, givenNameMasked) : '';
     const maskedPassportNo = passportNo ? maskPassportNumber(String(passportNo), isAdmin, passportNoMasked) : '';
     
+    // Helper function: confidence indicator yaratish
+    const getConfidenceIndicator = (confidence) => {
+        if (!confidence) return '';
+        const color = getConfidenceColor(confidence);
+        const colorClass = `confidence-${color}`;
+        return `<span class="confidence-indicator ${colorClass}" title="신뢰도: ${confidence}%"></span>`;
+    };
+    
+    // Helper function: sana formatini yaxshilash (kalendar uchun)
+    const formatDateForInput = (dateStr) => {
+        if (!dateStr) return '';
+        try {
+            let date;
+            if (dateStr.includes('-')) {
+                date = new Date(dateStr);
+            } else if (dateStr.includes('.')) {
+                const parts = dateStr.split('.');
+                if (parts.length === 3) {
+                    date = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+                }
+            }
+            if (date && !isNaN(date.getTime())) {
+                return date.toISOString().split('T')[0]; // YYYY-MM-DD format
+            }
+        } catch (e) {
+            console.error('Date formatting error:', e);
+        }
+        return dateStr;
+    };
+    
     let html = `
         <div class="passport-section">
             <h3>여권 정보</h3>
             <div class="passport-data-grid">
     `;
     
+    // Shaxsiy ma'lumotlar
     if (surname) {
+        const confInd = getConfidenceIndicator(surnameConfidence);
         html += `
             <div class="passport-field">
-                <span class="field-label">성 (Фамилия):</span>
-                <span class="field-value ${!isAdmin && surname ? 'masked' : ''}">${maskedSurname || '-'}</span>
+                <div class="field-label-row">
+                    <span class="field-label">성 (Фамилия):</span>
+                    ${confInd}
+                </div>
+                <span class="field-value ${!isAdmin && surname ? 'masked' : ''}">${maskedSurname || surname || '-'}</span>
             </div>
         `;
     }
     
     if (givenName) {
+        const confInd = getConfidenceIndicator(givenNameConfidence);
         html += `
             <div class="passport-field">
-                <span class="field-label">이름 (Исм):</span>
-                <span class="field-value ${!isAdmin && givenName ? 'masked' : ''}">${maskedGivenName || '-'}</span>
+                <div class="field-label-row">
+                    <span class="field-label">이름 (Исм):</span>
+                    ${confInd}
+                </div>
+                <span class="field-value ${!isAdmin && givenName ? 'masked' : ''}">${maskedGivenName || givenName || '-'}</span>
             </div>
         `;
     }
     
-    if (passportNo) {
+    if (patronymic) {
+        const confInd = getConfidenceIndicator(patronymicConfidence);
         html += `
             <div class="passport-field">
-                <span class="field-label">여권 번호:</span>
-                <span class="field-value ${!isAdmin && passportNo ? 'masked' : ''}">${maskedPassportNo || '-'}</span>
+                <div class="field-label-row">
+                    <span class="field-label">부칭 (Отасининг исми):</span>
+                    ${confInd}
+                </div>
+                <span class="field-value">${patronymic || '-'}</span>
             </div>
         `;
     }
     
     if (dateOfBirth) {
+        const confInd = getConfidenceIndicator(dateOfBirthConfidence);
+        const dateInputValue = formatDateForInput(dateOfBirth);
         html += `
             <div class="passport-field">
-                <span class="field-label">생년월일:</span>
-                <span class="field-value">${dateOfBirth || '-'}</span>
+                <div class="field-label-row">
+                    <span class="field-label">생년월일:</span>
+                    ${confInd}
+                </div>
+                <input type="date" class="date-input" value="${dateInputValue}" readonly style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background: #f8f9fa;">
+                <span class="field-value" style="margin-top: 5px; font-size: 0.9em; color: #666;">${dateOfBirth}</span>
+            </div>
+        `;
+    }
+    
+    if (passportNo) {
+        const confInd = getConfidenceIndicator(passportNoConfidence);
+        html += `
+            <div class="passport-field">
+                <div class="field-label-row">
+                    <span class="field-label">여권 번호:</span>
+                    ${confInd}
+                </div>
+                <span class="field-value ${!isAdmin && passportNo ? 'masked' : ''}">${maskedPassportNo || passportNo || '-'}</span>
             </div>
         `;
     }
     
     if (dateOfIssue) {
+        const confInd = getConfidenceIndicator(dateOfIssueConfidence);
+        const dateInputValue = formatDateForInput(dateOfIssue);
         html += `
             <div class="passport-field">
-                <span class="field-label">발급일:</span>
-                <span class="field-value">${dateOfIssue || '-'}</span>
+                <div class="field-label-row">
+                    <span class="field-label">발급일:</span>
+                    ${confInd}
+                </div>
+                <input type="date" class="date-input" value="${dateInputValue}" readonly style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background: #f8f9fa;">
+                <span class="field-value" style="margin-top: 5px; font-size: 0.9em; color: #666;">${dateOfIssue}</span>
             </div>
         `;
     }
     
     if (dateOfExpiry) {
+        const confInd = getConfidenceIndicator(dateOfExpiryConfidence);
+        const dateInputValue = formatDateForInput(dateOfExpiry);
+        const expiredClass = isExpired ? 'expired-warning' : '';
         html += `
-            <div class="passport-field">
-                <span class="field-label">만료일:</span>
-                <span class="field-value">${dateOfExpiry || '-'}</span>
+            <div class="passport-field ${expiredClass}">
+                <div class="field-label-row">
+                    <span class="field-label">만료일:</span>
+                    ${confInd}
+                </div>
+                <input type="date" class="date-input" value="${dateInputValue}" readonly style="width: 100%; padding: 8px; border: 1px solid ${isExpired ? '#ef4444' : '#ddd'}; border-radius: 4px; background: ${isExpired ? '#fee2e2' : '#f8f9fa'};">
+                <span class="field-value" style="margin-top: 5px; font-size: 0.9em; color: ${isExpired ? '#ef4444' : '#666'};">
+                    ${dateOfExpiry}
+                    ${isExpired ? '<span style="color: #ef4444; font-weight: bold;"> ⚠️ 만료됨</span>' : ''}
+                </span>
             </div>
         `;
     }
     
     if (nationality) {
+        const confInd = getConfidenceIndicator(nationalityConfidence);
         html += `
             <div class="passport-field">
-                <span class="field-label">국적:</span>
+                <div class="field-label-row">
+                    <span class="field-label">국적:</span>
+                    ${confInd}
+                </div>
                 <span class="field-value">${nationality || '-'}</span>
             </div>
         `;
     }
     
     if (sex) {
+        const confInd = getConfidenceIndicator(sexConfidence);
         html += `
             <div class="passport-field">
-                <span class="field-label">성별:</span>
+                <div class="field-label-row">
+                    <span class="field-label">성별:</span>
+                    ${confInd}
+                </div>
                 <span class="field-value">${sex || '-'}</span>
+            </div>
+        `;
+    }
+    
+    if (placeOfBirth) {
+        const confInd = getConfidenceIndicator(placeOfBirthConfidence);
+        html += `
+            <div class="passport-field">
+                <div class="field-label-row">
+                    <span class="field-label">출생지:</span>
+                    ${confInd}
+                </div>
+                <span class="field-value">${placeOfBirth || '-'}</span>
+            </div>
+        `;
+    }
+    
+    if (authority) {
+        const confInd = getConfidenceIndicator(authorityConfidence);
+        html += `
+            <div class="passport-field" style="grid-column: 1 / -1;">
+                <div class="field-label-row">
+                    <span class="field-label">발급 기관:</span>
+                    ${confInd}
+                </div>
+                <textarea class="authority-textarea" readonly style="width: 100%; min-height: 80px; padding: 10px; border: 1px solid #ddd; border-radius: 4px; background: #f8f9fa; resize: vertical;">${authority || '-'}</textarea>
             </div>
         `;
     }
@@ -942,12 +1430,105 @@ function formatPassportData(extractedData, isAdmin = false, documentId = null) {
         `;
     }
     
+    // "Tasdiqlayman" va "Qayta skanerlash" tugmalari
     html += `
+            </div>
+            <div class="passport-actions" style="margin-top: 30px; display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+                <button class="btn-success" onclick="confirmPassportData(${documentId})" style="padding: 12px 30px;">
+                    ✓ 확인 (Tasdiqlayman)
+                </button>
+                <button class="btn-warning" onclick="reprocessDocument(${documentId})" style="padding: 12px 30px;">
+                    🔄 다시 스캔 (Qayta skanerlash)
+                </button>
             </div>
         </div>
     `;
     
     return html;
+}
+
+// ==================== PASSPORT ACTIONS ====================
+
+async function confirmPassportData(documentId) {
+    if (!confirm('모든 정보가 정확한지 확인하셨습니까? (Barcha ma\'lumotlar to\'g\'riligiga ishonch hosil qildingizmi?)\n\n문서가 관리자에게 전송됩니다. (Hujjat admin\'ga yuboriladi.)')) {
+        return;
+    }
+    
+    try {
+        const userRole = localStorage.getItem('user_role') || 'user';
+        const token = localStorage.getItem('token');
+        const username = localStorage.getItem('username') || 'user';
+        
+        // Document'ni admin'ga yuborish uchun status va metadata'ni yangilash
+        const response = await fetch(`${API_BASE_URL}/ocr/documents/${documentId}?user_role=${userRole}`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                // Status'ni "pending" holatiga o'zgartirish (admin ko'rib chiqishi uchun)
+                status: 'pending',
+                // Metadata'da flag qo'yish
+                metadata: {
+                    submitted_for_review: true,
+                    submitted_at: new Date().toISOString(),
+                    submitted_by: username,
+                    confirmed: true,
+                    confirmed_at: new Date().toISOString()
+                }
+            })
+        });
+        
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.detail || '확인 오류');
+        }
+        
+        alert('문서가 성공적으로 확인되었습니다!\n관리자가 검토할 때까지 기다려주세요.\n\n(Hujjat muvaffaqiyatli tasdiqlandi! Admin ko\'rib chiqishini kutib turing.)');
+        
+        // Document'ni qayta yuklash
+        await viewDocument(documentId);
+        
+    } catch (error) {
+        console.error('확인 오류:', error);
+        alert('확인 중 오류가 발생했습니다: ' + error.message);
+    }
+}
+
+async function reprocessDocument(documentId) {
+    if (!confirm('이 문서를 다시 스캔하시겠습니까? (Bu hujjatni qayta skanerlashni xohlaysizmi?)')) {
+        return;
+    }
+    
+    try {
+        const userRole = localStorage.getItem('user_role') || 'user';
+        const token = localStorage.getItem('token');
+        
+        // Document'ni qayta ishlash
+        const response = await fetch(`${API_BASE_URL}/ocr/documents/${documentId}/reprocess?user_role=${userRole}`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.detail || '재처리 오류');
+        }
+        
+        alert('문서가 다시 스캔되었습니다! 잠시 후 새로고침됩니다.');
+        
+        // 2 soniyadan keyin document'ni qayta yuklash
+        setTimeout(async () => {
+            await viewDocument(documentId);
+        }, 2000);
+        
+    } catch (error) {
+        console.error('재처리 오류:', error);
+        alert('재처리 중 오류가 발생했습니다: ' + error.message);
+    }
 }
 
 // ==================== EDIT PASSPORT ====================
@@ -969,7 +1550,8 @@ function openEditPassportModal(documentId) {
 function closeEditPassportModal() {
     const modal = document.getElementById('editPassportModal');
     modal.style.display = 'none';
-    currentEditingDocumentId = null;
+    // currentEditingDocumentId'ni faqat modal yopilganda tozalash
+    // savePassportData'da viewDocument chaqirilgandan keyin tozalanadi
 }
 
 async function loadDocumentForEdit(documentId) {
@@ -1050,15 +1632,80 @@ async function loadDocumentForEdit(documentId) {
             return cleanFieldValue(rawValue);
         };
         
-        // Form'ni to'ldirish (tozalangan qiymatlar bilan)
-        document.getElementById('editSurname').value = getFieldValue('surname', ['familiya']) || '';
-        document.getElementById('editGivenName').value = getFieldValue('given_name', ['given_names', 'ism']) || '';
+        // Form'ni to'ldirish (to'liq, mask qilinmagan ma'lumotlar bilan)
+        // Edit rejimida: to'liq ma'lumotlarni ko'rsatish
+        const surnameField = fields.surname || fields.familiya;
+        const givenNameField = fields.given_name || fields.given_names || fields.ism;
+        
+        // Original qiymatlarni olish (mask qilinmagan)
+        let fullSurname = '';
+        let fullGivenName = '';
+        
+        if (surnameField) {
+            if (typeof surnameField === 'object' && surnameField.value) {
+                fullSurname = cleanFieldValue(surnameField.value);
+            } else if (typeof surnameField === 'string') {
+                fullSurname = cleanFieldValue(surnameField);
+            }
+        }
+        
+        if (givenNameField) {
+            if (typeof givenNameField === 'object' && givenNameField.value) {
+                fullGivenName = cleanFieldValue(givenNameField.value);
+            } else if (typeof givenNameField === 'string') {
+                fullGivenName = cleanFieldValue(givenNameField);
+            }
+        }
+        
+        // Agar hali ham bo'sh bo'lsa, boshqa formatlardan olish
+        if (!fullSurname) {
+            fullSurname = getFieldValue('surname', ['familiya']) || '';
+        }
+        if (!fullGivenName) {
+            fullGivenName = getFieldValue('given_name', ['given_names', 'ism']) || '';
+        }
+        
+        // Place of Birth va Authority maydonlarini to'g'ridan-to'g'ri olish (unmasked)
+        const placeOfBirthField = fields.place_of_birth || fields.tugilgan_joyi;
+        const authorityField = fields.authority || fields.kim_tomonidan_berilgan;
+        
+        let fullPlaceOfBirth = '';
+        let fullAuthority = '';
+        
+        if (placeOfBirthField) {
+            if (typeof placeOfBirthField === 'object' && placeOfBirthField.value) {
+                fullPlaceOfBirth = cleanFieldValue(placeOfBirthField.value);
+            } else if (typeof placeOfBirthField === 'string') {
+                fullPlaceOfBirth = cleanFieldValue(placeOfBirthField);
+            }
+        }
+        
+        if (authorityField) {
+            if (typeof authorityField === 'object' && authorityField.value) {
+                fullAuthority = cleanFieldValue(authorityField.value);
+            } else if (typeof authorityField === 'string') {
+                fullAuthority = cleanFieldValue(authorityField);
+            }
+        }
+        
+        // Agar hali ham bo'sh bo'lsa, boshqa formatlardan olish
+        if (!fullPlaceOfBirth) {
+            fullPlaceOfBirth = getFieldValue('place_of_birth', ['tugilgan_joyi']) || '';
+        }
+        if (!fullAuthority) {
+            fullAuthority = getFieldValue('authority', ['kim_tomonidan_berilgan']) || '';
+        }
+        
+        document.getElementById('editSurname').value = fullSurname;
+        document.getElementById('editGivenName').value = fullGivenName;
         document.getElementById('editPassportNo').value = getFieldValue('passport_no', ['passport_number', 'passport_raqami']) || '';
         document.getElementById('editDateOfBirth').value = getFieldValue('date_of_birth', ['dob', 'tugilgan_sanasi']) || '';
         document.getElementById('editDateOfIssue').value = getFieldValue('date_of_issue', ['issue_date', 'berilgan_vaqti']) || '';
         document.getElementById('editDateOfExpiry').value = getFieldValue('date_of_expiry', ['expiry', 'amal_qilish_muddati']) || '';
         document.getElementById('editNationality').value = getFieldValue('nationality', ['millati']) || '';
         document.getElementById('editSex').value = getFieldValue('sex', ['jinsi']) || '';
+        document.getElementById('editPlaceOfBirth').value = fullPlaceOfBirth;
+        document.getElementById('editAuthority').value = fullAuthority;
         
     } catch (error) {
         console.error('Document yuklash xatosi:', error);
@@ -1075,47 +1722,174 @@ async function savePassportData() {
     const errorDiv = document.getElementById('editPassportError');
     errorDiv.style.display = 'none';
     
+    // Avvalgi ma'lumotlarni olish (solishtirish uchun)
+    const userRole = localStorage.getItem('user_role') || 'user';
+    const originalDoc = await apiCall(`/ocr/documents/${currentEditingDocumentId}?user_role=${userRole}`);
+    const originalData = originalDoc.extracted_data || {};
+    const originalFields = originalData.fields || {};
+    
+    // Mavjud extracted_data'ni saqlab qolish (passport, simplified, normalized va boshqalar)
+    // Faqat fields qismini yangilaymiz
+    const existingExtractedData = { ...originalData };
+    
     // Form ma'lumotlarini yig'ish
-    const updatedData = {
-        fields: {
-            surname: {
-                value: document.getElementById('editSurname').value.trim(),
-                confidence: 100.0
-            },
-            given_names: {
-                value: document.getElementById('editGivenName').value.trim(),
-                confidence: 100.0
-            },
-            passport_number: {
-                value: document.getElementById('editPassportNo').value.trim(),
-                confidence: 100.0
-            },
-            date_of_birth: {
-                value: document.getElementById('editDateOfBirth').value.trim(),
-                confidence: 100.0
-            },
-            date_of_issue: {
-                value: document.getElementById('editDateOfIssue').value.trim(),
-                confidence: 100.0
-            },
-            date_of_expiry: {
-                value: document.getElementById('editDateOfExpiry').value.trim(),
-                confidence: 100.0
-            },
-            nationality: {
-                value: document.getElementById('editNationality').value.trim(),
-                confidence: 100.0
-            },
-            sex: {
-                value: document.getElementById('editSex').value.trim(),
-                confidence: 100.0
+    const userEditedData = {
+        surname: document.getElementById('editSurname').value.trim(),
+        given_name: document.getElementById('editGivenName').value.trim(),
+        passport_no: document.getElementById('editPassportNo').value.trim(),
+        date_of_birth: document.getElementById('editDateOfBirth').value.trim(),
+        date_of_issue: document.getElementById('editDateOfIssue').value.trim(),
+        date_of_expiry: document.getElementById('editDateOfExpiry').value.trim(),
+        nationality: document.getElementById('editNationality').value.trim(),
+        sex: document.getElementById('editSex').value.trim(),
+        place_of_birth: document.getElementById('editPlaceOfBirth').value.trim(),
+        authority: document.getElementById('editAuthority').value.trim()
+    };
+    
+    // is_edited flag'ni aniqlash - foydalanuvchi biror maydonni o'zgartirganmi?
+    let isEdited = false;
+    const fieldMappings = {
+        surname: ['surname', 'familiya'],
+        given_name: ['given_name', 'given_names', 'ism'],
+        passport_no: ['passport_no', 'passport_number', 'passport_raqami'],
+        date_of_birth: ['date_of_birth', 'dob', 'tugilgan_sanasi'],
+        date_of_issue: ['date_of_issue', 'issue_date', 'berilgan_vaqti'],
+        date_of_expiry: ['date_of_expiry', 'expiry', 'amal_qilish_muddati'],
+        nationality: ['nationality', 'millati'],
+        sex: ['sex', 'jinsi'],
+        place_of_birth: ['place_of_birth', 'tugilgan_joyi'],
+        authority: ['authority', 'kim_tomonidan_berilgan']
+    };
+    
+    // Har bir maydonni solishtirish
+    for (const [userField, fieldAliases] of Object.entries(fieldMappings)) {
+        const userValue = userEditedData[userField];
+        if (!userValue) continue;
+        
+        // Original qiymatni topish
+        let originalValue = null;
+        for (const fieldAlias of fieldAliases) {
+            // originalFields bu extracted_data.fields object'i
+            if (originalFields[fieldAlias]) {
+                if (typeof originalFields[fieldAlias] === 'object' && originalFields[fieldAlias].value !== undefined) {
+                    originalValue = originalFields[fieldAlias].value;
+                    break;
+                } else if (typeof originalFields[fieldAlias] === 'string') {
+                    originalValue = originalFields[fieldAlias];
+                    break;
+                }
             }
+        }
+        
+        // Agar original qiymat topilgan bo'lsa va o'zgargan bo'lsa
+        if (originalValue && String(userValue).trim().toUpperCase() !== String(originalValue).trim().toUpperCase()) {
+            isEdited = true;
+            break;
+        }
+    }
+    
+    // Updated data - mavjud extracted_data'ni saqlab qolish va faqat fields'ni yangilash
+    const updatedFields = {
+        ...originalFields,  // Mavjud fields'larni saqlab qolish
+        // Yangilangan maydonlar
+        surname: {
+            value: userEditedData.surname || (originalFields.surname?.value || originalFields.familiya?.value || ''),
+            confidence: userEditedData.surname ? 100.0 : (originalFields.surname?.confidence || originalFields.familiya?.confidence || 0)
+        },
+        familiya: {
+            value: userEditedData.surname || (originalFields.familiya?.value || originalFields.surname?.value || ''),
+            confidence: userEditedData.surname ? 100.0 : (originalFields.familiya?.confidence || originalFields.surname?.confidence || 0)
+        },
+        given_names: {
+            value: userEditedData.given_name || (originalFields.given_names?.value || originalFields.ism?.value || ''),
+            confidence: userEditedData.given_name ? 100.0 : (originalFields.given_names?.confidence || originalFields.ism?.confidence || 0)
+        },
+        ism: {
+            value: userEditedData.given_name || (originalFields.ism?.value || originalFields.given_names?.value || ''),
+            confidence: userEditedData.given_name ? 100.0 : (originalFields.ism?.confidence || originalFields.given_names?.confidence || 0)
+        },
+        passport_number: {
+            value: userEditedData.passport_no || (originalFields.passport_number?.value || originalFields.passport_raqami?.value || ''),
+            confidence: userEditedData.passport_no ? 100.0 : (originalFields.passport_number?.confidence || originalFields.passport_raqami?.confidence || 0)
+        },
+        passport_raqami: {
+            value: userEditedData.passport_no || (originalFields.passport_raqami?.value || originalFields.passport_number?.value || ''),
+            confidence: userEditedData.passport_no ? 100.0 : (originalFields.passport_raqami?.confidence || originalFields.passport_number?.confidence || 0)
+        },
+        date_of_birth: {
+            value: userEditedData.date_of_birth || (originalFields.date_of_birth?.value || originalFields.tugilgan_sanasi?.value || ''),
+            confidence: userEditedData.date_of_birth ? 100.0 : (originalFields.date_of_birth?.confidence || originalFields.tugilgan_sanasi?.confidence || 0)
+        },
+        tugilgan_sanasi: {
+            value: userEditedData.date_of_birth || (originalFields.tugilgan_sanasi?.value || originalFields.date_of_birth?.value || ''),
+            confidence: userEditedData.date_of_birth ? 100.0 : (originalFields.tugilgan_sanasi?.confidence || originalFields.date_of_birth?.confidence || 0)
+        },
+        date_of_issue: {
+            value: userEditedData.date_of_issue || (originalFields.date_of_issue?.value || originalFields.berilgan_vaqti?.value || ''),
+            confidence: userEditedData.date_of_issue ? 100.0 : (originalFields.date_of_issue?.confidence || originalFields.berilgan_vaqti?.confidence || 0)
+        },
+        berilgan_vaqti: {
+            value: userEditedData.date_of_issue || (originalFields.berilgan_vaqti?.value || originalFields.date_of_issue?.value || ''),
+            confidence: userEditedData.date_of_issue ? 100.0 : (originalFields.berilgan_vaqti?.confidence || originalFields.date_of_issue?.confidence || 0)
+        },
+        date_of_expiry: {
+            value: userEditedData.date_of_expiry || (originalFields.date_of_expiry?.value || originalFields.amal_qilish_muddati?.value || ''),
+            confidence: userEditedData.date_of_expiry ? 100.0 : (originalFields.date_of_expiry?.confidence || originalFields.amal_qilish_muddati?.confidence || 0)
+        },
+        amal_qilish_muddati: {
+            value: userEditedData.date_of_expiry || (originalFields.amal_qilish_muddati?.value || originalFields.date_of_expiry?.value || ''),
+            confidence: userEditedData.date_of_expiry ? 100.0 : (originalFields.amal_qilish_muddati?.confidence || originalFields.date_of_expiry?.confidence || 0)
+        },
+        nationality: {
+            value: userEditedData.nationality || (originalFields.nationality?.value || originalFields.millati?.value || ''),
+            confidence: userEditedData.nationality ? 100.0 : (originalFields.nationality?.confidence || originalFields.millati?.confidence || 0)
+        },
+        millati: {
+            value: userEditedData.nationality || (originalFields.millati?.value || originalFields.nationality?.value || ''),
+            confidence: userEditedData.nationality ? 100.0 : (originalFields.millati?.confidence || originalFields.nationality?.confidence || 0)
+        },
+        sex: {
+            value: userEditedData.sex || (originalFields.sex?.value || originalFields.jinsi?.value || ''),
+            confidence: userEditedData.sex ? 100.0 : (originalFields.sex?.confidence || originalFields.jinsi?.confidence || 0)
+        },
+        jinsi: {
+            value: userEditedData.sex || (originalFields.jinsi?.value || originalFields.sex?.value || ''),
+            confidence: userEditedData.sex ? 100.0 : (originalFields.jinsi?.confidence || originalFields.sex?.confidence || 0)
+        },
+        place_of_birth: {
+            value: userEditedData.place_of_birth || (originalFields.place_of_birth?.value || originalFields.tugilgan_joyi?.value || ''),
+            confidence: userEditedData.place_of_birth ? 100.0 : (originalFields.place_of_birth?.confidence || originalFields.tugilgan_joyi?.confidence || 0)
+        },
+        tugilgan_joyi: {
+            value: userEditedData.place_of_birth || (originalFields.tugilgan_joyi?.value || originalFields.place_of_birth?.value || ''),
+            confidence: userEditedData.place_of_birth ? 100.0 : (originalFields.tugilgan_joyi?.confidence || originalFields.place_of_birth?.confidence || 0)
+        },
+        authority: {
+            value: userEditedData.authority || (originalFields.authority?.value || originalFields.kim_tomonidan_berilgan?.value || ''),
+            confidence: userEditedData.authority ? 100.0 : (originalFields.authority?.confidence || originalFields.kim_tomonidan_berilgan?.confidence || 0)
+        },
+        kim_tomonidan_berilgan: {
+            value: userEditedData.authority || (originalFields.kim_tomonidan_berilgan?.value || originalFields.authority?.value || ''),
+            confidence: userEditedData.authority ? 100.0 : (originalFields.kim_tomonidan_berilgan?.confidence || originalFields.authority?.confidence || 0)
         }
     };
     
+    // Mavjud extracted_data'ni saqlab qolish va faqat fields'ni yangilash
+    const updatedData = {
+        ...existingExtractedData,  // Mavjud barcha ma'lumotlarni saqlash (passport, simplified, normalized, va boshqalar)
+        fields: updatedFields  // Faqat fields'ni yangilash
+    };
+    
     try {
-        const userRole = localStorage.getItem('user_role') || 'user';
         const token = localStorage.getItem('token');
+        
+        // Debug: yuborilayotgan ma'lumotlarni ko'rsatish
+        console.log('🔍 savePassportData - Sending data to backend:', {
+            documentId: currentEditingDocumentId,
+            updatedData: updatedData,
+            userEditedData: userEditedData,
+            isEdited: isEdited
+        });
         
         const response = await fetch(`${API_BASE_URL}/ocr/documents/${currentEditingDocumentId}?user_role=${userRole}`, {
             method: 'PATCH',
@@ -1124,21 +1898,45 @@ async function savePassportData() {
                 'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify({
-                extracted_data: updatedData
+                extracted_data: updatedData,
+                user_edited_data: userEditedData,  // Foydalanuvchi tahrirlagan ma'lumotlar
+                is_edited: isEdited  // Flag - o'zgartirilganmi?
             })
         });
         
         if (!response.ok) {
             const error = await response.json();
+            console.error('❌ Backend error:', error);
             throw new Error(error.detail || '저장 오류');
         }
         
+        const responseData = await response.json();
+        console.log('✅ Backend response:', responseData);
+        
         // Muvaffaqiyatli saqlandi
         alert('문서가 성공적으로 저장되었습니다!');
-        closeEditPassportModal();
         
-        // Document'ni qayta yuklash
-        await viewDocument(currentEditingDocumentId);
+        // Document ID'ni saqlab qolish
+        const savedDocumentId = currentEditingDocumentId;
+        
+        // Modal'ni yopish (lekin ID'ni tozalamaymiz, chunki viewDocument uchun kerak)
+        const modal = document.getElementById('editPassportModal');
+        modal.style.display = 'none';
+        
+        // Document'ni qayta yuklash (kutish vaqtini qo'shish, backend yangilanishini kutish uchun)
+        if (savedDocumentId) {
+            // Kichik kutish - backend yangilanishini kutish uchun
+            await new Promise(resolve => setTimeout(resolve, 500));
+            await viewDocument(savedDocumentId);
+            console.log('✅ Document reloaded after save');
+        } else {
+            // Agar ID yo'qolgan bo'lsa, documents list'ga qaytish
+            showPage('documents');
+            await loadDocuments();
+        }
+        
+        // Endi ID'ni tozalash
+        currentEditingDocumentId = null;
         
     } catch (error) {
         console.error('저장 오류:', error);
@@ -1368,16 +2166,603 @@ async function loadStatistics() {
 
 async function loadAdminPanel() {
     try {
-        const username = localStorage.getItem('username') || 'admin';
-        const role = localStorage.getItem('user_role') || 'admin';
+        const userRole = localStorage.getItem('user_role') || 'admin';
         
-        // Profile ma'lumotlarini yuklash
-        document.getElementById('adminProfileUsername').value = username;
-        document.getElementById('adminProfilePhone').value = '-';
-        document.getElementById('adminProfileEmail').value = '-';
+        // Admin bo'lmasa, boshqa sahifaga o'tkazish
+        if (userRole !== 'admin') {
+            showPage('dashboard');
+            return;
+        }
+        
+        // Barcha document'larni yuklash (admin uchun)
+        await loadAdminDocuments();
         
     } catch (error) {
         console.error('Admin panel yuklash xatosi:', error);
+        const adminList = document.getElementById('adminDocumentsList');
+        if (adminList) {
+            adminList.innerHTML = `<div class="error">오류: ${error.message}</div>`;
+        }
+    }
+}
+
+// Admin document'larni yuklash
+async function loadAdminDocuments(filter = 'all') {
+    try {
+        const userRole = localStorage.getItem('user_role') || 'admin';
+        const documents = await apiCall(`/ocr/documents?skip=0&limit=100&user_role=${userRole}`);
+        
+        const adminList = document.getElementById('adminDocumentsList');
+        if (!adminList) return;
+        
+        if (documents.length === 0) {
+            adminList.innerHTML = '<div class="empty-state">대기 중인 문서가 없습니다</div>';
+            return;
+        }
+        
+        // Filter qo'llash va metadata'larni olish
+        let filteredDocs = documents.map(doc => {
+            // Metadata'dan ma'lumotlarni olish
+            const metadata = doc.extracted_data?.metadata || {};
+            doc.user_edited_data = metadata.user_edited_data || {};
+            doc.is_edited = metadata.is_edited || false;
+            // Verified status - metadata'dan yoki document status'dan
+        doc.verified = metadata.verified || false || (doc.status === 'verified');
+            doc.rejected = metadata.rejected || false;
+            doc.reprocess_count = metadata.reprocess_count || 0;
+            doc.edit_count = metadata.edit_count || 0;
+            return doc;
+        });
+        
+        if (filter === 'pending') {
+            filteredDocs = filteredDocs.filter(doc => !doc.verified && !doc.rejected);
+        } else if (filter === 'approved') {
+            filteredDocs = filteredDocs.filter(doc => doc.verified);
+        } else if (filter === 'rejected') {
+            filteredDocs = filteredDocs.filter(doc => doc.rejected);
+        }
+        
+        // Document'larni yangi birinchi tartibda
+        const sortedDocs = [...filteredDocs].sort((a, b) => {
+            if (a.created_at && b.created_at) {
+                return new Date(b.created_at) - new Date(a.created_at);
+            }
+            return (b.id || 0) - (a.id || 0);
+        });
+        
+        adminList.innerHTML = sortedDocs.map(doc => {
+            const statusClass = doc.verified ? 'approved' : doc.rejected ? 'rejected' : 'pending';
+            const statusText = doc.verified ? '승인됨' : doc.rejected ? '거부됨' : '대기 중';
+            const createdBy = doc.created_by_username || 'Unknown';
+            const createdDate = new Date(doc.created_at).toLocaleDateString('ko-KR');
+            
+            return `
+                <div class="admin-document-card ${statusClass}" onclick="viewAdminDocument(${doc.id})">
+                    <div class="admin-doc-header">
+                        <span class="admin-doc-id">문서 #${doc.id}</span>
+                        <span class="admin-doc-status status-${statusClass}">${statusText}</span>
+                    </div>
+                    <div class="admin-doc-info">
+                        <p><strong>유형:</strong> ${doc.file_type || 'N/A'}</p>
+                        <p><strong>사용자:</strong> ${createdBy}</p>
+                        <p><strong>생성일:</strong> ${createdDate}</p>
+                        <p><strong>신뢰도:</strong> ${doc.confidence || 0}%</p>
+                    </div>
+                </div>
+            `;
+        }).join('');
+        
+    } catch (error) {
+        console.error('Admin documents yuklash xatosi:', error);
+        const adminList = document.getElementById('adminDocumentsList');
+        if (adminList) {
+            adminList.innerHTML = `<div class="error">오류: ${error.message}</div>`;
+        }
+    }
+}
+
+// Filter funksiyasi
+function filterAdminDocuments(filter) {
+    // Filter button'larni active qilish
+    document.querySelectorAll('.btn-filter').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    event.target.classList.add('active');
+    
+    // Document'larni filter qilib yuklash
+    loadAdminDocuments(filter);
+}
+
+// Admin document verification view
+async function viewAdminDocument(id) {
+    try {
+        const userRole = localStorage.getItem('user_role') || 'admin';
+        const doc = await apiCall(`/ocr/documents/${id}?user_role=${userRole}`);
+        
+        const contentDiv = document.getElementById('adminVerificationContent');
+        if (!contentDiv) return;
+        
+        const extractedData = doc.extracted_data || {};
+        const fields = extractedData.fields || {};
+        const normalized = extractedData.normalized || {};
+        
+        // Original rasm URL
+        let imageUrl = null;
+        if (doc.file_path) {
+            const baseUrl = API_BASE_URL.replace('/api', '');
+            let filePath = doc.file_path;
+            if (!filePath.startsWith('uploads/') && !filePath.startsWith('/uploads/')) {
+                filePath = `uploads/${filePath}`;
+            }
+            filePath = filePath.replace(/^\/+/, '');
+            imageUrl = `${baseUrl}/${filePath}`;
+            const pathParts = imageUrl.split('/');
+            const fileName = pathParts[pathParts.length - 1];
+            const encodedFileName = encodeURIComponent(fileName);
+            pathParts[pathParts.length - 1] = encodedFileName;
+            imageUrl = pathParts.join('/');
+        }
+        
+        // Metadata'dan ma'lumotlarni olish
+        const metadata = extractedData.metadata || {};
+        doc.user_edited_data = metadata.user_edited_data || {};
+        doc.is_edited = metadata.is_edited || false;
+        
+        // Verified status - metadata'dan yoki document status'dan
+        const statusValue = doc.status?.value || doc.status || '';
+        // Verified status - metadata'dan yoki document status'dan (barcha variantlarni tekshirish)
+        const isVerified = metadata.verified === true || 
+                          metadata.verified === 'true' || 
+                          String(metadata.verified).toLowerCase() === 'true' ||
+                          statusValue === 'verified' || 
+                          statusValue === 'VERIFIED' ||
+                          String(statusValue).toLowerCase() === 'verified';
+        doc.verified = Boolean(isVerified);
+        doc.rejected = Boolean(metadata.rejected === true || false);
+        doc.reprocess_count = metadata.reprocess_count || 0;
+        doc.edit_count = metadata.edit_count || 0;
+        doc.metadata = metadata;  // Metadata'ni saqlash (verified_at, verified_by uchun)
+        
+        // Debug: verified status'ni tekshirish
+        console.log('🔍 Document verified check:', {
+            'metadata.verified': metadata.verified,
+            'metadata.verified type': typeof metadata.verified,
+            'doc.status': doc.status,
+            'statusValue': statusValue,
+            'isVerified': isVerified,
+            'doc.verified': doc.verified,
+            'doc.verified type': typeof doc.verified,
+            'doc.rejected': doc.rejected,
+            'full metadata': metadata,
+            'extractedData': extractedData
+        });
+        
+        // OCR va Edited ma'lumotlarni solishtirish
+        const comparisonData = getComparisonData(extractedData, doc);
+        
+        let html = `
+            <div class="admin-verification-container">
+                <h1>문서 검증 #${doc.id}</h1>
+                
+                <!-- Layout: Original Image (Left) + Comparison Table (Right) -->
+                <div class="admin-verification-layout">
+                    <!-- Left: Original Image -->
+                    <div class="admin-image-panel">
+                        <h3>원본 이미지 (Original Image)</h3>
+                        ${imageUrl ? `
+                            <div class="admin-image-container">
+                                <img src="${imageUrl}" 
+                                     alt="Document Image" 
+                                     onclick="openImageModal('${imageUrl}')"
+                                     style="max-width: 100%; max-height: 600px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); cursor: pointer;">
+                            </div>
+                        ` : `
+                            <div class="admin-image-placeholder">
+                                <p>이미지를 불러올 수 없습니다</p>
+                            </div>
+                        `}
+                    </div>
+                    
+                    <!-- Right: Comparison Table -->
+                    <div class="admin-comparison-panel">
+                        <h3>데이터 비교 (Data Comparison)</h3>
+                        <div class="comparison-table-container">
+                            <table class="comparison-table">
+                                <thead>
+                                    <tr>
+                                        <th>필드명</th>
+                                        <th>사용자 입력</th>
+                                        <th>OCR 결과</th>
+                                        <th>상태</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${comparisonData.map(item => `
+                                        <tr class="${item.highlighted ? 'row-highlighted' : ''} ${item.isExpired ? 'row-expired' : ''}">
+                                            <td><strong>${item.fieldName}</strong></td>
+                                            <td class="${item.highlighted ? 'cell-highlighted' : ''}">${item.userValue || '-'}</td>
+                                            <td>${item.ocrValue || '-'}</td>
+                                            <td class="${item.isExpired ? 'status-expired' : item.statusClass}">
+                                                ${item.statusIcon} ${item.statusText}
+                                            </td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Action Sidebar -->
+                <div class="admin-action-sidebar">
+                    <h3>관리 작업</h3>
+                    
+                    <!-- Document Info -->
+                    <div class="admin-doc-info-box">
+                        <p><strong>문서 ID:</strong> #${doc.id}</p>
+                        <p><strong>사용자:</strong> ${doc.created_by_username || 'Unknown'}</p>
+                        <p><strong>생성일:</strong> ${new Date(doc.created_at).toLocaleString('ko-KR')}</p>
+                        <p><strong>신뢰도:</strong> ${doc.confidence || 0}%</p>
+                        ${doc.is_edited ? '<p style="color: #0066cc; font-weight: 600;"><strong>✏️ 수정됨:</strong> 사용자가 데이터를 수정했습니다</p>' : ''}
+                        ${checkDocumentExpired(doc) ? '<p style="color: #ef4444; font-weight: 600;"><strong>⚠️ 만료됨:</strong> 문서 유효기간이 만료되었습니다</p>' : ''}
+                    </div>
+                    
+                    <!-- Log Files -->
+                    <div class="admin-log-section">
+                        <h4>로그 파일 (Log Files)</h4>
+                        <div class="log-item">
+                            <span class="log-label">업로드:</span>
+                            <span class="log-value">${new Date(doc.created_at).toLocaleString('ko-KR')}</span>
+                        </div>
+                        <div class="log-item">
+                            <span class="log-label">재스캔 횟수:</span>
+                            <span class="log-value">${doc.reprocess_count || 0}회</span>
+                        </div>
+                        <div class="log-item">
+                            <span class="log-label">수정 횟수:</span>
+                            <span class="log-value">${doc.edit_count || 0}회</span>
+                        </div>
+                    </div>
+                    
+                    <!-- User History -->
+                    <div class="admin-user-history">
+                        <h4>사용자 이력 (User History)</h4>
+                        <div id="userHistory_${doc.id}" class="user-history-list">
+                            <p class="loading-small">로딩 중...</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Action Buttons (faqat verified bo'lmagan document'lar uchun) -->
+                    ${!doc.verified && !doc.rejected ? `
+                        <div class="admin-action-buttons">
+                            <button class="btn-approve" onclick="approveDocument(${doc.id})">
+                                ✓ 승인 (Approve)
+                            </button>
+                            <button class="btn-reject" onclick="openRejectModal(${doc.id})">
+                                ✗ 거부 (Reject)
+                            </button>
+                        </div>
+                    ` : doc.verified ? `
+                        <div class="admin-verified-message">
+                            <div class="verified-badge">
+                                <span class="verified-icon">✓</span>
+                                <span class="verified-text">이 문서는 승인되었습니다 (This document has been verified)</span>
+                            </div>
+                            <p class="verified-info">승인일: ${new Date((doc.metadata && doc.metadata.verified_at) || doc.created_at).toLocaleString('ko-KR')}</p>
+                            <p class="verified-info">승인자: ${(doc.metadata && doc.metadata.verified_by) || 'Admin'}</p>
+                        </div>
+                    ` : doc.rejected ? `
+                        <div class="admin-rejected-message">
+                            <div class="rejected-badge">
+                                <span class="rejected-icon">✗</span>
+                                <span class="rejected-text">이 문서는 거부되었습니다 (This document has been rejected)</span>
+                            </div>
+                            <p class="rejected-info">거부 사유: ${(doc.metadata && doc.metadata.rejection_reason) || 'N/A'}</p>
+                            ${(doc.metadata && doc.metadata.rejection_notes) ? `<p class="rejected-info">추가 설명: ${doc.metadata.rejection_notes}</p>` : ''}
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+        
+        contentDiv.innerHTML = html;
+        showPage('adminVerification');
+        
+        // Debug: HTML'dan keyin verified status'ni tekshirish
+        console.log('🔍 After HTML generation - doc.verified:', doc.verified, 'doc.rejected:', doc.rejected);
+        console.log('🔍 Action buttons should be:', !doc.verified && !doc.rejected ? 'VISIBLE' : 'HIDDEN');
+        
+        // User history yuklash
+        loadUserHistory(doc.created_by_username, doc.id);
+        
+    } catch (error) {
+        console.error('Admin document yuklash xatosi:', error);
+        alert('문서 로드 오류: ' + error.message);
+    }
+}
+
+// Comparison data yaratish
+function getComparisonData(extractedData, doc) {
+    const fields = extractedData.fields || {};
+    const normalized = extractedData.normalized || {};
+    const comparison = [];
+    
+    // Helper: field value olish
+    const getFieldValue = (fieldName, altNames = []) => {
+        if (normalized[fieldName]) return normalized[fieldName];
+        for (const name of [fieldName, ...altNames]) {
+            if (fields[name]) {
+                if (typeof fields[name] === 'object' && fields[name].value) {
+                    return fields[name].value;
+                } else if (typeof fields[name] === 'string') {
+                    return fields[name];
+                }
+            }
+        }
+        return null;
+    };
+    
+    // Helper: status aniqlash
+    const getStatus = (userValue, ocrValue) => {
+        if (!userValue && !ocrValue) return { icon: '⚪', text: '없음', class: 'status-empty' };
+        if (!userValue || !ocrValue) return { icon: '⚠️', text: '부분', class: 'status-partial' };
+        const userClean = String(userValue).trim().toUpperCase();
+        const ocrClean = String(ocrValue).trim().toUpperCase();
+        if (userClean === ocrClean) {
+            return { icon: '✅', text: '일치', class: 'status-match' };
+        }
+        return { icon: '❌', text: '불일치', class: 'status-mismatch' };
+    };
+    
+    // Passport fields
+    const fieldsToCompare = [
+        { name: '성 (Фамилия)', field: 'surname', alt: ['familiya'] },
+        { name: '이름 (Исм)', field: 'given_name', alt: ['given_names', 'ism'] },
+        { name: '여권 번호', field: 'passport_no', alt: ['passport_number', 'passport_raqami'] },
+        { name: '생년월일', field: 'date_of_birth', alt: ['dob', 'tugilgan_sanasi'] },
+        { name: '만료일', field: 'date_of_expiry', alt: ['expiry', 'amal_qilish_muddati'] },
+        { name: '국적', field: 'nationality', alt: ['millati'] },
+    ];
+    
+    fieldsToCompare.forEach(({ name, field, alt }) => {
+        const ocrValue = getFieldValue(field, alt);
+        // User edited value (agar mavjud bo'lsa)
+        const userValue = doc.edited_data && doc.edited_data[field] ? doc.edited_data[field] : null;
+        const status = getStatus(userValue, ocrValue);
+        
+        // Muddati o'tgan tekshiruvi
+        let statusIcon = status.icon;
+        let statusText = status.text;
+        if (field === 'date_of_expiry' && ocrValue) {
+            try {
+                const expiryDate = new Date(ocrValue);
+                if (expiryDate < new Date()) {
+                    statusIcon = '❌';
+                    statusText = '만료됨';
+                }
+            } catch (e) {}
+        }
+        
+        comparison.push({
+            fieldName: name,
+            userValue: userValue || '-',
+            ocrValue: ocrValue || '-',
+            statusIcon: statusIcon,
+            statusText: statusText,
+            statusClass: status.class
+        });
+    });
+    
+    return comparison;
+}
+
+// Document muddati o'tganini tekshirish
+function checkDocumentExpired(doc) {
+    const extractedData = doc.extracted_data || {};
+    const userEditedData = doc.user_edited_data || {};
+    const fields = extractedData.fields || {};
+    
+    // Date of expiry ni topish
+    let expiryValue = userEditedData.date_of_expiry || userEditedData.date_of_expiry;
+    if (!expiryValue) {
+        const expiryField = fields.date_of_expiry || fields.expiry || fields.amal_qilish_muddati;
+        if (expiryField) {
+            expiryValue = typeof expiryField === 'object' ? expiryField.value : expiryField;
+        }
+    }
+    
+    if (!expiryValue) return false;
+    
+    try {
+        let expiryDate;
+        if (expiryValue.includes('-')) {
+            expiryDate = new Date(expiryValue);
+        } else if (expiryValue.includes('.')) {
+            const parts = expiryValue.split('.');
+            if (parts.length === 3) {
+                expiryDate = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+            }
+        }
+        if (expiryDate && !isNaN(expiryDate.getTime())) {
+            return expiryDate < new Date();
+        }
+    } catch (e) {
+        console.error('Date parsing error:', e);
+    }
+    
+    return false;
+}
+
+// User history yuklash
+async function loadUserHistory(username, currentDocId) {
+    try {
+        const userRole = localStorage.getItem('user_role') || 'admin';
+        const documents = await apiCall(`/ocr/documents?skip=0&limit=100&user_role=${userRole}`);
+        
+        const userDocs = documents.filter(doc => 
+            doc.created_by_username === username && doc.id !== currentDocId
+        );
+        
+        const historyDiv = document.getElementById(`userHistory_${currentDocId}`);
+        if (!historyDiv) return;
+        
+        if (userDocs.length === 0) {
+            historyDiv.innerHTML = '<p class="no-history">이전 문서 없음</p>';
+            return;
+        }
+        
+        historyDiv.innerHTML = userDocs.slice(0, 5).map(doc => `
+            <div class="history-item">
+                <span class="history-doc-id">문서 #${doc.id}</span>
+                <span class="history-date">${new Date(doc.created_at).toLocaleDateString('ko-KR')}</span>
+                <span class="history-status status-${doc.verified ? 'approved' : doc.rejected ? 'rejected' : 'pending'}">
+                    ${doc.verified ? '승인' : doc.rejected ? '거부' : '대기'}
+                </span>
+            </div>
+        `).join('');
+        
+    } catch (error) {
+        console.error('User history yuklash xatosi:', error);
+    }
+}
+
+// Document'ni tasdiqlash
+async function approveDocument(documentId) {
+    if (!confirm('이 문서를 승인하시겠습니까?')) {
+        return;
+    }
+    
+    try {
+        const userRole = localStorage.getItem('user_role') || 'admin';
+        const token = localStorage.getItem('token');
+        
+        const response = await fetch(`${API_BASE_URL}/ocr/documents/${documentId}/approve?user_role=${userRole}`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.detail || '승인 오류');
+        }
+        
+        // Response'dan document'ni olish
+        const result = await response.json();
+        
+        alert('문서가 성공적으로 승인되었습니다! 문서 상태가 verified로 변경되었습니다.');
+        
+        // Admin verification page'da bo'lsak, qayta yuklash
+        const currentPage = localStorage.getItem('currentPage');
+        if (currentPage === 'adminVerification') {
+            // Hozirgi document'ni qayta yuklash (force reload)
+            // Kichik delay qo'shamiz, chunki backend yangilanishi uchun vaqt kerak
+            setTimeout(async () => {
+                await viewAdminDocument(documentId);
+            }, 500);
+        } else {
+            showPage('admin');
+            loadAdminDocuments();
+        }
+        
+    } catch (error) {
+        console.error('승인 오류:', error);
+        alert('승인 중 오류가 발생했습니다: ' + error.message);
+    }
+}
+
+// Reject modal ochish
+function openRejectModal(documentId) {
+    const modal = document.getElementById('rejectModal');
+    if (!modal) {
+        // Modal yaratish
+        const rejectModal = document.createElement('div');
+        rejectModal.id = 'rejectModal';
+        rejectModal.className = 'modal-overlay';
+        rejectModal.innerHTML = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>문서 거부 (Document Rejection)</h2>
+                    <button class="modal-close-btn" onclick="closeRejectModal()">×</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>거부 사유 (Rejection Reason):</label>
+                        <select id="rejectReason" class="form-input">
+                            <option value="image_blurry">이미지 흐림 (Image Blurry)</option>
+                            <option value="document_expired">문서 만료됨 (Document Expired)</option>
+                            <option value="data_mismatch">데이터 불일치 (Data Mismatch)</option>
+                            <option value="low_confidence">낮은 신뢰도 (Low Confidence)</option>
+                            <option value="invalid_document">잘못된 문서 (Invalid Document)</option>
+                            <option value="other">기타 (Other)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>추가 설명 (Additional Notes):</label>
+                        <textarea id="rejectNotes" class="form-input" rows="4" placeholder="선택사항"></textarea>
+                    </div>
+                    <div id="rejectError" class="error" style="display: none;"></div>
+                    <div class="modal-footer">
+                        <button class="btn-secondary" onclick="closeRejectModal()">취소</button>
+                        <button class="btn-danger" onclick="rejectDocument(${documentId})">거부</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(rejectModal);
+    }
+    
+    document.getElementById('rejectModal').style.display = 'flex';
+    document.getElementById('rejectReason').value = '';
+    document.getElementById('rejectNotes').value = '';
+}
+
+function closeRejectModal() {
+    const modal = document.getElementById('rejectModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+// Document'ni rad etish
+async function rejectDocument(documentId) {
+    try {
+        const userRole = localStorage.getItem('user_role') || 'admin';
+        const token = localStorage.getItem('token');
+        const reason = document.getElementById('rejectReason').value;
+        const notes = document.getElementById('rejectNotes').value;
+        
+        const response = await fetch(`${API_BASE_URL}/ocr/documents/${documentId}/reject?user_role=${userRole}`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                reason: reason,
+                notes: notes
+            })
+        });
+        
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.detail || '거부 오류');
+        }
+        
+        alert('문서가 거부되었습니다!');
+        closeRejectModal();
+        showPage('admin');
+        loadAdminDocuments();
+        
+    } catch (error) {
+        console.error('거부 오류:', error);
+        const errorDiv = document.getElementById('rejectError');
+        if (errorDiv) {
+            errorDiv.textContent = error.message;
+            errorDiv.style.display = 'block';
+        }
     }
 }
 

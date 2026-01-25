@@ -6,6 +6,7 @@
     <title>AI-OCR 시스템</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📄</text></svg>">
     <link rel="stylesheet" href="styles.css?v=6">
+    <link rel="stylesheet" href="admin-styles.css">
     <script src="translations.js"></script>
 </head>
 <body>
@@ -446,6 +447,14 @@
                                     <option value="F">여성 (F)</option>
                                 </select>
                             </div>
+                            <div class="form-group">
+                                <label>출생지 (Tug'ilgan joyi)</label>
+                                <input type="text" id="editPlaceOfBirth" class="form-input" />
+                            </div>
+                            <div class="form-group">
+                                <label>발급 기관 (Kim tomonidan berilgan)</label>
+                                <textarea id="editAuthority" class="form-input" rows="3"></textarea>
+                            </div>
                             <div id="editPassportError" class="error" style="display: none; margin-top: 15px;"></div>
                             <div class="modal-footer">
                                 <button type="button" class="btn-secondary" onclick="closeEditPassportModal()">취소</button>
@@ -494,46 +503,32 @@
 
             <!-- My Page (Admin Panel) -->
             <div id="adminPage" class="page">
-                <!-- Profile Header (Next to Sidebar Profile) -->
-                <div class="profile-header-section">
-                    <h1>내 정보</h1>
-                    <p class="welcome-text">다시 만나서 반갑습니다!</p>
+                <div class="admin-header">
+                    <h1>관리자 패널 (Admin Panel)</h1>
+                    <p class="admin-subtitle">문서 검증 및 승인 센터</p>
                 </div>
                 
-                <div class="profile-content-grid">
-                    <div class="profile-section">
-                        <h2>사진</h2>
-                        <div class="photo-section">
-                            <div class="profile-photo-large">
-                                <div class="avatar-circle-large">👤</div>
-                            </div>
-                            <div class="photo-actions">
-                                <button class="btn-upload">프로필 사진 업로드</button>
-                                <p class="photo-hint">사진은 JPG, JPEG, PNG 또는 WebP 형식이어야 합니다!</p>
-                            </div>
+                <!-- Admin Documents List -->
+                <div class="admin-documents-section">
+                    <div class="admin-section-header">
+                        <h2>대기 중인 문서 (Pending Documents)</h2>
+                        <div class="admin-filters">
+                            <button class="btn-filter active" onclick="filterAdminDocuments('all')">전체</button>
+                            <button class="btn-filter" onclick="filterAdminDocuments('pending')">대기 중</button>
+                            <button class="btn-filter" onclick="filterAdminDocuments('approved')">승인됨</button>
+                            <button class="btn-filter" onclick="filterAdminDocuments('rejected')">거부됨</button>
                         </div>
                     </div>
-                    
-                    <div class="profile-section">
-                        <h2>사용자 정보</h2>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>사용자명</label>
-                                <input type="text" id="adminProfileUsername" value="Admin" readonly>
-                            </div>
-                            <div class="form-group">
-                                <label>전화번호</label>
-                                <input type="text" id="adminProfilePhone" value="-" readonly>
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group full-width">
-                                <label>이메일</label>
-                                <input type="email" id="adminProfileEmail" value="-" readonly>
-                            </div>
-                        </div>
+                    <div id="adminDocumentsList" class="admin-documents-list">
+                        <div class="loading">로딩 중...</div>
                     </div>
                 </div>
+            </div>
+            
+            <!-- Admin Document Verification Page -->
+            <div id="adminVerificationPage" class="page">
+                <button onclick="showPage('admin')" class="btn-back">← 뒤로</button>
+                <div id="adminVerificationContent"></div>
             </div>
 
             <!-- Branch Finder Page -->
