@@ -657,6 +657,77 @@ document.addEventListener('DOMContentLoaded', () => {
     // Upload form
     document.getElementById('uploadForm').addEventListener('submit', handleUpload);
     
+    // Mobile menu toggle
+    const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+    const navLinks = document.getElementById('navLinks');
+    const sidebar = document.getElementById('sidebar');
+    const sidebarClose = document.getElementById('sidebarClose');
+    
+    if (mobileMenuToggle) {
+        mobileMenuToggle.addEventListener('click', () => {
+            if (navLinks) {
+                navLinks.classList.toggle('active');
+            }
+        });
+    }
+    
+    // Sidebar toggle (mobile)
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
+    
+    if (mobileMenuToggle && sidebar) {
+        mobileMenuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('active');
+            if (sidebarOverlay) {
+                sidebarOverlay.classList.toggle('active');
+            }
+        });
+    }
+    
+    if (sidebarClose) {
+        sidebarClose.addEventListener('click', () => {
+            sidebar.classList.remove('active');
+            if (sidebarOverlay) sidebarOverlay.classList.remove('active');
+        });
+    }
+    
+    // Overlay bosilganda sidebar'ni yopish
+    if (sidebarOverlay) {
+        sidebarOverlay.addEventListener('click', () => {
+            sidebar.classList.remove('active');
+            sidebarOverlay.classList.remove('active');
+        });
+    }
+    
+    // Sidebar'ni yopish (link bosilganda)
+    const sidebarLinks = document.querySelectorAll('.sidebar .nav-link');
+    sidebarLinks.forEach(link => {
+        link.addEventListener('click', () => {
+            if (window.innerWidth <= 768) {
+                sidebar.classList.remove('active');
+                if (sidebarOverlay) sidebarOverlay.classList.remove('active');
+            }
+        });
+    });
+    
+    // Nav links'ni yopish (link bosilganda - mobile)
+    const topNavLinks = document.querySelectorAll('.nav-links-modern .nav-link-modern');
+    topNavLinks.forEach(link => {
+        link.addEventListener('click', () => {
+            if (window.innerWidth <= 768 && navLinks) {
+                navLinks.classList.remove('active');
+            }
+        });
+    });
+    
+    // Window resize - mobile menu'ni yopish
+    window.addEventListener('resize', () => {
+        if (window.innerWidth > 768) {
+            if (navLinks) navLinks.classList.remove('active');
+            if (sidebar) sidebar.classList.remove('active');
+            if (sidebarOverlay) sidebarOverlay.classList.remove('active');
+        }
+    });
+    
     // Check authentication
     checkAuth();
 });

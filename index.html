@@ -84,12 +84,13 @@
         <header class="top-nav-modern">
             <div class="nav-container">
                 <div class="nav-left">
+                    <button class="mobile-menu-toggle" id="mobileMenuToggle">☰</button>
                     <div class="logo-modern">
                         <div class="logo-icon-triangle">▲</div>
                         <span class="logo-text-modern">AI-OCR</span>
                     </div>
                 </div>
-                <nav class="nav-links-modern">
+                <nav class="nav-links-modern" id="navLinks">
                     <a href="#" data-page="dashboard" class="nav-link-modern active">Home</a>
                     <a href="#" data-page="documents" class="nav-link-modern">Documents</a>
                     <a href="#" data-page="upload" class="nav-link-modern">Upload</a>
@@ -110,8 +111,12 @@
             </div>
         </header>
         
+        <!-- Sidebar Overlay (Mobile) -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+        
         <!-- Sidebar -->
-        <nav class="sidebar">
+        <nav class="sidebar" id="sidebar">
+            <button class="mobile-menu-toggle" id="sidebarClose">✕</button>
             <div class="sidebar-profile">
                 <div class="profile-avatar">
                     <div class="avatar-circle">👤</div>
