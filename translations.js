@@ -2,10 +2,10 @@
 const translations = {
     ko: {
         // Navigation
-        navHome: 'Home',
-        navDocuments: 'Documents',
-        navUpload: 'Upload',
-        navMyPage: 'My Page',
+        navHome: '홈',
+        navDocuments: '문서',
+        navUpload: '업로드',
+        navMyPage: '내 페이지',
         // Login
         loginTitle: 'AI-OCR 시스템',
         loginSubtitle: '로그인',
@@ -776,26 +776,62 @@ function getCurrentLanguage() {
 
 // Set language
 function setLanguage(lang) {
+    console.log('🌐 Setting language to:', lang);
     localStorage.setItem('language', lang);
-    applyTranslations(lang);
+    
+    // DOM to'liq yuklanguncha kutish (navigation link'lar uchun)
+    setTimeout(() => {
+        applyTranslations(lang);
+    }, 50);
+    
+    // Qo'shimcha tekshirish - agar navigation link'lar hali yuklanmagan bo'lsa
+    setTimeout(() => {
+        const homeLinks = document.querySelectorAll('[data-page="dashboard"]');
+        if (homeLinks.length > 0) {
+            console.log('✅ Navigation links found, applying translations again...');
+            applyTranslations(lang);
+        }
+    }, 300);
 }
 
 // Apply translations to the page
 function applyTranslations(lang) {
     const t = translations[lang] || translations.ko;
     
-    // Navigation links
-    const homeLink = document.querySelector('[data-page="dashboard"]');
-    if (homeLink) homeLink.textContent = t.navHome;
+    // Navigation links - barcha navigation link'larni topish (top nav va sidebar)
+    const homeLinks = document.querySelectorAll('[data-page="dashboard"]');
+    homeLinks.forEach(link => {
+        if (link) link.textContent = t.navHome;
+    });
     
-    const documentsLink = document.querySelector('[data-page="documents"]');
-    if (documentsLink) documentsLink.textContent = t.navDocuments;
+    const documentsLinks = document.querySelectorAll('[data-page="documents"]');
+    documentsLinks.forEach(link => {
+        if (link) link.textContent = t.navDocuments;
+    });
     
-    const uploadLink = document.querySelector('[data-page="upload"]');
-    if (uploadLink) uploadLink.textContent = t.navUpload;
+    const uploadLinks = document.querySelectorAll('[data-page="upload"]');
+    uploadLinks.forEach(link => {
+        if (link) link.textContent = t.navUpload;
+    });
     
-    const myPageLink = document.querySelector('[data-page="admin"]');
-    if (myPageLink) myPageLink.textContent = t.navMyPage;
+    const myPageLinks = document.querySelectorAll('[data-page="admin"]');
+    myPageLinks.forEach(link => {
+        if (link) link.textContent = t.navMyPage;
+    });
+    
+    // Debug: navigation link'larni tekshirish
+    console.log('🌐 Language changed to:', lang, {
+        homeLinks: homeLinks.length,
+        documentsLinks: documentsLinks.length,
+        uploadLinks: uploadLinks.length,
+        myPageLinks: myPageLinks.length,
+        translations: {
+            navHome: t.navHome,
+            navDocuments: t.navDocuments,
+            navUpload: t.navUpload,
+            navMyPage: t.navMyPage
+        }
+    });
     
     // Login screen
     const loginTitle = document.querySelector('#loginScreen h1');
@@ -980,5 +1016,19 @@ function applyTranslations(lang) {
 // Initialize language on page load (will be called from app.js after DOM is ready)
 function initializeLanguage() {
     const currentLang = getCurrentLanguage();
-    applyTranslations(currentLang);
+    console.log('🌐 Initializing language:', currentLang);
+    
+    // DOM to'liq yuklanguncha kutish (navigation link'lar uchun)
+    setTimeout(() => {
+        applyTranslations(currentLang);
+    }, 100);
+    
+    // Qo'shimcha tekshirish - agar navigation link'lar hali yuklanmagan bo'lsa
+    setTimeout(() => {
+        const homeLinks = document.querySelectorAll('[data-page="dashboard"]');
+        if (homeLinks.length === 0) {
+            console.warn('⚠️ Navigation links not found, retrying...');
+            applyTranslations(currentLang);
+        }
+    }, 500);
 }
