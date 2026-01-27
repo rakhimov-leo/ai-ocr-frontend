@@ -326,31 +326,39 @@ function checkAuth() {
 
 async function apiCall(endpoint, options = {}) {
     const token = localStorage.getItem('token');
-    
     const headers = {
         'Content-Type': 'application/json',
         ...options.headers
     };
-    
     if (token) {
         headers['Authorization'] = `Bearer ${token}`;
     }
-    
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
         ...options,
         headers
     });
-    
     if (!response.ok) {
+        const errText = await response.text();
         if (response.status === 401) {
             handleLogout();
             throw new Error('인증 오류');
         }
-        const error = await response.json();
-        throw new Error(error.detail || 'API 오류');
+        let errorMsg = 'API 오류';
+        try {
+            const error = JSON.parse(errText);
+            errorMsg = error.detail || errorMsg;
+        } catch (_) {
+            errorMsg = errText.slice(0, 100) || errorMsg;
+        }
+        throw new Error(errorMsg);
     }
-    
-    return response.json();
+    const text = await response.text();
+    if (!text.trim()) return null;
+    try {
+        return JSON.parse(text);
+    } catch (e) {
+        throw e;
+    }
 }
 
 // ==================== NAVIGATION ====================
@@ -639,7 +647,9 @@ async function loadDocuments() {
         // Har bir user uchun documentlar teskari raqamlanadi:
         // Eng yangi document eng katta raqam bilan (documents.length), eng eski document 1-raqam bilan
         const totalDocs = sortedDocuments.length;
-        tbody.innerHTML = sortedDocuments.map((doc, index) => `
+        tbody.innerHTML = sortedDocuments.map((doc, index) => {
+            const docId = doc.id ?? doc._id;
+            return `
             <tr>
                 <td>${totalDocs - index}</td>
                 <td>${doc.file_type}</td>
@@ -647,10 +657,11 @@ async function loadDocuments() {
                 <td>${doc.confidence || 0}%</td>
                 <td>${new Date(doc.created_at).toLocaleDateString('ko-KR')}</td>
                 <td>
-                    <button class="btn-small" onclick="viewDocument(${doc.id})">보기</button>
+                    <button class="btn-small" onclick="viewDocument(${docId != null ? JSON.stringify(docId) : 'null'})">보기</button>
                 </td>
             </tr>
-        `).join('');
+        `;
+        }).join('');
         
     } catch (error) {
         tbody.innerHTML = `<tr><td colspan="6" class="error">오류: ${error.message}</td></tr>`;
@@ -661,10 +672,15 @@ async function viewDocument(id) {
     try {
         const userRole = localStorage.getItem('user_role') || 'user';
         const doc = await apiCall(`/ocr/documents/${id}?user_role=${userRole}`);
-        
+        const docId = doc.id ?? doc._id;
+        if (docId == null || docId === '') {
+            console.error('Document has no id or _id:', doc);
+            alert('문서 ID를 찾을 수 없습니다.');
+            return;
+        }
         console.log('Document data:', doc); // Debug
         console.log('Extracted data:', doc.extracted_data); // Debug
-        
+
         const contentDiv = document.getElementById('documentDetailContent');
         const isAdmin = userRole === 'admin';
         
@@ -787,7 +803,7 @@ async function viewDocument(id) {
         }
         
         let html = `
-            <h1>문서 #${doc.id}</h1>
+            <h1>문서 #${docId}</h1>
             <div class="document-info-card">
                 <h3>기본 정보</h3>
                 <p><strong>파일 유형:</strong> ${doc.file_type}</p>
@@ -805,7 +821,7 @@ async function viewDocument(id) {
                     <div style="position: relative; display: inline-block; cursor: pointer;" onclick="openImageModal('${imageUrl}')">
                         <img src="${imageUrl}" 
                              alt="Document Image" 
-                             id="documentImage_${doc.id}"
+                             id="documentImage_${docId}"
                              style="max-width: 300px; max-height: 400px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: transform 0.3s; display: block;"
                              onmouseover="this.style.transform='scale(1.05)'"
                              onmouseout="this.style.transform='scale(1)'"
@@ -838,7 +854,7 @@ async function viewDocument(id) {
         if (hasPassportData) {
             console.log('🔍 Formatting passport data for user:', { 
                 isAdmin, 
-                documentId: doc.id, 
+                documentId: docId, 
                 fileType: doc.file_type,
                 hasPassport: !!extractedData.passport,
                 hasSimplified: !!extractedData.simplified,
@@ -846,7 +862,7 @@ async function viewDocument(id) {
                 hasNormalized: !!extractedData.normalized,
                 extractedData 
             });
-            const passportHtml = formatPassportData(extractedData, isAdmin, doc.id);
+            const passportHtml = formatPassportData(extractedData, isAdmin, docId);
             console.log('🔍 Passport HTML result:', passportHtml ? 'HTML generated' : 'Empty HTML');
             if (passportHtml) {
                 html += passportHtml;
@@ -912,15 +928,15 @@ async function viewDocument(id) {
         html += `
             <div class="document-actions" style="margin-top: 30px; display: flex; gap: 15px; justify-content: flex-end;">
                 ${doc.file_type === 'passport' ? `
-                    <button class="btn-primary" onclick="openEditPassportModal(${doc.id})" style="padding: 10px 20px;">
+                    <button class="btn-primary" onclick="openEditPassportModal(${docId})" style="padding: 10px 20px;">
                         수정 (Tahrirlash)
                     </button>
                 ` : `
-                    <button class="btn-primary" onclick="openEditDocumentModal(${doc.id})" style="padding: 10px 20px;">
+                    <button class="btn-primary" onclick="openEditDocumentModal(${docId})" style="padding: 10px 20px;">
                         수정 (Tahrirlash)
                     </button>
                 `}
-                <button class="btn-danger" onclick="deleteDocument(${doc.id})" style="padding: 10px 20px;">
+                <button class="btn-danger" onclick="deleteDocument(${docId})" style="padding: 10px 20px;">
                     삭제 (O'chirish)
                 </button>
             </div>
@@ -1607,9 +1623,17 @@ function formatPassportData(extractedData, isAdmin = false, documentId = null) {
         `;
     }
     
-    // "Tasdiqlayman" va "Qayta skanerlash" tugmalari
-    // Eslatma: "수정 (Tahrirlash)" tugmasi viewDocument funksiyasida qo'shiladi
-    html += `
+    // "Tasdiqlayman" va "Qayta skanerlash" – admin sahifasida ko'rsatilmaydi; oddiy user uchun tasdiqlanmagan bo'lsa ko'rsatiladi
+    const metadata = extractedData.metadata || {};
+    const userConfirmed = metadata.confirmed === true || metadata.submitted_for_review === true;
+    if (isAdmin) {
+        // Admin: Tasdiqlayman / Qayta skanerlash tugmalari yo'q
+        html += `
+            </div>
+        </div>
+    `;
+    } else if (!userConfirmed) {
+        html += `
             </div>
             <div class="passport-actions" style="margin-top: 30px; display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
                 <button class="btn-success" onclick="confirmPassportData(${documentId})" style="padding: 12px 30px;">
@@ -1621,6 +1645,15 @@ function formatPassportData(extractedData, isAdmin = false, documentId = null) {
             </div>
         </div>
     `;
+    } else {
+        html += `
+            </div>
+            <p class="passport-confirmed-msg" style="margin-top: 20px; padding: 12px 20px; background: #ecfdf5; color: #065f46; border-radius: 8px; text-align: center;">
+                ✓ 문서가 확인되었습니다. (Hujjat tasdiqlandi.)
+            </p>
+        </div>
+    `;
+    }
     
     return html;
 }
@@ -1927,12 +1960,21 @@ async function confirmPassportData(documentId) {
         return;
     }
     
+    // Darhol tugmalarni yashirish va "Hujjat tasdiqlandi" ko'rsatish (backend javobini kutmasdan)
+    const actionsEl = document.querySelector('.passport-actions');
+    if (actionsEl) {
+        const msg = document.createElement('p');
+        msg.className = 'passport-confirmed-msg';
+        msg.setAttribute('style', 'margin-top: 20px; padding: 12px 20px; background: #ecfdf5; color: #065f46; border-radius: 8px; text-align: center;');
+        msg.textContent = '✓ 문서가 확인되었습니다. (Hujjat tasdiqlandi.)';
+        actionsEl.parentNode.replaceChild(msg, actionsEl);
+    }
+    
     try {
         const userRole = localStorage.getItem('user_role') || 'user';
         const token = localStorage.getItem('token');
         const username = localStorage.getItem('username') || 'user';
         
-        // Document'ni admin'ga yuborish uchun status va metadata'ni yangilash
         const response = await fetch(`${API_BASE_URL}/ocr/documents/${documentId}?user_role=${userRole}`, {
             method: 'PATCH',
             headers: {
@@ -1940,9 +1982,7 @@ async function confirmPassportData(documentId) {
                 'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify({
-                // Status'ni "pending" holatiga o'zgartirish (admin ko'rib chiqishi uchun)
                 status: 'pending',
-                // Metadata'da flag qo'yish
                 metadata: {
                     submitted_for_review: true,
                     submitted_at: new Date().toISOString(),
@@ -1954,17 +1994,17 @@ async function confirmPassportData(documentId) {
         });
         
         if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.detail || '확인 오류');
+            const errBody = await response.json().catch(() => ({}));
+            throw new Error(errBody.detail || '확인 오류');
         }
         
         alert('문서가 성공적으로 확인되었습니다!\n관리자가 검토할 때까지 기다려주세요.\n\n(Hujjat muvaffaqiyatli tasdiqlandi! Admin ko\'rib chiqishini kutib turing.)');
         
-        // Document'ni qayta yuklash
+        // Sahifani qayta yuklash – keyingi safar ochganda ham tugmalar ko‘rinmasin
         await viewDocument(documentId);
-        
     } catch (error) {
         console.error('확인 오류:', error);
+        await viewDocument(documentId);
         alert('확인 중 오류가 발생했습니다: ' + error.message);
     }
 }
@@ -2062,9 +2102,14 @@ let editModalObserver = null;
 
 // 1. Modalni ochish va ma'lumotlarni yuklash
 window.openEditPassportModal = async function openEditModal(documentId) {
+    if (documentId == null || documentId === '' || String(documentId) === 'undefined') {
+        console.error('❌ openEditPassportModal: documentId yo\'q', documentId);
+        alert('문서 ID를 찾을 수 없습니다. 문서를 다시 열어주세요.');
+        return;
+    }
     currentEditingDocId = documentId;
     currentEditingDocumentId = documentId; // Eski versiya bilan moslashish uchun
-    
+
     const modal = document.getElementById('editPassportModal');
     if (!modal) {
         console.error('❌ editPassportModal not found!');
@@ -2082,7 +2127,6 @@ window.openEditPassportModal = async function openEditModal(documentId) {
         const userRole = localStorage.getItem('user_role') || 'user';
         const doc = await apiCall(`/ocr/documents/${documentId}?user_role=${userRole}`);
         const fields = doc.extracted_data?.fields || {};
-        
         console.log('📄 Document loaded for editing:', {
             id: documentId,
             hasFields: !!doc.extracted_data?.fields
@@ -2140,7 +2184,6 @@ window.openEditPassportModal = async function openEditModal(documentId) {
         if (saveBtn) {
             saveBtn.onclick = () => saveEditedData(documentId);
         }
-        
         console.log("✅ Tahrirlash uchun ma'lumotlar yuklandi:", documentId);
     } catch (error) {
         console.error("❌ Yuklashda xato:", error);
@@ -2168,7 +2211,6 @@ async function saveEditedData(docId) {
         nationality: (document.getElementById('edit-nationality')?.value || '').trim(),
         authority: (document.getElementById('edit-authority')?.value || '').trim()
     };
-    
     console.log("🚀 Saqlanayotgan ma'lumot:", updatedData);
     
     // Tekshirish - kamida bir maydon to'ldirilgan bo'lishi kerak
@@ -2184,6 +2226,15 @@ async function saveEditedData(docId) {
         return;
     }
     
+    // await dan OLDIN qiymatlarni nusxalab olamiz – await dan keyin updatedData o'zgarishi mumkin
+    const payloadToSend = {
+        surname: String(updatedData.surname ?? '').trim(),
+        given_names: String(updatedData.given_names ?? '').trim(),
+        passport_no: String(updatedData.passport_no ?? '').trim(),
+        nationality: String(updatedData.nationality ?? '').trim(),
+        authority: String(updatedData.authority ?? '').trim()
+    };
+    
     try {
         const userRole = localStorage.getItem('user_role') || 'user';
         
@@ -2191,34 +2242,30 @@ async function saveEditedData(docId) {
         const originalDoc = await apiCall(`/ocr/documents/${docId}?user_role=${userRole}`);
         const originalFields = originalDoc.extracted_data?.fields || {};
         
-        // is_edited flag'ni aniqlash
+        // is_edited flag'ni aniqlash (payloadToSend dan, await dan keyin emas)
         let isEdited = false;
-        if (updatedData.surname && updatedData.surname !== (originalFields.surname?.value || originalFields.familiya?.value || '')) {
+        if (payloadToSend.surname !== (originalFields.surname?.value || originalFields.familiya?.value || '')) {
             isEdited = true;
-        } else if (updatedData.given_names && updatedData.given_names !== (originalFields.given_names?.value || originalFields.ism?.value || '')) {
+        } else if (payloadToSend.given_names !== (originalFields.given_names?.value || originalFields.ism?.value || '')) {
             isEdited = true;
-        } else if (updatedData.passport_no && updatedData.passport_no !== (originalFields.passport_no?.value || originalFields.passport_number?.value || '')) {
+        } else if (payloadToSend.passport_no !== (originalFields.passport_no?.value || originalFields.passport_number?.value || originalFields.passport_raqami?.value || '')) {
             isEdited = true;
-        } else if (updatedData.nationality && updatedData.nationality !== (originalFields.nationality?.value || originalFields.millati?.value || '')) {
+        } else if (payloadToSend.nationality !== (originalFields.nationality?.value || originalFields.millati?.value || '')) {
             isEdited = true;
-        } else if (updatedData.authority && updatedData.authority !== (originalFields.authority?.value || originalFields.kim_tomonidan_berilgan?.value || '')) {
+        } else if (payloadToSend.authority !== (originalFields.authority?.value || originalFields.kim_tomonidan_berilgan?.value || '')) {
             isEdited = true;
         }
         
-        // Backend'ga yuborish - faqat user_edited_data va is_edited yuboramiz
-        // Status'ni yubormaymiz, chunki bu backend'da muammo qilishi mumkin
         const patchData = {
-            user_edited_data: updatedData,
+            user_edited_data: payloadToSend,
             is_edited: isEdited
         };
         
         console.log("📤 Backend'ga yuborilayotgan ma'lumot:", patchData);
-        
         const response = await apiCall(`/ocr/documents/${docId}?user_role=${userRole}`, {
             method: 'PATCH',
             body: JSON.stringify(patchData)
         });
-        
         console.log("✅ Backend response:", response);
         
         // Modal'ni yopish
