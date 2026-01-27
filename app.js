@@ -285,40 +285,14 @@ function checkAuth() {
             showPage(savedPage);
         }, 100);
     } else {
-        // Token yo'q bo'lsa ham, homepage'ga o'tkazish (login screen ko'rsatilmaydi)
+        // Token yo'q – login ekranini ko'rsatish, app'ni yashirish
         const loginScreen = document.getElementById('loginScreen');
         const appScreen = document.getElementById('appScreen');
         
-        if (loginScreen) loginScreen.classList.remove('active');
-        if (appScreen) appScreen.classList.add('active');
+        if (loginScreen) loginScreen.classList.add('active');
+        if (appScreen) appScreen.classList.remove('active');
         
-        // Clear any stale data
         currentUser = null;
-        
-        // Homepage'ga o'tkazish - DOM to'liq yuklanguncha kutish
-        setTimeout(() => {
-            // Barcha page'larni yashirish
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            
-            // Dashboard page'ni ko'rsatish
-            const dashboardPage = document.getElementById('dashboardPage');
-            if (dashboardPage) {
-                dashboardPage.classList.add('active');
-                console.log('✅ Dashboard page activated');
-            } else {
-                console.error('❌ Dashboard page not found!');
-            }
-            
-            // showPage funksiyasini ham chaqirish (navigation va boshqa ishlarni bajarish uchun)
-            if (typeof showPage === 'function') {
-                showPage('dashboard');
-            }
-            
-            // Dashboard ma'lumotlarini yuklash
-            if (typeof loadDashboard === 'function') {
-                loadDashboard();
-            }
-        }, 200);
     }
 }
 
@@ -924,10 +898,11 @@ async function viewDocument(id) {
             `;
         }
         
-        // Edit va Delete tugmalari (barcha user'lar uchun)
+        // Edit va Delete – tasdiqlangan hujjatda Tahrirlash ko‘rsatilmaydi
+        const docConfirmed = extractedData.metadata && (extractedData.metadata.confirmed === true || extractedData.metadata.submitted_for_review === true);
         html += `
             <div class="document-actions" style="margin-top: 30px; display: flex; gap: 15px; justify-content: flex-end;">
-                ${doc.file_type === 'passport' ? `
+                ${!docConfirmed ? (doc.file_type === 'passport' ? `
                     <button class="btn-primary" onclick="openEditPassportModal(${docId})" style="padding: 10px 20px;">
                         수정 (Tahrirlash)
                     </button>
@@ -935,7 +910,7 @@ async function viewDocument(id) {
                     <button class="btn-primary" onclick="openEditDocumentModal(${docId})" style="padding: 10px 20px;">
                         수정 (Tahrirlash)
                     </button>
-                `}
+                `) : ''}
                 <button class="btn-danger" onclick="deleteDocument(${docId})" style="padding: 10px 20px;">
                     삭제 (O'chirish)
                 </button>
@@ -1635,7 +1610,7 @@ function formatPassportData(extractedData, isAdmin = false, documentId = null) {
     } else if (!userConfirmed) {
         html += `
             </div>
-            <div class="passport-actions" style="margin-top: 30px; display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+            <div id="passport-actions-${documentId}" class="passport-actions" style="margin-top: 30px; display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
                 <button class="btn-success" onclick="confirmPassportData(${documentId})" style="padding: 12px 30px;">
                     ✓ 확인 (Tasdiqlayman)
                 </button>
@@ -1960,14 +1935,21 @@ async function confirmPassportData(documentId) {
         return;
     }
     
-    // Darhol tugmalarni yashirish va "Hujjat tasdiqlandi" ko'rsatish (backend javobini kutmasdan)
-    const actionsEl = document.querySelector('.passport-actions');
+    // Darhol: Tasdiqlayman/Qayta skanerlash blokini xabar bilan almashtirish
+    const id = String(documentId);
+    const contentRoot = document.getElementById('documentDetailContent');
+    const actionsEl = document.getElementById('passport-actions-' + id) ||
+        (contentRoot && contentRoot.querySelector('.passport-actions')) ||
+        document.querySelector('.passport-actions');
     if (actionsEl) {
-        const msg = document.createElement('p');
-        msg.className = 'passport-confirmed-msg';
-        msg.setAttribute('style', 'margin-top: 20px; padding: 12px 20px; background: #ecfdf5; color: #065f46; border-radius: 8px; text-align: center;');
-        msg.textContent = '✓ 문서가 확인되었습니다. (Hujjat tasdiqlandi.)';
-        actionsEl.parentNode.replaceChild(msg, actionsEl);
+        actionsEl.innerHTML = '<p class="passport-confirmed-msg" style="margin:0; padding: 12px 20px; background: #ecfdf5; color: #065f46; border-radius: 8px; text-align: center;">✓ 문서가 확인되었습니다. (Hujjat tasdiqlandi.)</p>';
+        actionsEl.id = 'passport-actions-' + id;
+    }
+    // Darhol: pastdagi Tahrirlash tugmasini yashirish
+    const docActions = contentRoot && contentRoot.querySelector('.document-actions');
+    if (docActions) {
+        const editBtn = docActions.querySelector('.btn-primary');
+        if (editBtn) editBtn.style.display = 'none';
     }
     
     try {
@@ -1998,10 +1980,8 @@ async function confirmPassportData(documentId) {
             throw new Error(errBody.detail || '확인 오류');
         }
         
+        // Muvaffaqiyat: sahifani qayta yuklamaymiz, shunchaki xabar – tugmalar allaqachon yo‘qolgan
         alert('문서가 성공적으로 확인되었습니다!\n관리자가 검토할 때까지 기다려주세요.\n\n(Hujjat muvaffaqiyatli tasdiqlandi! Admin ko\'rib chiqishini kutib turing.)');
-        
-        // Sahifani qayta yuklash – keyingi safar ochganda ham tugmalar ko‘rinmasin
-        await viewDocument(documentId);
     } catch (error) {
         console.error('확인 오류:', error);
         await viewDocument(documentId);
@@ -2274,27 +2254,8 @@ async function saveEditedData(docId) {
         // Success message
         alert("✅ Muvaffaqiyatli saqlandi!");
         
-        // Kichik kutish - modal to'liq yopilishini kutish
-        await new Promise(resolve => setTimeout(resolve, 300));
-        
-        // Documents sahifasiga o'tish (showPage ichida loadDocuments() avtomatik chaqiriladi)
-        console.log('🔄 Navigating to documents page...');
-        showPage('documents');
-        
-        // Qo'shimcha tekshirish - agar sahifa ko'rinmasa, qayta urinish
-        setTimeout(() => {
-            const documentsPage = document.getElementById('documentsPage');
-            if (documentsPage) {
-                if (!documentsPage.classList.contains('active')) {
-                    console.log('⚠️ Documents page not active, retrying...');
-                    showPage('documents');
-                } else {
-                    console.log('✅ Documents page is active');
-                }
-            } else {
-                console.error('❌ Documents page element not found');
-            }
-        }, 200);
+        // Shu hujjat detali sahifada qolish – yangilangan ma'lumot bilan (Tasdiqlayman bosish uchun)
+        await viewDocument(docId);
     } catch (error) {
         console.error("❌ Saqlashda xato:", error);
         const errorMsg = "Saqlashda xato: " + (error.message || 'Noma\'lum xatolik');
@@ -3974,27 +3935,19 @@ document.addEventListener('DOMContentLoaded', () => {
     // Check authentication (page load'da)
     checkAuth();
     
-    // Window load'da ham tekshirish (F5 uchun)
+    // Window load'da ham tekshirish (F5 – login bo‘lsa sahifani saqlab qolish)
     window.addEventListener('load', () => {
         console.log('🔄 Window loaded, checking auth again...');
         checkAuth();
         
-        // Qo'shimcha tekshirish - agar dashboard page ko'rinmasa
+        // Faqat hech qanday sahifa active bo‘lmaganda saved page’ni ko‘rsatish (dashboard’ni majburan emas)
         setTimeout(() => {
-            const dashboardPage = document.getElementById('dashboardPage');
             const appScreen = document.getElementById('appScreen');
-            
-            if (appScreen && appScreen.classList.contains('active')) {
-                if (!dashboardPage || !dashboardPage.classList.contains('active')) {
-                    console.log('⚠️ Dashboard not active, activating...');
-                    // Barcha page'larni yashirish
-                    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-                    // Dashboard'ni ko'rsatish
-                    if (dashboardPage) {
-                        dashboardPage.classList.add('active');
-                        showPage('dashboard');
-                    }
-                }
+            const currentActive = document.querySelector('.page.active');
+            if (appScreen && appScreen.classList.contains('active') && !currentActive) {
+                const savedPage = localStorage.getItem('currentPage') || 'dashboard';
+                console.log('📄 No page active, restoring:', savedPage);
+                showPage(savedPage);
             }
         }, 300);
     });
