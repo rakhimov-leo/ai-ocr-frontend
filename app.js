@@ -3032,23 +3032,36 @@ function handleServiceClick(service) {
     }
 }
 
+// Pensiya kalkulyatori: yosh + oylik to'lov -> taxminiy pensiya
 function handleCalculator() {
-    const age = parseInt(document.getElementById('calcAge')?.value);
-    const years = parseInt(document.getElementById('calcYears')?.value);
-    const income = parseInt(document.getElementById('calcIncome')?.value);
+    const age = parseInt(document.getElementById('calcAge')?.value, 10);
+    const monthlyPayment = parseFloat(document.getElementById('calcMonthly')?.value);
     
-    if (!age || !years || !income) {
-        alert('모든 필드를 입력하세요!');
+    if (!age || age < 18 || age > 100) {
+        alert('나이를 입력하세요 (18–100). / Yoshni kiriting (18–100).');
+        return;
+    }
+    if (!monthlyPayment || monthlyPayment < 0) {
+        alert('월 납부액을 입력하세요. / Pensiya uchun oylik badal summasini kiriting.');
         return;
     }
     
-    // Simple pension calculation (example formula)
-    const monthlyPension = Math.round((income * years * 0.02) / 12);
+    // Soddalashtirilgan formula: pensiya yoshi 63, to'lovlar 63 gacha, pensiya 20 yil davomida
+    const PENSION_AGE = 63;
+    const PENSION_YEARS = 20;
+    const yearsLeft = Math.max(0, PENSION_AGE - age);
+    const totalAccumulated = monthlyPayment * 12 * yearsLeft;
+    const monthlyPension = yearsLeft > 0 ? totalAccumulated / (PENSION_YEARS * 12) : 0;
+    
     const resultDiv = document.getElementById('calcResult');
     const resultValue = document.getElementById('calcResultValue');
+    const resultNote = document.getElementById('calcResultNote');
     
     if (resultDiv && resultValue) {
-        resultValue.textContent = `월 ${monthlyPension.toLocaleString()}원`;
+        resultValue.textContent = '월 ~' + Math.round(monthlyPension).toLocaleString() + ' / oy';
+        if (resultNote) {
+            resultNote.innerHTML = '한국어: 연금나이 63세, ' + yearsLeft + '년 납부, ' + PENSION_YEARS + '년 수령 (예상).<br>O\'zbek: Pensiya yoshi 63, to\'lovlar ' + yearsLeft + ' yil, pensiya ' + PENSION_YEARS + ' yil davomida (taxminiy).';
+        }
         resultDiv.style.display = 'block';
     }
 }
