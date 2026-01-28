@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="styles.css?v=6">
     <link rel="stylesheet" href="admin-styles.css">
     <link rel="stylesheet" href="dark-mode.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
     <script>
         (function(){ try { if (localStorage.getItem('darkMode') === 'true') document.documentElement.classList.add('dark-mode'); } catch(e) {} })();
     </script>
@@ -561,7 +562,6 @@
                         </div>
                     </main>
                 </div>
-                <a href="#" class="mypage-float-aichat" id="mypageAIChatBtn" title="AI Chat"><span class="mypage-aichat-icon">✦</span> AI Chat</a>
             </div>
             
             <!-- Admin Document Verification Page -->
@@ -577,9 +577,7 @@
                 </div>
                 <div class="service-content">
                     <p>가까운 지사를 찾아보세요.</p>
-                    <div id="branchMap" style="width: 100%; height: 400px; background: #f0f0f0; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #666;">
-                        지도가 여기에 표시됩니다
-                    </div>
+                    <div id="branchMap" class="branch-map-container" style="width: 100%; height: 400px; background: #f0f0f0; border-radius: 12px; min-height: 400px;"></div>
                 </div>
             </div>
 
@@ -710,9 +708,34 @@
                 </div>
             </div>
         </main>
+
+        <!-- AI Chat (Locohub-style floating panel) -->
+        <div class="aichat-wrap chatting">
+            <button type="button" class="chat-button" id="aiChatFloatBtn" title="AI Chat">
+                <span class="chat-btn-icon" id="aiChatBtnIcon">✦</span>
+                <span class="chat-btn-text">AI Chat</span>
+            </button>
+            <div class="chat-frame" id="aiChatFrame">
+                <div class="chat-top">
+                    <span class="chat-top-icon">✦</span>
+                    <span>AI Chat</span>
+                </div>
+                <div class="chat-content" id="aiChatContent">
+                    <div class="chat-main" id="aiChatMain">
+                        <div class="chat-welcome" id="aiChatWelcome">Welcome to AI Chat! Ask about documents, pension, branches, forms.</div>
+                        <div id="aiChatMessages"></div>
+                    </div>
+                </div>
+                <div class="chat-bott">
+                    <input type="text" class="msg-input" id="aiChatInput" placeholder="Type message..." autocomplete="off">
+                    <button type="button" class="send-msg-btn" id="aiChatSendBtn" title="Send">➤</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script src="config.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script src="translations.js"></script>
     <script src="app.js?v=6"></script>
 </body>

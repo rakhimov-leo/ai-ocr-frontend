@@ -417,15 +417,19 @@ function showPage(pageName) {
     // Current page'ni localStorage'ga saqlash (refresh uchun)
     localStorage.setItem('currentPage', pageName);
     
-    // History: documentDetail faqat viewDocument orqali pushState qilinadi. Servis sahifalari (webfax, branch, ...) dan orqaga bosganda homepage ga qaytishi uchun pushState, asosiy sahifalar replaceState.
+    // History: asosiy sahifalarga (dashboard, documents, …) pushState qilamiz, shunda orqaga bosganda oldingi sahifa to'g'ri ochiladi. Servis sahifalari ham pushState. Faqat birinchi yuklanishda replaceState.
     const servicePages = ['webfax', 'branch', 'forms', 'calculator', 'guide', 'statistics', 'chat'];
+    const mainPages = ['dashboard', 'documents', 'upload', 'admin'];
     if (pageName === 'documentDetail') {
         // hech narsa – viewDocument o'zi pushState qiladi
     } else if (typeof history.replaceState === 'function' && typeof history.pushState === 'function') {
-        if (servicePages.includes(pageName)) {
-            history.pushState({ page: pageName }, '', window.location.pathname || '/');
-        } else {
-            history.replaceState({ page: pageName }, '', window.location.pathname || '/');
+        const hasState = history.state && history.state.page != null;
+        if (servicePages.includes(pageName) || mainPages.includes(pageName)) {
+            if (hasState) {
+                history.pushState({ page: pageName }, '', window.location.pathname || '/');
+            } else {
+                history.replaceState({ page: pageName }, '', window.location.pathname || '/');
+            }
         }
     }
     
@@ -438,7 +442,44 @@ function showPage(pageName) {
         loadAdminPanel();
     } else if (pageName === 'statistics') {
         loadStatistics();
+    } else if (pageName === 'branch') {
+        initBranchMap();
+    } else if (pageName === 'webfax') {
+        loadWebfax();
     }
+}
+
+// Koreyadagi NPS (Milliy pensiya xizmati) filiallari xaritasi
+function initBranchMap() {
+    const container = document.getElementById('branchMap');
+    if (!container || typeof L === 'undefined') return;
+    if (window.branchMapLeaflet) {
+        window.branchMapLeaflet.invalidateSize();
+        return;
+    }
+    container.classList.add('map-initialized');
+    // Janubiy Koreya markazi, zoom 7
+    var map = L.map('branchMap', { center: [36.35, 127.85], zoom: 7, scrollWheelZoom: true });
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    }).addTo(map);
+    // NPS filiallari (Koreya – 국민연금공단)
+    var npsOffices = [
+        { name: 'NPS 본부 / NPS Headquarters', nameEn: 'NPS Headquarters', addr: 'Jeonju, Deokjin District', lat: 35.8298, lng: 127.1192 },
+        { name: '종로·중구 regional', nameEn: 'Jongno-Junggu Regional Office', addr: 'Toegye-ro 173, Jung-gu, Seoul', lat: 37.5600, lng: 126.9870 },
+        { name: '강남 Southern Seoul', nameEn: 'Southern Seoul Regional HQ', addr: 'Dosandae-ro 128, Gangnam-gu, Seoul', lat: 37.4979, lng: 127.0276 },
+        { name: '송파 (잠실)', nameEn: 'Songpa (Jamsil) Office', addr: 'Olympic-ro 35da-gil 13, Songpa-gu, Seoul', lat: 37.5145, lng: 127.1059 },
+        { name: '인천공항 센터', nameEn: 'Incheon Airport Center', addr: '272 Gonghang-ro, Incheon', lat: 37.4602, lng: 126.4407 },
+        { name: '동대문·중랑', nameEn: 'Dongdaemun-Jungnang Office', addr: 'Whangsanro 6, Dongdaemun-gu, Seoul', lat: 37.5745, lng: 127.0394 },
+        { name: '성동·광진', nameEn: 'Seongdong-Gwangjin Office', addr: 'Achasan-ro 563, Gwangjin-gu, Seoul', lat: 37.5440, lng: 127.0865 },
+        { name: '강동·하남', nameEn: 'Gangdong-Hanam Office', addr: '1102 Cheonho-daero, Gangdong-gu, Seoul', lat: 37.5525, lng: 127.1454 },
+        { name: '성북·강북', nameEn: 'Seongbuk-Gangbuk Office', addr: 'Dobong-ro 314, Gangbuk-gu, Seoul', lat: 37.6390, lng: 127.0262 }
+    ];
+    npsOffices.forEach(function (o) {
+        var marker = L.marker([o.lat, o.lng]).addTo(map);
+        marker.bindPopup('<strong>' + o.name + '</strong><br>' + (o.nameEn || '') + '<br><small>' + (o.addr || '') + '</small>');
+    });
+    window.branchMapLeaflet = map;
 }
 
 // Detail sahifadan ortga – hujjatlar ro'yxatiga. To'g'ridan-to'g'ri sahifani almashtiramiz (history.back() ishonchli ishlamasligi mumkin).
@@ -3166,6 +3207,33 @@ function handleServiceClick(service) {
     }
 }
 
+// Shakl topish: PDF yuklash (minimal placeholder PDF – keyinchalik haqiqiy fayllar qo‘yilishi mumkin)
+function getMinimalPdfBase64() {
+    var raw = '%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n3 0 obj<</Type/Page/MediaBox[0 0 612 792]/Parent 2 0 R>>endobj\nxref\n0 4\n0000000000 65535 f \n0000000009 00000 n \n0000000052 00000 n \n0000000101 00000 n \ntrailer<</Size 4/Root 1 0 R>>\nstartxref\n178\n%%EOF';
+    return btoa(raw);
+}
+
+function downloadFormPdf(formIndex, filename) {
+    try {
+        var base64 = getMinimalPdfBase64();
+        var binary = atob(base64);
+        var bytes = new Uint8Array(binary.length);
+        for (var i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+        var blob = new Blob([bytes], { type: 'application/pdf' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = filename || 'form.pdf';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    } catch (err) {
+        console.error('PDF download error:', err);
+        if (typeof alert === 'function') alert(typeof t === 'function' ? t('error') : 'Error');
+    }
+}
+
 // Pensiya kalkulyatori: yosh + oylik to'lov -> taxminiy pensiya
 function handleCalculator() {
     const age = parseInt(document.getElementById('calcAge')?.value, 10);
@@ -3200,57 +3268,185 @@ function handleCalculator() {
     }
 }
 
+// AI javob: avval Gemini yoki Groq API (Locohub dagi kabi), yo‘q bo‘lsa kalit-so‘z fallback
+function getKeywordReply(message) {
+    var lang = typeof getCurrentLanguage === 'function' ? getCurrentLanguage() : 'ko';
+    var t = (typeof translations !== 'undefined' && translations[lang]) ? translations[lang] : (typeof translations !== 'undefined' ? translations.ko : {});
+    var lower = (message || '').toLowerCase().trim();
+    var reply = t.chatBotHint || t.chatBotPreparing || 'Try: help, documents, pension, branch, form';
+    if (/hello|hi|salom|привет|안녕|你好|xin chào|สวัสดี/i.test(lower) && !/website|sayt|haqida|bilmoqchi|about/.test(lower)) {
+        reply = t.chatWelcome || 'Hello!';
+    } else if (/help|yordam|помощь|도움|帮助|giúp|ช่วย/i.test(lower)) {
+        reply = t.chatBotHelp || 'See the top menu for services.';
+    } else if (/document|hujjat|문서|документ|เอกสาร|tài liệu|文档/i.test(lower)) {
+        reply = t.chatBotDocsHint || 'Open the Documents menu above.';
+    } else if (/website|sayt|haqida|bilmoqchi|about|know.*about|사이트|웹사이트|网站|сайт/i.test(lower)) {
+        reply = t.chatBotWhatIsThis || 'This is the AI-OCR service. Ask about documents, pension, branch, form.';
+    } else if (/nima|what|bu nima|qanday|what is this|это что|这是|이건|gì vậy|นี่คืออะไร/i.test(lower)) {
+        reply = t.chatBotWhatIsThis || 'This chat is for AI-OCR services. Type "help" for a short guide.';
+    } else if (/pension|pensiya|연금|пенси|养老金|lương hưu|บำนาญ|filial|branch|филиал|지사|分支|chi nhánh|สาขา|shakl|form|서식|форма|แบบฟอร์ม|表格/i.test(lower)) {
+        reply = t.chatBotHelp || 'See the top menu for services.';
+    }
+    return reply;
+}
+
+function getAIReply(message) {
+    var geminiKey = (typeof CONFIG !== 'undefined' && CONFIG.GEMINI_API_KEY) ? CONFIG.GEMINI_API_KEY : '';
+    var groqKey = (typeof CONFIG !== 'undefined' && CONFIG.GROQ_API_KEY) ? CONFIG.GROQ_API_KEY : '';
+
+    // 1) Gemini API (Google) – xuddi Locohubdagidek, lekin AI-OCR mavzusi
+    if (geminiKey) {
+        var systemPrompt = 'You are a helpful AI assistant for the AI-OCR system. The system offers: document upload and OCR, pension calculator, NPS (National Pension Service) branch finder in Korea, forms (passport, pension, ID). Answer briefly and in the same language the user writes.';
+        return fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + encodeURIComponent(geminiKey), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{ role: 'user', parts: [{ text: systemPrompt + '\n\nUser: ' + message }] }],
+                generationConfig: { maxOutputTokens: 512, temperature: 0.7 }
+            })
+        })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                var text = data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0];
+                if (text && text.text) return text.text.trim();
+                throw new Error('No text in Gemini response');
+            })
+            .catch(function(err) {
+                console.warn('Gemini API error:', err);
+                return getKeywordReply(message);
+            });
+    }
+
+    // 2) Groq API (Locohub dagi kabi – bepul, tez)
+    if (groqKey) {
+        return fetch('https://api.groq.com/openai/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + groqKey
+            },
+            body: JSON.stringify({
+                messages: [
+                    { role: 'system', content: 'You are a helpful AI assistant for the AI-OCR system (document OCR, pension calculator, NPS branch finder, forms). Answer briefly in the same language as the user.' },
+                    { role: 'user', content: message }
+                ],
+                model: 'llama-3.1-8b-instant',
+                temperature: 0.7,
+                max_tokens: 500
+            })
+        })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                var text = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+                if (text) return text.trim();
+                throw new Error('No text in Groq response');
+            })
+            .catch(function(err) {
+                console.warn('Groq API error:', err);
+                return getKeywordReply(message);
+            });
+    }
+
+    // 3) API kaliti yo‘q – kalit-so‘z javob
+    return Promise.resolve(getKeywordReply(message));
+}
+
 function handleChatSend() {
-    const chatInput = document.getElementById('chatInput');
-    const chatMessages = document.getElementById('chatMessages');
-    
+    var chatInput = document.getElementById('chatInput');
+    var chatMessages = document.getElementById('chatMessages');
     if (!chatInput || !chatMessages) return;
-    
-    const message = chatInput.value.trim();
+    var message = chatInput.value.trim();
     if (!message) return;
-    
-    // User message
-    const userMsg = document.createElement('div');
+    var userMsg = document.createElement('div');
     userMsg.className = 'chat-message user';
-    userMsg.innerHTML = `<p>${message}</p>`;
+    userMsg.innerHTML = '<p>' + message.replace(/</g, '&lt;') + '</p>';
     chatMessages.appendChild(userMsg);
-    
     chatInput.value = '';
-    
-    // Bot response (simple)
-    setTimeout(() => {
-        const botMsg = document.createElement('div');
+    getAIReply(message).then(function(reply) {
+        var botMsg = document.createElement('div');
         botMsg.className = 'chat-message bot';
-        botMsg.innerHTML = `<p>죄송합니다. 현재 채팅 기능이 준비 중입니다. 곧 이용하실 수 있습니다.</p>`;
+        botMsg.innerHTML = '<p>' + reply.replace(/</g, '&lt;') + '</p>';
         chatMessages.appendChild(botMsg);
         chatMessages.scrollTop = chatMessages.scrollHeight;
-    }, 500);
+    });
+}
+
+// Locohub-uslubidagi float AI Chat: ochish/yopish va yuborish
+function initAIChatFloat() {
+    var btn = document.getElementById('aiChatFloatBtn');
+    var frame = document.getElementById('aiChatFrame');
+    var icon = document.getElementById('aiChatBtnIcon');
+    var content = document.getElementById('aiChatContent');
+    var main = document.getElementById('aiChatMessages');
+    var input = document.getElementById('aiChatInput');
+    var sendBtn = document.getElementById('aiChatSendBtn');
+    if (!btn || !frame || !main || !input || !sendBtn) return;
+    btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        frame.classList.toggle('open');
+        icon.textContent = frame.classList.contains('open') ? '×' : '✦';
+    });
+    function sendFloatMessage() {
+        var text = input.value.trim();
+        if (!text) return;
+        input.value = '';
+        var userRow = document.createElement('div');
+        userRow.className = 'msg-row user';
+        userRow.innerHTML = '<div class="msg-right">' + text.replace(/</g, '&lt;') + '</div>';
+        main.appendChild(userRow);
+        content.scrollTop = content.scrollHeight;
+        getAIReply(text).then(function(reply) {
+            var botRow = document.createElement('div');
+            botRow.className = 'msg-row';
+            botRow.innerHTML = '<div class="msg-left">' + reply.replace(/</g, '&lt;') + '</div>';
+            main.appendChild(botRow);
+            content.scrollTop = content.scrollHeight;
+        });
+    }
+    sendBtn.addEventListener('click', sendFloatMessage);
+    input.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') { e.preventDefault(); sendFloatMessage(); }
+    });
 }
 
 async function loadStatistics() {
+    var chartDiv = document.getElementById('statisticsChart');
+    if (!chartDiv) return;
+    var lang = typeof getCurrentLanguage === 'function' ? getCurrentLanguage() : 'ko';
+    var t = (typeof translations !== 'undefined' && translations[lang]) ? translations[lang] : (typeof translations !== 'undefined' ? translations.ko : {});
+    var statsTitle = t.statsTitle || 'Document statistics';
+    var statsTotalDocs = t.statsTotalDocs || 'Total';
+    var statsCompleted = t.statsCompleted || 'Completed';
+    var statsProcessing = t.statsProcessing || 'Processing';
+    var statsNoData = t.statsNoData || 'Unable to load data.';
     try {
-        const userRole = localStorage.getItem('user_role') || 'user';
-        const documents = await apiCall(`/ocr/documents?skip=0&limit=100&user_role=${userRole}`);
-        
-        // Simple statistics
-        const chartDiv = document.getElementById('statisticsChart');
-        if (chartDiv) {
-            const totalDocs = documents.length;
-            const completedDocs = documents.filter(d => d.status === 'completed').length;
-            const processingDocs = documents.filter(d => d.status === 'processing').length;
-            
-            chartDiv.innerHTML = `
-                <div style="width: 100%;">
-                    <h3>문서 통계</h3>
-                    <p>전체 문서: ${totalDocs}개</p>
-                    <p>처리 완료: ${completedDocs}개</p>
-                    <p>처리 중: ${processingDocs}개</p>
-                </div>
-            `;
-        }
+        var userRole = localStorage.getItem('user_role') || 'user';
+        var documents = await apiCall('/ocr/documents?skip=0&limit=100&user_role=' + userRole);
+        var totalDocs = documents.length;
+        var completedDocs = documents.filter(function(d) { return d.status === 'completed'; }).length;
+        var processingDocs = documents.filter(function(d) { return d.status === 'processing'; }).length;
+        chartDiv.innerHTML = '<div class="stats-inner"><h3>' + statsTitle + '</h3><p>' + statsTotalDocs + ': ' + totalDocs + '</p><p>' + statsCompleted + ': ' + completedDocs + '</p><p>' + statsProcessing + ': ' + processingDocs + '</p></div>';
     } catch (error) {
         console.error('Statistics yuklash xatosi:', error);
+        chartDiv.innerHTML = '<div class="stats-inner"><h3>' + statsTitle + '</h3><p>' + statsNoData + '</p></div>';
     }
+}
+
+function loadWebfax() {
+    var listEl = document.querySelector('#webfaxPage .webfax-list');
+    if (!listEl) return;
+    var lang = typeof getCurrentLanguage === 'function' ? getCurrentLanguage() : 'ko';
+    var t = (typeof translations !== 'undefined' && translations[lang]) ? translations[lang] : (typeof translations !== 'undefined' ? translations.ko : {});
+    var docLabel = t.webfaxDocLabel || 'Document';
+    var processed = t.webfaxProcessed || 'Processed';
+    var demoList = [
+        { date: '2026-01-23', num: 1, status: processed },
+        { date: '2026-01-22', num: 2, status: processed },
+        { date: '2026-01-20', num: 3, status: processed }
+    ];
+    listEl.innerHTML = demoList.map(function(item) {
+        return '<div class="webfax-item"><span>' + item.date + '</span><span>' + docLabel + ' #' + item.num + '</span><span>' + item.status + '</span></div>';
+    }).join('');
 }
 
 // ==================== MY PAGE (Profile + Documents) ====================
@@ -3337,10 +3533,7 @@ function setupMypageSidebar() {
             else if (page === 'documents' || page === 'favorites') renderMypageDocumentsView();
         };
     });
-    const aiChatBtn = document.getElementById('mypageAIChatBtn');
-    if (aiChatBtn) {
-        aiChatBtn.onclick = (e) => { e.preventDefault(); alert('AI Chat – tez kunda'); };
-    }
+    // Float AI Chat – initAIChatFloat() barcha sahifalarda DOMContentLoaded da chaqiriladi
     const updateBtn = document.getElementById('mypageUpdateBtn');
     if (updateBtn) {
         updateBtn.onclick = () => {
@@ -4206,6 +4399,32 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
+    // Oson qo'llanma: bo'limni bosganda yig'ish/ochish (accordion)
+    var guideSections = document.querySelector('#guidePage .guide-sections');
+    if (guideSections) {
+        guideSections.addEventListener('click', function(e) {
+            var h2 = e.target.closest('.guide-section h2');
+            if (h2) {
+                var section = h2.closest('.guide-section');
+                if (section) section.classList.toggle('collapsed');
+            }
+        });
+    }
+
+    // Shakl topish: PDF yuklash tugmalari
+    const formsList = document.querySelector('#formsPage .forms-list');
+    if (formsList) {
+        formsList.addEventListener('click', function(e) {
+            var btn = e.target.closest('.form-item button.btn-primary');
+            if (!btn) return;
+            var item = btn.closest('.form-item');
+            var items = document.querySelectorAll('#formsPage .form-item');
+            var idx = Array.prototype.indexOf.call(items, item);
+            var names = ['passport-translation-form.pdf', 'pension-application.pdf', 'id-translation-form.pdf'];
+            downloadFormPdf(idx, names[idx] || 'form.pdf');
+        });
+    }
+
     // Calculator functionality
     const calcBtn = document.getElementById('calcBtn');
     if (calcBtn) {
@@ -4223,7 +4442,10 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-    
+
+    // Float AI Chat (Locohub-style) – barcha sahifalarda ko‘rinadi
+    initAIChatFloat();
+
     // Language selector event listener
     const languageSelector = document.getElementById('languageSelector');
     if (languageSelector) {
@@ -4309,14 +4531,25 @@ document.addEventListener('DOMContentLoaded', () => {
         showPage(savedPage);
     }
     
-    // Brauzer orqaga/oldinga: sayt ichida qolish (detail -> documents, homepage'dan chiqib ketmaslik)
+    // Brauzer orqaga/oldinga: sayt ichida qolish. Documents (yoki boshqa asosiy sahifa)dan orqaga bosganda servis sahifasiga tushmaslik – to'g'ridan-to'g'ri dashboard.
+    const mainPages = ['dashboard', 'documents', 'upload', 'admin'];
+    const servicePages = ['webfax', 'branch', 'forms', 'calculator', 'guide', 'statistics', 'chat'];
     window.addEventListener('popstate', function(e) {
         const state = e.state;
+        const fromPage = currentPage;
         if (state && state.page === 'documentDetail' && state.docId != null) {
             viewDocument(state.docId);
             return;
         }
         if (state && state.page) {
+            // Asosiy sahifadan (documents, upload, admin) orqaga bosib servis sahifasiga (webfax, ...) tushmaslik – dashboard ko'rsatamiz va history'ni tozalaymiz
+            if (mainPages.includes(fromPage) && servicePages.includes(state.page)) {
+                showPage('dashboard');
+                if (typeof history.replaceState === 'function') {
+                    history.replaceState({ page: 'dashboard' }, '', window.location.pathname || '/');
+                }
+                return;
+            }
             showPage(state.page);
             return;
         }

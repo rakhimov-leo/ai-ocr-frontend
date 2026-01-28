@@ -264,43 +264,186 @@
     margin-top: 0;
 }
 
-/* Floating AI Chat button */
-.mypage-float-aichat {
+/* ==================== AI Chat (Locohub-style floating) ==================== */
+.aichat-wrap.chatting {
+    position: relative;
+}
+
+.aichat-wrap .chat-button {
+    border: none;
     position: fixed;
-    bottom: 28px;
-    right: 28px;
-    display: inline-flex;
+    bottom: 90px;
+    right: 24px;
+    height: 50px;
+    min-width: 130px;
+    padding: 0 20px;
+    display: flex;
     align-items: center;
+    justify-content: center;
     gap: 8px;
-    padding: 12px 20px;
-    background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%);
-    color: #fff;
     border-radius: 999px;
-    font-weight: 600;
-    font-size: 0.95em;
-    text-decoration: none;
-    box-shadow: 0 4px 16px rgba(124, 58, 237, 0.4);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    box-shadow: 0 4px 20px rgba(99, 102, 241, 0.5);
     transition: transform 0.2s, box-shadow 0.2s;
-    z-index: 100;
+    z-index: 999;
+    cursor: pointer;
+    color: #fff;
+    font-weight: 600;
+    font-size: 15px;
 }
 
-.mypage-float-aichat:hover {
+.aichat-wrap .chat-button:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(124, 58, 237, 0.5);
+    box-shadow: 0 6px 25px rgba(99, 102, 241, 0.6);
     color: #fff;
 }
 
-.mypage-aichat-icon {
-    font-size: 1.1em;
-    opacity: 0.95;
+.aichat-wrap .chat-btn-icon {
+    font-size: 18px;
 }
 
+.aichat-wrap .chat-frame {
+    position: fixed;
+    right: -380px;
+    width: 380px;
+    max-width: calc(100vw - 24px);
+    height: 500px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    background: #e9f3ff;
+    border-radius: 20px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    bottom: 165px;
+    transition: right 0.4s ease;
+}
+
+.aichat-wrap .chat-frame.open {
+    right: 12px;
+}
+
+.aichat-wrap .chat-top {
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0e7ff 100%);
+    border-radius: 20px 20px 0 0;
+    font-size: 20px;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.aichat-wrap .chat-top-icon {
+    font-size: 22px;
+    color: #6366f1;
+}
+
+.aichat-wrap .chat-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px 16px;
+}
+
+.aichat-wrap .chat-main {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.aichat-wrap .chat-welcome {
+    margin-left: 4px;
+    padding: 10px 14px;
+    max-width: 90%;
+    background: #9fa7ac;
+    border-radius: 18px 18px 18px 4px;
+    color: #fff;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.aichat-wrap .msg-row {
+    display: flex;
+    align-items: flex-end;
+    margin: 6px 0;
+}
+
+.aichat-wrap .msg-row.user {
+    justify-content: flex-end;
+}
+
+.aichat-wrap .msg-left {
+    max-width: 85%;
+    margin-left: 8px;
+    padding: 10px 14px;
+    background: #0780cc;
+    border-radius: 18px 18px 18px 4px;
+    color: #fff;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.aichat-wrap .msg-right {
+    max-width: 85%;
+    padding: 10px 14px;
+    background: #d0ece8;
+    border-radius: 18px 18px 4px 18px;
+    color: #1f2937;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.aichat-wrap .chat-bott {
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+    background: #fff;
+    border-radius: 0 0 20px 20px;
+}
+
+.aichat-wrap .msg-input {
+    flex: 1;
+    padding: 12px 18px;
+    height: 46px;
+    border: 1px solid #e5e7eb;
+    border-radius: 24px;
+    font-size: 15px;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.aichat-wrap .msg-input:focus {
+    border-color: #6366f1;
+}
+
+.aichat-wrap .send-msg-btn {
+    width: 46px;
+    height: 46px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: #33c1c1;
+    border: none;
+    color: #fff;
+    font-size: 18px;
+    cursor: pointer;
+    transition: transform 0.15s, background 0.15s;
+}
+
+.aichat-wrap .send-msg-btn:hover {
+    background: #2aa8a8;
+    transform: scale(1.05);
+}
+
+/* Hide old mypage-only AI Chat button if still in DOM */
 .mypage-float-aichat {
-    display: none;
-}
-
-body.mypage-visible .mypage-float-aichat {
-    display: inline-flex;
+    display: none !important;
 }
 
 @media (max-width: 768px) {

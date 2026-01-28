@@ -832,6 +832,10 @@ body::before {
     display: block;
 }
 
+.branch-map-container.map-initialized .leaflet-container {
+    border-radius: 12px;
+}
+
 .page h1 {
     font-size: 2.5em;
     margin-bottom: 5px;
@@ -2155,6 +2159,23 @@ body::before {
 .guide-section h2 {
     color: #0066cc;
     margin-bottom: 15px;
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+    padding-right: 24px;
+}
+.guide-section h2::after {
+    content: '▼';
+    position: absolute;
+    right: 0;
+    font-size: 0.75em;
+    opacity: 0.7;
+}
+.guide-section.collapsed h2::after {
+    content: '▶';
+}
+.guide-section.collapsed p {
+    display: none;
 }
 
 .guide-section p {
@@ -2179,6 +2200,19 @@ body::before {
 
 .webfax-item:last-child {
     border-bottom: none;
+}
+
+.stats-inner {
+    width: 100%;
+    padding: 10px;
+}
+.stats-inner h3 {
+    margin-top: 0;
+    color: #2d3748;
+}
+.stats-inner p {
+    margin: 8px 0;
+    color: #4a5568;
 }
 
 /* Chat */
