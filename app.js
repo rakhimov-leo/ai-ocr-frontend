@@ -614,11 +614,14 @@ async function loadDashboard() {
         if (newsList) {
             var items = (typeof NPS_NEWS !== 'undefined' && NPS_NEWS.length) ? NPS_NEWS : [];
             if (items.length > 0) {
-                newsList.innerHTML = items.map(function (item) {
+                var titles = (typeof t === 'function') ? [t('npsNews1'), t('npsNews2'), t('npsNews3'), t('npsNews4'), t('npsNews5'), t('npsNews6')] : null;
+                if (!titles) titles = items.map(function (i) { return i.title; });
+                newsList.innerHTML = items.map(function (item, idx) {
                     var url = item.url || 'https://www.nps.or.kr/eng/main.do';
+                    var title = (titles && titles[idx]) ? titles[idx] : (item.title || '');
                     return '<a class="news-item news-item-link" href="' + url + '" target="_blank" rel="noopener noreferrer">' +
                         '<span class="news-date">' + (item.date || '') + '</span>' +
-                        '<span class="news-title">' + (item.title || '') + '</span></a>';
+                        '<span class="news-title">' + title + '</span></a>';
                 }).join('');
             } else {
                 newsList.innerHTML = '<div class="news-item" style="grid-column: 1 / -1; text-align: center; padding: 30px; background: #f8f9fa;"><span class="news-title" style="color: #999;">' + (typeof t === "function" ? t("docNotFound") : "No news") + '</span></div>';

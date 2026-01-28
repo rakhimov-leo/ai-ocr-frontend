@@ -282,8 +282,8 @@
     justify-content: center;
     gap: 8px;
     border-radius: 999px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    box-shadow: 0 4px 20px rgba(99, 102, 241, 0.5);
+    background: linear-gradient(135deg, #0d9488 0%, #059669 100%);
+    box-shadow: 0 4px 20px rgba(5, 150, 105, 0.45);
     transition: transform 0.2s, box-shadow 0.2s;
     z-index: 999;
     cursor: pointer;
@@ -294,8 +294,9 @@
 
 .aichat-wrap .chat-button:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 25px rgba(99, 102, 241, 0.6);
+    box-shadow: 0 6px 25px rgba(5, 150, 105, 0.55);
     color: #fff;
+    background: linear-gradient(135deg, #0f766e 0%, #047857 100%);
 }
 
 .aichat-wrap .chat-btn-icon {

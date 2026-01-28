@@ -36,6 +36,12 @@ const translations = {
         tabPress: '보도자료',
         tabPromo: '홍보센터',
         tabJobs: '채용공고',
+        npsNews1: 'NPS 채용: 포트폴리오 매니저 모집',
+        npsNews2: '리서치 매니저 – EM-아시아 시장 조사 및 투자 전략',
+        npsNews3: '인프라 포트폴리오 매니저 – 시니어 어소시에이트',
+        npsNews4: 'NPS 펀드 운용 보고서 – 연간 성과',
+        npsNews5: '국민연금법 및 외국인 일시금 환급',
+        npsNews6: 'NPS 국제업무센터 – 상담 안내',
         newsUpdate: '2026년 AI-OCR 시스템 업데이트 안내',
         newsNewFeature: '새로운 문서 인식 기능 추가',
         newsService: '비대면 채널을 통한 서비스 안내',
@@ -234,6 +240,12 @@ const translations = {
         tabPress: 'Press Release',
         tabPromo: 'Promotion Center',
         tabJobs: 'Job Postings',
+        npsNews1: 'NPS Job Opening: Portfolio Manager Recruitment',
+        npsNews2: 'Research Manager – EM-Asia Market Research and Investment Strategy',
+        npsNews3: 'Infrastructure Portfolio Manager – Senior Associate',
+        npsNews4: 'NPS Fund Management Report – Annual Performance',
+        npsNews5: 'National Pension Act and Foreigners Lump-sum Refund',
+        npsNews6: 'NPS Center for International Affairs – Consultation',
         newsUpdate: '2026 AI-OCR System Update Notice',
         newsNewFeature: 'New Document Recognition Feature Added',
         newsService: 'Service Guide via Non-face-to-face Channels',
@@ -427,6 +439,12 @@ const translations = {
         tabPress: 'Matbuot',
         tabPromo: 'Targ\'ibot markazi',
         tabJobs: 'Ish o\'rinlari',
+        npsNews1: 'NPS ish o\'rni: Portfel menejeri qidiruv',
+        npsNews2: 'Tadqiqot menejeri – EM-Osiyo bozori va investitsiya strategiyasi',
+        npsNews3: 'Infratuzilma portfel menejeri – Katta mutaxassis',
+        npsNews4: 'NPS fond boshqaruvi hisoboti – Yillik ko\'rsatkichlar',
+        npsNews5: 'Milliy pensiya to\'g\'risidagi qonun va chet elliklar uchun bir martalik to\'lov',
+        npsNews6: 'NPS xalqaro ishlar markazi – Maslahat',
         newsUpdate: '2026 AI-OCR Tizimi yangilanishi',
         newsNewFeature: 'Yangi hujjatni tanib olish funksiyasi qo\'shildi',
         newsService: 'Uzoqdan xizmat ko\'rsatish kanallari orqali qo\'llanma',
@@ -620,6 +638,12 @@ const translations = {
         tabPress: 'Пресс-релиз',
         tabPromo: 'Промо-центр',
         tabJobs: 'Вакансии',
+        npsNews1: 'NPS: набор портфельного менеджера',
+        npsNews2: 'Менеджер по исследованиям – EM-Азия, стратегия инвестиций',
+        npsNews3: 'Менеджер по инфраструктурному портфелю – старший специалист',
+        npsNews4: 'Отчёт NPS по управлению фондом – годовые результаты',
+        npsNews5: 'Закон о национальной пенсии и единовременная выплата иностранцам',
+        npsNews6: 'Центр международных дел NPS – консультация',
         newsUpdate: 'Уведомление об обновлении системы AI-OCR 2026',
         newsNewFeature: 'Добавлена новая функция распознавания документов',
         newsService: 'Руководство по услугам через дистанционные каналы',
@@ -813,6 +837,12 @@ const translations = {
         tabPress: 'Хэвлэлийн мэдээ',
         tabPromo: 'Сурталчилгааны төв',
         tabJobs: 'Ажлын байр',
+        npsNews1: 'NPS ажлын байр: Портфолио менежерийн эл recruitment',
+        npsNews2: 'Судалгааны менежер – EM-Ази зах зээл, хөрөнгө оруулалтын стратеги',
+        npsNews3: 'Дэд бүтцийн портфолио менежер – Ахлах мэргэжилтэн',
+        npsNews4: 'NPS хөрөнгө зохистойлолтын тайлан – Жилийн гүйцэтгэл',
+        npsNews5: 'Үндэсний пенсийн хууль ба гадаадын нэг удаагийн төлбөр',
+        npsNews6: 'NPS олон улсын хэлтэс – Зөвлөгөө',
         newsUpdate: '2026 AI-OCR Систем шинэчлэл',
         newsNewFeature: 'Шинэ баримт бичгийн таних функц нэмэгдсэн',
         newsService: 'Харилцан биш сувгаар үйлчилгээний заавар',
@@ -1006,6 +1036,12 @@ const translations = {
         tabPress: '新闻稿',
         tabPromo: '宣传中心',
         tabJobs: '招聘公告',
+        npsNews1: 'NPS 招聘：投资组合经理',
+        npsNews2: '研究员 – 新兴市场亚洲研究与投资策略',
+        npsNews3: '基础设施投资组合经理 – 高级助理',
+        npsNews4: 'NPS 基金管理报告 – 年度业绩',
+        npsNews5: '国民年金法与外国人一次性退费',
+        npsNews6: 'NPS 国际业务中心 – 咨询',
         newsUpdate: '2026 AI-OCR 系统更新通知',
         newsNewFeature: '新增文档识别功能',
         newsService: '通过非面对面渠道的服务指南',
@@ -1199,6 +1235,12 @@ const translations = {
         tabPress: 'Thông cáo báo chí',
         tabPromo: 'Trung tâm quảng bá',
         tabJobs: 'Tuyển dụng',
+        npsNews1: 'NPS tuyển dụng: Quản lý danh mục đầu tư',
+        npsNews2: 'Quản lý nghiên cứu – EM-Châu Á thị trường và chiến lược đầu tư',
+        npsNews3: 'Quản lý danh mục hạ tầng – Chuyên gia cao cấp',
+        npsNews4: 'Báo cáo quản lý quỹ NPS – Hiệu suất hàng năm',
+        npsNews5: 'Luật hưu trí quốc gia và hoàn trả một lần cho người nước ngoài',
+        npsNews6: 'Trung tâm đối ngoại NPS – Tư vấn',
         newsUpdate: 'Thông báo cập nhật Hệ thống AI-OCR 2026',
         newsNewFeature: 'Tính năng nhận dạng tài liệu mới được thêm vào',
         newsService: 'Hướng dẫn dịch vụ qua các kênh không tiếp xúc',
@@ -1392,6 +1434,12 @@ const translations = {
         tabPress: 'ข่าวประชาสัมพันธ์',
         tabPromo: 'ศูนย์ส่งเสริมการขาย',
         tabJobs: 'ประกาศรับสมัครงาน',
+        npsNews1: 'NPS รับสมัคร: ผู้จัดการพอร์ตโฟลิโอ',
+        npsNews2: 'ผู้จัดการวิจัย – EM-เอเชีย ตลาดและกลยุทธ์การลงทุน',
+        npsNews3: 'ผู้จัดการพอร์ตโฟลิโอโครงสร้างพื้นฐาน – นักวิเคราะห์อาวุโส',
+        npsNews4: 'รายงานการบริหารกองทุน NPS – ผลดำเนินงานประจำปี',
+        npsNews5: 'พระราชบัญญัติบำนาญแห่งชาติและเงินคืนครั้งเดียวสำหรับชาวต่างชาติ',
+        npsNews6: 'ศูนย์กิจการระหว่างประเทศ NPS – ให้คำปรึกษา',
         newsUpdate: 'ประกาศอัปเดตระบบ AI-OCR 2026',
         newsNewFeature: 'เพิ่มฟีเจอร์การจดจำเอกสารใหม่',
         newsService: 'คู่มือบริการผ่านช่องทางที่ไม่ต้องพบหน้ากัน',
@@ -1688,7 +1736,16 @@ function applyTranslations(lang) {
         tabs[3].textContent = t.tabJobs;
     }
     
-    // News items – bosh sahifada NPS yangiliklari loadDashboard() da to'ldiriladi, tarjima qilib yozilmaydi
+    // NPS yangiliklari sarlavhalari – til o'zgarganda avtomatik yangilanadi
+    const newsTitles = document.querySelectorAll('.news-list .news-item-link .news-title');
+    if (newsTitles.length >= 6 && t.npsNews1) {
+        newsTitles[0].textContent = t.npsNews1;
+        newsTitles[1].textContent = t.npsNews2;
+        newsTitles[2].textContent = t.npsNews3;
+        newsTitles[3].textContent = t.npsNews4;
+        newsTitles[4].textContent = t.npsNews5;
+        newsTitles[5].textContent = t.npsNews6;
+    }
     
     // Services
     const servicesTitle = document.querySelector('.services-box h2');
