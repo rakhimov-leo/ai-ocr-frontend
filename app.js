@@ -492,6 +492,16 @@ function goBackFromDetail() {
 
 // ==================== DASHBOARD ====================
 
+// NPS (Korea Milliy pensiya xizmati) haqida haqiqiy yangiliklar – rasmiy saytga linklar
+var NPS_NEWS = [
+    { date: '2024-08-30', title: 'NPS Job Opening: Portfolio Manager Recruitment', url: 'https://www.nps.or.kr/eng/main.do' },
+    { date: '2024-06-12', title: 'Research Manager – EM-Asia Market Research and Investment Strategy', url: 'https://www.nps.or.kr/eng/main.do' },
+    { date: '2024-06-12', title: 'Infrastructure Portfolio Manager – Senior Associate', url: 'https://www.nps.or.kr/eng/main.do' },
+    { date: '2024-01-15', title: 'NPS Fund Management Report – Annual Performance', url: 'https://fund.nps.or.kr/eng/main.do' },
+    { date: '2023-12-01', title: 'National Pension Act and Foreigners Lump-sum Refund', url: 'https://www.nps.or.kr/eng/main.do' },
+    { date: '2023-11-20', title: 'NPS Center for International Affairs – Consultation', url: 'https://www.nps.or.kr/eng/main.do' }
+];
+
 // Featured list checkbox'larini boshqarish funksiyasi (global)
 function initFeaturedCheckboxes() {
     const featuredCheckboxes = document.querySelectorAll('.featured-checkbox');
@@ -599,36 +609,51 @@ async function loadDashboard() {
             }
         }
         
-        // News list yangilash - Responsive Grid bilan (Clean Code tamoyili)
+        // News list – haqiqiy NPS yangiliklari (onlayn linklar)
         const newsList = document.querySelector('.news-list');
         if (newsList) {
-            if (documents.length > 0) {
-                // Eng so'nggi document'larni news sifatida ko'rsatish
-                const latestDocs = documents.slice(0, 6); // Ko'proq item'lar uchun
-                
-                // Oddiy user: sarlavhada tartib raqami (1,2,3...), admin: haqiqiy id
-                const forUser = userRole === 'user';
-                newsList.innerHTML = latestDocs.map((doc, index) => {
-                    const date = new Date(doc.created_at).toISOString().split('T')[0];
-                    const fileTypeFormatted = doc.file_type || '기타';
-                    const num = forUser ? (index + 1) : doc.id;
-                    const title = `문서 #${num} - ${fileTypeFormatted} 처리 완료`;
-                    return `
-                        <div class="news-item" onclick="viewDocument(${doc.id})" data-doc-id="${doc.id}">
-                            <span class="news-date">${date}</span>
-                            <span class="news-title">${title}</span>
-                </div>
-                    `;
+            var items = (typeof NPS_NEWS !== 'undefined' && NPS_NEWS.length) ? NPS_NEWS : [];
+            if (items.length > 0) {
+                newsList.innerHTML = items.map(function (item) {
+                    var url = item.url || 'https://www.nps.or.kr/eng/main.do';
+                    return '<a class="news-item news-item-link" href="' + url + '" target="_blank" rel="noopener noreferrer">' +
+                        '<span class="news-date">' + (item.date || '') + '</span>' +
+                        '<span class="news-title">' + (item.title || '') + '</span></a>';
                 }).join('');
             } else {
-                // Agar document'lar bo'lmasa - empty state
-                newsList.innerHTML = `
-                    <div class="news-item" style="grid-column: 1 / -1; text-align: center; padding: 30px; background: #f8f9fa;">
-                        <span class="news-title" style="color: #999; font-weight: 400;">아직 뉴스가 없습니다</span>
-                    </div>
-                `;
+                newsList.innerHTML = '<div class="news-item" style="grid-column: 1 / -1; text-align: center; padding: 30px; background: #f8f9fa;"><span class="news-title" style="color: #999;">' + (typeof t === "function" ? t("docNotFound") : "No news") + '</span></div>';
             }
         }
+        // "Ko'proq +" tugmasi – NPS rasmiy yangiliklar sahifasiga
+        var btnMore = document.querySelector('.news-box .btn-more');
+        if (btnMore) {
+            btnMore.onclick = function () { window.open('https://www.nps.or.kr/eng/main.do', '_blank'); };
+            btnMore.style.cursor = 'pointer';
+        }
+        // Yangiliklar qutisi tablari – nomiga mos saytga ochish
+        var tabs = document.querySelectorAll('.news-box .box-tabs .tab');
+        var tabUrls = [
+            null,
+            'https://www.mohw.go.kr/board.es?mid=a20401000000&bid=0032',
+            'https://www.nps.or.kr/eng/main.do',
+            'https://www.jobkorea.co.kr/'
+        ];
+        tabs.forEach(function (tab, index) {
+            tab.style.cursor = 'pointer';
+            if (tabUrls[index]) {
+                tab.onclick = function (e) {
+                    e.preventDefault();
+                    tabs.forEach(function (t) { t.classList.remove('active'); });
+                    tab.classList.add('active');
+                    window.open(tabUrls[index], '_blank');
+                };
+            } else {
+                tab.onclick = function () {
+                    tabs.forEach(function (t) { t.classList.remove('active'); });
+                    tab.classList.add('active');
+                };
+            }
+        });
         
         // Featured checkbox'larini init qilish (dashboard yuklanganda)
         setTimeout(() => {
@@ -3296,56 +3321,15 @@ function getAIReply(message) {
     var geminiKey = (typeof CONFIG !== 'undefined' && CONFIG.GEMINI_API_KEY) ? CONFIG.GEMINI_API_KEY : (typeof window !== 'undefined' && window.GEMINI_API_KEY) ? window.GEMINI_API_KEY : '';
     var groqKey = (typeof CONFIG !== 'undefined' && CONFIG.GROQ_API_KEY) ? CONFIG.GROQ_API_KEY : (typeof window !== 'undefined' && window.GROQ_API_KEY) ? window.GROQ_API_KEY : '';
 
-    // 1) Gemini API (Google)
-    if (geminiKey) {
-        var systemPrompt = 'You are a helpful AI assistant for the AI-OCR system. The system offers: document upload and OCR, pension calculator, NPS (National Pension Service) branch finder in Korea, forms (passport, pension, ID). Answer briefly and in the same language the user writes.';
-        return fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + encodeURIComponent(geminiKey), {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents: [{ role: 'user', parts: [{ text: systemPrompt + '\n\nUser: ' + message }] }],
-                generationConfig: { maxOutputTokens: 512, temperature: 0.7 }
-            })
-        })
-            .then(function(r) { return r.json(); })
-            .then(function(data) {
-                if (data.error) {
-                    console.warn('Gemini API error:', data.error);
-                    var code = data.error.code;
-                    var status = (data.error.status || '').toUpperCase();
-                    if (code === 503 || status === 'UNAVAILABLE' || (data.error.message && data.error.message.indexOf('overloaded') !== -1)) {
-                        var msg = (typeof t !== 'undefined' && t.chatBotOverloaded) ? t.chatBotOverloaded : 'AI modeli hozir band. Bir ozdan keyin qayta urinib ko\'ring.';
-                        return msg;
-                    }
-                    throw new Error(data.error.message || 'Gemini error');
-                }
-                var parts = data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts;
-                var text = parts && parts[0] && parts[0].text;
-                if (text) return text.trim();
-                throw new Error('No text in Gemini response');
-            })
-            .catch(function(err) {
-                console.warn('Gemini API error:', err);
-                var overloaded = err && err.message && (err.message.indexOf('overloaded') !== -1 || err.message.indexOf('503') !== -1);
-                if (overloaded) {
-                    return (typeof t !== 'undefined' && t.chatBotOverloaded) ? t.chatBotOverloaded : 'AI modeli hozir band. Bir ozdan keyin qayta urinib ko\'ring.';
-                }
-                return 'AI javob bermadi. Brauzer Konsol (F12) da xatolikni ko\'ring. Agar sahifani file:// ochgan bo\'lsangiz, lokal serverdan oching (masalan: Live Server yoki npx serve).';
-            });
-    }
-
-    // 2) Groq API (Locohub dagi kabi – bepul, tez)
-    if (groqKey) {
+    function callGroq(msg) {
+        if (!groqKey) return Promise.resolve((typeof t !== 'undefined' && t.chatBotOverloaded) ? t.chatBotOverloaded : 'AI modeli hozir band. Bir ozdan keyin qayta urinib ko\'ring.');
         return fetch('https://api.groq.com/openai/v1/chat/completions', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + groqKey
-            },
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + groqKey },
             body: JSON.stringify({
                 messages: [
                     { role: 'system', content: 'You are a helpful AI assistant for the AI-OCR system (document OCR, pension calculator, NPS branch finder, forms). Answer briefly in the same language as the user.' },
-                    { role: 'user', content: message }
+                    { role: 'user', content: msg }
                 ],
                 model: 'llama-3.1-8b-instant',
                 temperature: 0.7,
@@ -3362,6 +3346,58 @@ function getAIReply(message) {
                 console.warn('Groq API error:', err);
                 return 'AI javob bermadi. Brauzer Konsol (F12) da xatolikni ko\'ring. Sahifani file:// emas, http:// orqali oching.';
             });
+    }
+
+    // 1) Gemini API (Google) – 429/503 bo‘lsa Groq ga o‘tadi
+    if (geminiKey) {
+        var systemPrompt = 'You are a helpful AI assistant for the AI-OCR system. The system offers: document upload and OCR, pension calculator, NPS (National Pension Service) branch finder in Korea, forms (passport, pension, ID). Answer briefly and in the same language the user writes.';
+        return fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + encodeURIComponent(geminiKey), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{ role: 'user', parts: [{ text: systemPrompt + '\n\nUser: ' + message }] }],
+                generationConfig: { maxOutputTokens: 512, temperature: 0.7 }
+            })
+        })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.error) {
+                    console.warn('Gemini API error:', data.error);
+                    var code = data.error.code;
+                    var status = (data.error.status || '').toUpperCase();
+                    var msgText = data.error.message || '';
+                    var isOverloaded = code === 503 || status === 'UNAVAILABLE' || msgText.indexOf('overloaded') !== -1;
+                    var isQuota = code === 429 || status === 'RESOURCE_EXHAUSTED' || msgText.indexOf('quota') !== -1;
+                    if ((isOverloaded || isQuota) && groqKey) {
+                        return callGroq(message);
+                    }
+                    if (isOverloaded || isQuota) {
+                        return (typeof t !== 'undefined' && t.chatBotOverloaded) ? t.chatBotOverloaded : 'AI modeli hozir band. Bir ozdan keyin qayta urinib ko\'ring.';
+                    }
+                    throw new Error(msgText || 'Gemini error');
+                }
+                var parts = data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts;
+                var text = parts && parts[0] && parts[0].text;
+                if (text) return text.trim();
+                throw new Error('No text in Gemini response');
+            })
+            .catch(function(err) {
+                console.warn('Gemini API error:', err);
+                var errMsg = err && err.message ? err.message : '';
+                var overloadedOrQuota = errMsg.indexOf('overloaded') !== -1 || errMsg.indexOf('503') !== -1 || errMsg.indexOf('quota') !== -1 || errMsg.indexOf('429') !== -1;
+                if (overloadedOrQuota && groqKey) {
+                    return callGroq(message);
+                }
+                if (overloadedOrQuota) {
+                    return (typeof t !== 'undefined' && t.chatBotOverloaded) ? t.chatBotOverloaded : 'AI modeli hozir band. Bir ozdan keyin qayta urinib ko\'ring.';
+                }
+                return 'AI javob bermadi. Brauzer Konsol (F12) da xatolikni ko\'ring. Agar sahifani file:// ochgan bo\'lsangiz, lokal serverdan oching (masalan: Live Server yoki npx serve).';
+            });
+    }
+
+    // 2) Groq API (Locohub dagi kabi – bepul, tez)
+    if (groqKey) {
+        return callGroq(message);
     }
 
     // 3) API kaliti yo‘q – kalit-so‘z javob + eslatma
@@ -3525,6 +3561,30 @@ async function renderMypageDocumentsView() {
     else await loadUserMyPageDocuments();
 }
 
+function applyMypageAvatar() {
+    var dataUrl = localStorage.getItem('mypage_avatar');
+    var ids = ['mypageProfileAvatar', 'mypageSidebarAvatar'];
+    ids.forEach(function(id) {
+        var img = document.getElementById(id);
+        if (!img) return;
+        var placeholder = img.nextElementSibling;
+        if (placeholder && placeholder.classList && placeholder.classList.contains) {
+            if (dataUrl) {
+                img.src = dataUrl;
+                img.style.display = '';
+                placeholder.classList.remove('show');
+            } else {
+                img.removeAttribute('src');
+                img.style.display = 'none';
+                placeholder.classList.add('show');
+            }
+        } else {
+            if (dataUrl) { img.src = dataUrl; img.style.display = ''; }
+            else { img.removeAttribute('src'); img.style.display = 'none'; }
+        }
+    });
+}
+
 function setupMypageSidebar() {
     const username = localStorage.getItem('username') || 'User';
     const phone = localStorage.getItem('mypage_phone') || localStorage.getItem('phone') || '';
@@ -3540,12 +3600,9 @@ function setupMypageSidebar() {
     if (roleEl) roleEl.textContent = role === 'ADMIN' ? 'ADMIN' : 'USER';
     if (initSide) initSide.textContent = initial;
     if (initProfile) initProfile.textContent = initial;
+    applyMypageAvatar();
     const navTexts = document.querySelectorAll('.mypage-sidebar-nav .mypage-nav-item .mypage-nav-text');
     const labels = [
-        typeof t === 'function' ? t('myFavorites') : 'My Favorites',
-        typeof t === 'function' ? t('recentlyVisited') : 'Recently Visited',
-        typeof t === 'function' ? t('myFollowers') : 'My Followers',
-        typeof t === 'function' ? t('myFollowings') : 'My Followings',
         typeof t === 'function' ? t('myProfile') : 'My Profile',
         typeof t === 'function' ? t('logout') : 'Logout'
     ];
@@ -3574,6 +3631,34 @@ function setupMypageSidebar() {
             if (adEl) localStorage.setItem('mypage_address', adEl.value.trim());
             setupMypageSidebar();
             alert(typeof t === 'function' ? t('success') : 'Saved');
+        };
+    }
+    var uploadPhotoBtn = document.getElementById('mypageUploadPhotoBtn');
+    var photoInput = document.getElementById('mypagePhotoInput');
+    if (uploadPhotoBtn && photoInput) {
+        uploadPhotoBtn.onclick = function() { photoInput.click(); };
+        photoInput.onchange = function() {
+            var file = photoInput.files && photoInput.files[0];
+            if (!file) return;
+            var ok = /^image\/(jpeg|jpg|png|webp)$/i.test(file.type);
+            if (!ok) {
+                alert(typeof t === 'function' ? t('photoHint') : 'Rasm JPG, JPEG, PNG yoki WebP formatida bo\'lishi kerak!');
+                photoInput.value = '';
+                return;
+            }
+            var reader = new FileReader();
+            reader.onload = function() {
+                try {
+                    localStorage.setItem('mypage_avatar', reader.result);
+                    applyMypageAvatar();
+                    alert(typeof t === 'function' ? t('success') : 'Saved');
+                } catch (e) {
+                    console.error('Avatar saqlash xatosi:', e);
+                    alert('Rasm juda katta yoki saqlashda xato.');
+                }
+            };
+            reader.readAsDataURL(file);
+            photoInput.value = '';
         };
     }
 }

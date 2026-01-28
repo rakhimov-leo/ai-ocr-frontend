@@ -1087,47 +1087,7 @@ body::before {
     font-weight: 600;
 }
 
-.featured-buttons {
-    display: flex;
-    gap: 15px;
-    margin-top: 20px;
-}
-
-.btn-individual {
-    background: #0066cc;
-    color: white;
-    border: none;
-    padding: 12px 30px;
-    border-radius: 8px;
-    font-size: 1em;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.3s;
-}
-
-.btn-individual:hover {
-    background: #0052a3;
-}
-
-.btn-workplace {
-    background: rgba(255, 255, 255, 0.9);
-    color: #0066cc;
-    border: 2px solid #0066cc;
-    padding: 12px 30px;
-    border-radius: 8px;
-    font-size: 1em;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s;
-}
-
-.btn-workplace:hover {
-    background: #0066cc;
-    color: white;
-    border-color: #0052a3;
-}
-
-    .featured-illustration {
+.featured-illustration {
         display: flex;
         flex-wrap: wrap;
         gap: 10px;
@@ -1345,6 +1305,19 @@ body::before {
     cursor: pointer;
     position: relative;
     overflow: hidden;
+}
+
+.news-item-link {
+    text-decoration: none;
+    color: inherit;
+}
+
+.news-item-link .news-title {
+    color: #333;
+}
+
+.news-item-link:hover .news-title {
+    color: #667eea;
 }
 
 .news-item::before {

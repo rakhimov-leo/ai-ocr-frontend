@@ -1673,15 +1673,6 @@ function applyTranslations(lang) {
     const featuredDescription = document.querySelector('.featured-description');
     if (featuredDescription) featuredDescription.textContent = t.featuredDescription;
     
-    const featuredLink = document.querySelector('.featured-link');
-    if (featuredLink) featuredLink.textContent = t.featuredLink;
-    
-    const btnIndividual = document.querySelector('.btn-individual');
-    if (btnIndividual) btnIndividual.textContent = t.btnIndividual;
-    
-    const btnWorkplace = document.querySelector('.btn-workplace');
-    if (btnWorkplace) btnWorkplace.textContent = t.btnWorkplace;
-    
     // News & Information
     const newsInfo = document.querySelector('.news-box h2');
     if (newsInfo) newsInfo.textContent = t.newsInfo;
@@ -1697,13 +1688,7 @@ function applyTranslations(lang) {
         tabs[3].textContent = t.tabJobs;
     }
     
-    // News items (static ones)
-    const newsItems = document.querySelectorAll('.news-list .news-item .news-title');
-    if (newsItems.length >= 3) {
-        newsItems[0].textContent = t.newsUpdate;
-        newsItems[1].textContent = t.newsNewFeature;
-        newsItems[2].textContent = t.newsService;
-    }
+    // News items – bosh sahifada NPS yangiliklari loadDashboard() da to'ldiriladi, tarjima qilib yozilmaydi
     
     // Services
     const servicesTitle = document.querySelector('.services-box h2');
