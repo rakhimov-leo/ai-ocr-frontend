@@ -1,6 +1,13 @@
 // API Configuration (config.js dan o'qiladi)
 const API_BASE_URL = CONFIG.API_BASE_URL;
 
+// Tarjima yordamchisi - sayt tiliga qarab matn qaytaradi (translations.js dan)
+function t(key) {
+    const lang = typeof getCurrentLanguage !== 'undefined' ? getCurrentLanguage() : 'ko';
+    const T = typeof translations !== 'undefined' ? (translations[lang] || translations.ko) : {};
+    return T[key] != null ? T[key] : (translations && translations.ko ? translations.ko[key] : null) || key;
+}
+
 // State Management
 let currentUser = null;
 let currentPage = 'dashboard';
@@ -801,17 +808,17 @@ async function viewDocument(id) {
                              onmouseout="this.style.transform='scale(1)'"
                              onerror="this.onerror=null; this.style.display='none'; const errorDiv = this.nextElementSibling; if(errorDiv) errorDiv.style.display='block';">
                         <div style="display: none; padding: 20px; text-align: center; color: #999;">
-                            <p>이미지를 불러올 수 없습니다</p>
+                            <p>${t('imageLoadError')}</p>
                             <p style="font-size: 0.85em; margin-top: 10px;">URL: ${imageUrl}</p>
                         </div>
                         <div style="position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.7); color: white; padding: 5px 10px; border-radius: 5px; font-size: 0.85em; pointer-events: none;">
-                            🔍 클릭하여 확대
+                            🔍 ${t('clickToEnlarge')}
                         </div>
                     </div>
                 ` : `
                     <div style="padding: 40px; text-align: center; color: #999; border: 2px dashed #ddd; border-radius: 8px;">
-                        <p>이미지를 불러올 수 없습니다</p>
-                        <p style="font-size: 0.85em; margin-top: 10px;">파일 경로: ${doc.file_path || 'N/A'}</p>
+                        <p>${t('imageLoadError')}</p>
+                        <p style="font-size: 0.85em; margin-top: 10px;">${t('noImagePath')}: ${doc.file_path || 'N/A'}</p>
                     </div>
                 `}
             </div>
@@ -847,15 +854,15 @@ async function viewDocument(id) {
         if (table.rows && table.rows.length > 0) {
             html += `
                 <div class="table-section">
-                    <h3>표 데이터</h3>
+                    <h3>${t('docTableData')}</h3>
                     <table class="data-table">
                         <thead>
                             <tr>
-                                <th>날짜</th>
-                                <th>철</th>
-                                <th>동</th>
-                                <th>합계</th>
-                                ${table.rows[0].flags ? '<th>플래그</th>' : ''}
+                                <th>${t('docDate')}</th>
+                                <th>${t('docIron')}</th>
+                                <th>${t('docCopper')}</th>
+                                <th>${t('docTotal')}</th>
+                                ${table.rows[0].flags ? '<th>' + t('docFlags') + '</th>' : ''}
                             </tr>
                         </thead>
                         <tbody>
@@ -878,7 +885,7 @@ async function viewDocument(id) {
         if (isAdmin && doc.extracted_text) {
             html += `
                 <div class="raw-text-section">
-                    <h3>원본 텍스트 (관리자 전용)</h3>
+                    <h3>${t('docRawText')}</h3>
                     <pre class="raw-text">${escapeHtml(doc.extracted_text)}</pre>
                 </div>
             `;
@@ -891,9 +898,9 @@ async function viewDocument(id) {
             
             html += `
                 <div class="raw-text-section">
-                    <h3>전체 JSON 데이터 (관리자 전용)</h3>
+                    <h3>${t('docFullJson')}</h3>
                     <pre class="raw-text">${escapeHtml(jsonString)}</pre>
-                    ${Object.keys(jsonData).length === 0 ? '<p style="color: #999; margin-top: 10px;">⚠️ 추출된 데이터가 없습니다</p>' : ''}
+                    ${Object.keys(jsonData).length === 0 ? '<p style="color: #999; margin-top: 10px;">⚠️ ' + t('docNoData') + '</p>' : ''}
                 </div>
             `;
         }
@@ -904,27 +911,31 @@ async function viewDocument(id) {
             <div class="document-actions" style="margin-top: 30px; display: flex; gap: 15px; justify-content: flex-end;">
                 ${!docConfirmed ? (doc.file_type === 'passport' ? `
                     <button class="btn-primary" onclick="openEditPassportModal(${docId})" style="padding: 10px 20px;">
-                        수정 (Tahrirlash)
+                        ${t('btnEdit')}
                     </button>
                 ` : `
                     <button class="btn-primary" onclick="openEditDocumentModal(${docId})" style="padding: 10px 20px;">
-                        수정 (Tahrirlash)
+                        ${t('btnEdit')}
                     </button>
                 `) : ''}
                 <button class="btn-danger" onclick="deleteDocument(${docId})" style="padding: 10px 20px;">
-                    삭제 (O'chirish)
+                    ${t('btnDelete')}
                 </button>
             </div>
         `;
         
         contentDiv.innerHTML = html;
+        currentPage = 'documentDetail';
+        localStorage.setItem('currentPage', 'documentDetail');
+        localStorage.setItem('documentDetailId', String(docId));
         showPage('documentDetail');
         
     } catch (error) {
-        console.error('문서 로드 오류:', error);
-        alert('문서 로드 오류: ' + error.message);
+        console.error(t('docLoadError') + ':', error);
+        alert(t('docLoadError') + ': ' + error.message);
     }
 }
+window.viewDocument = viewDocument;
 
 // HTML escape funksiyasi
 function escapeHtml(text) {
@@ -963,7 +974,7 @@ function openImageModal(imageUrl) {
             this.style.display = 'none';
             const errorDiv = document.createElement('div');
             errorDiv.style.cssText = 'padding: 40px; text-align: center; color: #999;';
-            errorDiv.innerHTML = '<p>이미지를 불러올 수 없습니다</p><p style="font-size: 0.85em; margin-top: 10px;">URL: ' + imageUrl + '</p>';
+            errorDiv.innerHTML = '<p>' + t('imageLoadError') + '</p><p style="font-size: 0.85em; margin-top: 10px;">URL: ' + imageUrl + '</p>';
             modal.querySelector('.image-modal-content').appendChild(errorDiv);
         };
     }
@@ -1206,7 +1217,22 @@ function formatPassportData(extractedData, isAdmin = false, documentId = null) {
         }
         
         // Tozalash
-        const cleaned = cleanFieldValue(rawValue);
+        let cleaned = cleanFieldValue(rawValue);
+        
+        // Millat maydonida faqat label (НАЦИОНАЛЬНОСТЬ / MILLATI – "millat" so'zining tarjimasi) chiqsa – bu qiymat emas, bo'sh qoldiramiz
+        const nationalityLabelsOnly = [
+            'НАЦИОНАЛЬНОСТЬ', 'NATIONALITY', 'МИЛЛАТИ', 'MILLATI', 'Millati', 'Национальность'
+        ];
+        const normalizeForLabelCheck = (str) => (str || '').toString().trim().replace(/\s+/g, ' ').replace(/^[\s.,:;]+|[\s.,:;]+$/g, '').toUpperCase();
+        const isNationalityField = fieldName === 'nationality' || (altNames && altNames.includes('millati'));
+        if (isNationalityField && cleaned && typeof cleaned === 'string') {
+            const c = normalizeForLabelCheck(cleaned);
+            const isLabel = c && (
+                nationalityLabelsOnly.some(l => normalizeForLabelCheck(l) === c) ||
+                (c.length <= 25 && (c.includes('НАЦИОНАЛЬНОСТЬ') || c.includes('NATIONALITY') || c.includes('МИЛЛАТИ') || c === 'MILLATI'))
+            );
+            if (isLabel) cleaned = '';
+        }
         
         // Auto-formatting: UPPERCASE (pasport standarti)
         const formatted = cleaned ? cleaned.toUpperCase().trim() : '';
@@ -1241,9 +1267,28 @@ function formatPassportData(extractedData, isAdmin = false, documentId = null) {
     let dateOfIssue = getFieldValue('date_of_issue', ['issue_date', 'berilgan_vaqti']);
     let dateOfExpiry = getFieldValue('date_of_expiry', ['expiry', 'amal_qilish_muddati']);
     let nationality = getFieldValue('nationality', ['millati']);
+    // Pasportda "Millati / НАЦИОНАЛЬНОСТЬ" – bu label; qiymat ularning ostidagi millat nomi (masalan ўзбек). Label ni hech qachon qiymat sifatida ko'rsatmaymiz.
+    if (nationality && typeof nationality === 'string') {
+        const n = nationality.trim().replace(/\s+/g, ' ').toUpperCase();
+        if (n === 'НАЦИОНАЛЬНОСТЬ' || n === 'NATIONALITY' || n === 'МИЛЛАТИ' || n === 'MILLATI' || (n.startsWith('НАЦИОНАЛЬНОСТЬ') && n.length < 22) || (n.startsWith('NATIONALITY') && n.length < 15)) {
+            nationality = '';
+        }
+    }
     let sex = getFieldValue('sex', ['jinsi']);
     let placeOfBirth = getFieldValue('place_of_birth', ['tugilgan_joyi']);
     let authority = getFieldValue('authority', ['kim_tomonidan_berilgan']);
+    
+    // OCR millat qiymatini olmagan bo'lsa (yoki faqat label olgani uchun bo'sh qoldirdik) – O'zbekiston pasporti belgilari bo'lsa "O'zbek" ko'rsatamiz
+    if (!nationality || (typeof nationality === 'string' && !nationality.trim())) {
+        const placeUpper = (placeOfBirth || '').toUpperCase();
+        const authUpper = (authority || '').toUpperCase();
+        const looksUzbekPassport = placeUpper.includes('ТОШКЕНТ') || placeUpper.includes('TOSHKENT') || placeUpper.includes('O\'ZBEKISTON') || placeUpper.includes('UZBEKISTAN') ||
+            authUpper.includes('ТОШКЕНТ') || authUpper.includes('TOSHKENT') || authUpper.includes('UZBEKISTAN') ||
+            (passportNo && String(passportNo).toUpperCase().includes('UZB'));
+        if (looksUzbekPassport) {
+            nationality = 'O\'zbek';
+        }
+    }
     
     // Debug: topilgan ma'lumotlarni ko'rsatish
     console.log('🔍 formatPassportData - extracted values:', {
@@ -1369,7 +1414,7 @@ function formatPassportData(extractedData, isAdmin = false, documentId = null) {
     
     let html = `
         <div class="passport-section">
-            <h3>여권 정보</h3>
+            <h3>${t('passportInfo')}</h3>
             <div class="passport-data-grid">
     `;
     
@@ -1383,12 +1428,12 @@ function formatPassportData(extractedData, isAdmin = false, documentId = null) {
     const fullPlaceOfBirth = isAdmin ? placeOfBirth : (placeOfBirth || '');
     const fullAuthority = isAdmin ? authority : (authority || '');
     
-    // 1. SURNAME (성/Фамилия) - HAR DOIM
+    // 1. SURNAME - HAR DOIM
     const confIndSurname = getConfidenceIndicator(surnameConfidence);
     html += `
         <div class="passport-field">
             <div class="field-label-row">
-                <span class="field-label">성 (Фамилия):</span>
+                <span class="field-label">${t('labelSurname')}:</span>
                 ${confIndSurname}
             </div>
             <input type="text" 
@@ -1401,12 +1446,12 @@ function formatPassportData(extractedData, isAdmin = false, documentId = null) {
         </div>
     `;
     
-    // 2. GIVEN NAME (이름/Исм) - HAR DOIM
+    // 2. GIVEN NAME - HAR DOIM
     const confIndGivenName = getConfidenceIndicator(givenNameConfidence);
     html += `
         <div class="passport-field">
             <div class="field-label-row">
-                <span class="field-label">이름 (Исм):</span>
+                <span class="field-label">${t('labelGivenName')}:</span>
                 ${confIndGivenName}
             </div>
             <input type="text" 
@@ -1419,12 +1464,12 @@ function formatPassportData(extractedData, isAdmin = false, documentId = null) {
         </div>
     `;
     
-    // 3. PATRONYMIC (부칭/Отасининг исми) - HAR DOIM
+    // 3. PATRONYMIC - HAR DOIM
     const confIndPatronymic = getConfidenceIndicator(patronymicConfidence);
     html += `
         <div class="passport-field">
             <div class="field-label-row">
-                <span class="field-label">부칭 (Отасининг исми):</span>
+                <span class="field-label">${t('labelPatronymic')}:</span>
                 ${confIndPatronymic}
             </div>
             <input type="text" 
@@ -1437,12 +1482,12 @@ function formatPassportData(extractedData, isAdmin = false, documentId = null) {
         </div>
     `;
     
-    // 4. DATE OF BIRTH (생년월일) - HAR DOIM
+    // 4. DATE OF BIRTH - HAR DOIM
     const confIndDateOfBirth = getConfidenceIndicator(dateOfBirthConfidence);
     html += `
         <div class="passport-field">
             <div class="field-label-row">
-                <span class="field-label">생년월일:</span>
+                <span class="field-label">${t('labelDateOfBirth')}:</span>
                 ${confIndDateOfBirth}
             </div>
             <input type="text" 
@@ -1456,12 +1501,12 @@ function formatPassportData(extractedData, isAdmin = false, documentId = null) {
         </div>
     `;
     
-    // 5. PASSPORT NUMBER (여권 번호) - HAR DOIM
+    // 5. PASSPORT NUMBER - HAR DOIM
     const confIndPassportNo = getConfidenceIndicator(passportNoConfidence);
     html += `
         <div class="passport-field">
             <div class="field-label-row">
-                <span class="field-label">여권 번호:</span>
+                <span class="field-label">${t('labelPassportNo')}:</span>
                 ${confIndPassportNo}
             </div>
             <input type="text" 
@@ -1474,12 +1519,12 @@ function formatPassportData(extractedData, isAdmin = false, documentId = null) {
         </div>
     `;
     
-    // 6. DATE OF ISSUE (발급일) - HAR DOIM
+    // 6. DATE OF ISSUE - HAR DOIM
     const confIndDateOfIssue = getConfidenceIndicator(dateOfIssueConfidence);
     html += `
         <div class="passport-field">
             <div class="field-label-row">
-                <span class="field-label">발급일:</span>
+                <span class="field-label">${t('labelDateOfIssue')}:</span>
                 ${confIndDateOfIssue}
             </div>
             <input type="text" 
@@ -1493,13 +1538,13 @@ function formatPassportData(extractedData, isAdmin = false, documentId = null) {
         </div>
     `;
     
-    // 7. DATE OF EXPIRY (만료일) - HAR DOIM
+    // 7. DATE OF EXPIRY - HAR DOIM
     const confIndDateOfExpiry = getConfidenceIndicator(dateOfExpiryConfidence);
     const expiredClass = isExpired ? 'expired-warning' : '';
     html += `
         <div class="passport-field ${expiredClass}">
             <div class="field-label-row">
-                <span class="field-label">만료일:</span>
+                <span class="field-label">${t('labelDateOfExpiry')}:</span>
                 ${confIndDateOfExpiry}
             </div>
             <input type="text" 
@@ -1510,16 +1555,16 @@ function formatPassportData(extractedData, isAdmin = false, documentId = null) {
                    data-field="date_of_expiry"
                    placeholder="DD.MM.YYYY"
                    style="width: 100%; padding: 8px; border: 1px solid ${isExpired ? '#ef4444' : '#ddd'}; border-radius: 4px; background: ${isExpired ? '#fee2e2' : '#f8f9fa'}; font-size: 1em; color: ${isExpired ? '#ef4444' : 'inherit'};">
-            ${isExpired ? '<span style="color: #ef4444; font-weight: bold; font-size: 0.9em; margin-top: 5px; display: block;">⚠️ 만료됨</span>' : ''}
+            ${isExpired ? '<span style="color: #ef4444; font-weight: bold; font-size: 0.9em; margin-top: 5px; display: block;">⚠️ ' + t('expired') + '</span>' : ''}
         </div>
     `;
     
-    // 8. NATIONALITY (국적) - HAR DOIM
+    // 8. NATIONALITY - HAR DOIM
     const confIndNationality = getConfidenceIndicator(nationalityConfidence);
     html += `
         <div class="passport-field">
             <div class="field-label-row">
-                <span class="field-label">국적:</span>
+                <span class="field-label">${t('labelNationality')}:</span>
                 ${confIndNationality}
             </div>
             <input type="text" 
@@ -1532,13 +1577,13 @@ function formatPassportData(extractedData, isAdmin = false, documentId = null) {
         </div>
     `;
     
-    // 9. SEX (성별) - HAR DOIM
+    // 9. SEX - HAR DOIM
     const confIndSex = getConfidenceIndicator(sexConfidence);
     const sexValue = sex || '';
     html += `
         <div class="passport-field">
             <div class="field-label-row">
-                <span class="field-label">성별:</span>
+                <span class="field-label">${t('labelSex')}:</span>
                 ${confIndSex}
             </div>
             <select id="view-edit-sex-${documentId}" 
@@ -1546,19 +1591,19 @@ function formatPassportData(extractedData, isAdmin = false, documentId = null) {
                     disabled 
                     data-field="sex"
                     style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background: #f8f9fa; font-size: 1em;">
-                <option value="">선택하세요</option>
-                <option value="M" ${sexValue === 'M' || sexValue === 'MALE' || sexValue === '남성' || sexValue.toUpperCase().includes('M') ? 'selected' : ''}>남성 (M)</option>
-                <option value="F" ${sexValue === 'F' || sexValue === 'FEMALE' || sexValue === '여성' || sexValue.toUpperCase().includes('F') ? 'selected' : ''}>여성 (F)</option>
+                <option value="">${t('selectPlaceholder')}</option>
+                <option value="M" ${sexValue === 'M' || sexValue === 'MALE' || sexValue === '남성' || sexValue.toUpperCase().includes('M') ? 'selected' : ''}>${t('maleOption')}</option>
+                <option value="F" ${sexValue === 'F' || sexValue === 'FEMALE' || sexValue === '여성' || sexValue.toUpperCase().includes('F') ? 'selected' : ''}>${t('femaleOption')}</option>
             </select>
         </div>
     `;
     
-    // 10. PLACE OF BIRTH (출생지) - HAR DOIM
+    // 10. PLACE OF BIRTH - HAR DOIM
     const confIndPlaceOfBirth = getConfidenceIndicator(placeOfBirthConfidence);
     html += `
         <div class="passport-field">
             <div class="field-label-row">
-                <span class="field-label">출생지:</span>
+                <span class="field-label">${t('labelPlaceOfBirth')}:</span>
                 ${confIndPlaceOfBirth}
             </div>
             <input type="text" 
@@ -1571,12 +1616,12 @@ function formatPassportData(extractedData, isAdmin = false, documentId = null) {
         </div>
     `;
     
-    // 11. AUTHORITY (발급 기관) - HAR DOIM
+    // 11. AUTHORITY - HAR DOIM
     const confIndAuthority = getConfidenceIndicator(authorityConfidence);
     html += `
         <div class="passport-field" style="grid-column: 1 / -1;">
             <div class="field-label-row">
-                <span class="field-label">발급 기관:</span>
+                <span class="field-label">${t('labelAuthority')}:</span>
                 ${confIndAuthority}
             </div>
             <textarea id="view-edit-authority-${documentId}" 
@@ -1587,12 +1632,46 @@ function formatPassportData(extractedData, isAdmin = false, documentId = null) {
         </div>
     `;
     
+    // Qo'shimcha maydonlar: hujjatda qanday so'zlar/label'lar bo'lsa (koreys, arab, o'zbek va h.k.) – backend yuborgan barcha noma'lum maydonlarni ko'rsatish
+    const knownFieldKeys = new Set([
+        'surname', 'familiya', 'given_name', 'given_names', 'ism', 'patronymic', 'otasining_ismi',
+        'passport_no', 'passport_number', 'passport_raqami', 'date_of_birth', 'dob', 'tugilgan_sanasi',
+        'date_of_issue', 'issue_date', 'berilgan_vaqti', 'date_of_expiry', 'expiry', 'amal_qilish_muddati',
+        'nationality', 'millati', 'sex', 'jinsi', 'place_of_birth', 'tugilgan_joyi', 'authority', 'kim_tomonidan_berilgan'
+    ]);
+    const extraEntries = [];
+    const allFieldSources = [fields, normalized].filter(Boolean);
+    for (const source of allFieldSources) {
+        for (const [key, raw] of Object.entries(source)) {
+            if (!key) continue;
+            const keyNorm = String(key).toLowerCase().replace(/\s+/g, '_').trim();
+            if (knownFieldKeys.has(keyNorm) || knownFieldKeys.has(key)) continue;
+            const val = typeof raw === 'object' && raw != null && 'value' in raw ? raw.value : raw;
+            if (val == null && typeof raw === 'object') continue;
+            const displayVal = typeof val === 'string' ? val : (val != null ? String(val) : '');
+            if (extraEntries.some(e => e.label === key)) continue;
+            extraEntries.push({ label: key, value: displayVal });
+        }
+    }
+    if (extraEntries.length > 0) {
+        html += `<div class="passport-field" style="grid-column: 1 / -1;"><p class="field-label" style="margin-bottom: 10px; font-weight: 600;">${t('extraFieldsTitle')}</p></div>`;
+        for (const { label, value } of extraEntries) {
+            const safeVal = (value || '').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            html += `
+                <div class="passport-field">
+                    <div class="field-label-row"><span class="field-label">${escapeHtml(label)}:</span></div>
+                    <input type="text" class="passport-edit-input" value="${safeVal}" readonly style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background: #f8f9fa; font-size: 1em;">
+                </div>
+            `;
+        }
+    }
+    
     // Agar ma'lumotlar to'liq bo'lmasa, xabar ko'rsatish
     if (!surname && !givenName && !passportNo) {
         html += `
             <div class="passport-field" style="grid-column: 1 / -1;">
                 <span class="field-value" style="color: #999; font-style: italic;">
-                    ⚠️ 일부 정보만 추출되었습니다. 이미지를 다시 확인해주세요.
+                    ⚠️ ${t('partialDataWarning')}
                 </span>
             </div>
         `;
@@ -1612,10 +1691,10 @@ function formatPassportData(extractedData, isAdmin = false, documentId = null) {
             </div>
             <div id="passport-actions-${documentId}" class="passport-actions" style="margin-top: 30px; display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
                 <button class="btn-success" onclick="confirmPassportData(${documentId})" style="padding: 12px 30px;">
-                    ✓ 확인 (Tasdiqlayman)
+                    ✓ ${t('confirmButton')}
                 </button>
                 <button class="btn-warning" onclick="reprocessDocument(${documentId})" style="padding: 12px 30px;">
-                    🔄 다시 스캔 (Qayta skanerlash)
+                    🔄 ${t('rescanButton')}
                 </button>
             </div>
         </div>
@@ -1624,7 +1703,7 @@ function formatPassportData(extractedData, isAdmin = false, documentId = null) {
         html += `
             </div>
             <p class="passport-confirmed-msg" style="margin-top: 20px; padding: 12px 20px; background: #ecfdf5; color: #065f46; border-radius: 8px; text-align: center;">
-                ✓ 문서가 확인되었습니다. (Hujjat tasdiqlandi.)
+                ✓ ${t('docConfirmedMsg')}
             </p>
         </div>
     `;
@@ -1923,7 +2002,7 @@ window.savePassportDataFromView = async function(documentId) {
             errorDiv.textContent = error.message || '저장 중 오류가 발생했습니다.';
             errorDiv.style.display = 'block';
         } else {
-            alert('저장 중 오류가 발생했습니다: ' + error.message);
+            alert(t('saveErrorAlert') + ': ' + error.message);
         }
     }
 };
@@ -1931,7 +2010,7 @@ window.savePassportDataFromView = async function(documentId) {
 // ==================== PASSPORT ACTIONS ====================
 
 async function confirmPassportData(documentId) {
-    if (!confirm('모든 정보가 정확한지 확인하셨습니까? (Barcha ma\'lumotlar to\'g\'riligiga ishonch hosil qildingizmi?)\n\n문서가 관리자에게 전송됩니다. (Hujjat admin\'ga yuboriladi.)')) {
+    if (!confirm(t('confirmDialogTitle') + '\n\n' + t('confirmDialogSent'))) {
         return;
     }
     
@@ -1942,7 +2021,7 @@ async function confirmPassportData(documentId) {
         (contentRoot && contentRoot.querySelector('.passport-actions')) ||
         document.querySelector('.passport-actions');
     if (actionsEl) {
-        actionsEl.innerHTML = '<p class="passport-confirmed-msg" style="margin:0; padding: 12px 20px; background: #ecfdf5; color: #065f46; border-radius: 8px; text-align: center;">✓ 문서가 확인되었습니다. (Hujjat tasdiqlandi.)</p>';
+        actionsEl.innerHTML = '<p class="passport-confirmed-msg" style="margin:0; padding: 12px 20px; background: #ecfdf5; color: #065f46; border-radius: 8px; text-align: center;">✓ ' + t('docConfirmedMsg') + '</p>';
         actionsEl.id = 'passport-actions-' + id;
     }
     // Darhol: pastdagi Tahrirlash tugmasini yashirish
@@ -1977,20 +2056,20 @@ async function confirmPassportData(documentId) {
         
         if (!response.ok) {
             const errBody = await response.json().catch(() => ({}));
-            throw new Error(errBody.detail || '확인 오류');
+            throw new Error(errBody.detail || t('confirmErr'));
         }
         
         // Muvaffaqiyat: sahifani qayta yuklamaymiz, shunchaki xabar – tugmalar allaqachon yo‘qolgan
-        alert('문서가 성공적으로 확인되었습니다!\n관리자가 검토할 때까지 기다려주세요.\n\n(Hujjat muvaffaqiyatli tasdiqlandi! Admin ko\'rib chiqishini kutib turing.)');
+        alert(t('confirmSuccessAlert'));
     } catch (error) {
-        console.error('확인 오류:', error);
+        console.error(t('confirmErr') + ':', error);
         await viewDocument(documentId);
-        alert('확인 중 오류가 발생했습니다: ' + error.message);
+        alert(t('confirmErrorAlert') + ': ' + error.message);
     }
 }
 
 async function reprocessDocument(documentId) {
-    if (!confirm('이 문서를 다시 스캔하시겠습니까? (Bu hujjatni qayta skanerlashni xohlaysizmi?)')) {
+    if (!confirm(t('rescanConfirm'))) {
         return;
     }
     
@@ -2008,10 +2087,10 @@ async function reprocessDocument(documentId) {
         
         if (!response.ok) {
             const error = await response.json();
-            throw new Error(error.detail || '재처리 오류');
+            throw new Error(error.detail || t('rescanErrorAlert'));
         }
         
-        alert('문서가 다시 스캔되었습니다! 잠시 후 새로고침됩니다.');
+        alert(t('rescanSuccessAlert'));
         
         // 2 soniyadan keyin document'ni qayta yuklash
         setTimeout(async () => {
@@ -2019,8 +2098,8 @@ async function reprocessDocument(documentId) {
         }, 2000);
         
     } catch (error) {
-        console.error('재처리 오류:', error);
-        alert('재처리 중 오류가 발생했습니다: ' + error.message);
+        console.error(t('rescanErrorAlert') + ':', error);
+        alert(t('rescanErrorAlert') + ': ' + error.message);
     }
 }
 
@@ -2144,7 +2223,10 @@ window.openEditPassportModal = async function openEditModal(documentId) {
         }
         
         if (nationalityEl) {
-            nationalityEl.value = fields.nationality?.value || fields.millati?.value || '';
+            let natVal = fields.nationality?.value || fields.millati?.value || '';
+            const natUpper = (natVal && typeof natVal === 'string' ? natVal.trim().toUpperCase() : '');
+            if (natUpper === 'НАЦИОНАЛЬНОСТЬ' || natUpper === 'NATIONALITY' || natUpper === 'МИЛЛАТИ' || natUpper === 'MILLATI') natVal = '';
+            nationalityEl.value = natVal;
             nationalityEl.removeAttribute('readonly');
             nationalityEl.removeAttribute('disabled');
             nationalityEl.readOnly = false;
@@ -2347,6 +2429,21 @@ async function loadDocumentForEdit(documentId) {
             return cleanedLines.length > 0 ? cleanedLines.join(' ').trim() : value;
         };
         
+        // Millat maydonida faqat label bo'lsa bo'sh qaytarish (qiymat emas)
+        const nationalityLabelsOnly = [
+            'НАЦИОНАЛЬНОСТЬ', 'NATIONALITY', 'МИЛЛАТИ', 'MILLATI', 'Millati', 'Национальность'
+        ];
+        const normalizeForLabelCheck = (str) => (str || '').toString().trim().replace(/\s+/g, ' ').replace(/^[\s.,:;]+|[\s.,:;]+$/g, '').toUpperCase();
+        const isNationalityLabelOnly = (val, fieldName, altNames) => {
+            if (fieldName !== 'nationality' && !(altNames && altNames.includes('millati'))) return false;
+            if (!val || typeof val !== 'string') return false;
+            const c = normalizeForLabelCheck(val);
+            return c && (
+                nationalityLabelsOnly.some(l => normalizeForLabelCheck(l) === c) ||
+                (c.length <= 25 && (c.includes('НАЦИОНАЛЬНОСТЬ') || c.includes('NATIONALITY') || c.includes('МИЛЛАТИ') || c === 'MILLATI'))
+            );
+        };
+        
         // Helper function: field value'ni olish va tozalash
         const getFieldValue = (fieldName, altNames = []) => {
             let rawValue = '';
@@ -2371,7 +2468,9 @@ async function loadDocumentForEdit(documentId) {
                 }
             }
             
-            return cleanFieldValue(rawValue);
+            let result = cleanFieldValue(rawValue);
+            if (isNationalityLabelOnly(result, fieldName, altNames)) result = '';
+            return result;
         };
         
         // Form'ni to'ldirish (to'liq, mask qilinmagan ma'lumotlar bilan)
@@ -3459,35 +3558,33 @@ function getComparisonData(extractedData, doc) {
         return null;
     };
     
-    // Helper: status aniqlash
+    // Helper: status aniqlash (tarjima t() orqali)
     const getStatus = (userValue, ocrValue) => {
-        if (!userValue && !ocrValue) return { icon: '⚪', text: '없음', class: 'status-empty' };
-        if (!userValue || !ocrValue) return { icon: '⚠️', text: '부분', class: 'status-partial' };
+        if (!userValue && !ocrValue) return { icon: '⚪', text: t('statusNone'), class: 'status-empty' };
+        if (!userValue || !ocrValue) return { icon: '⚠️', text: t('statusPartial'), class: 'status-partial' };
         const userClean = String(userValue).trim().toUpperCase();
         const ocrClean = String(ocrValue).trim().toUpperCase();
         if (userClean === ocrClean) {
-            return { icon: '✅', text: '일치', class: 'status-match' };
+            return { icon: '✅', text: t('statusMatch'), class: 'status-match' };
         }
-        return { icon: '❌', text: '불일치', class: 'status-mismatch' };
+        return { icon: '❌', text: t('statusMismatch'), class: 'status-mismatch' };
     };
     
-    // Passport fields
+    // Passport fields (labelKey – translations.js dagi kalit)
     const fieldsToCompare = [
-        { name: '성 (Фамилия)', field: 'surname', alt: ['familiya'] },
-        { name: '이름 (Исм)', field: 'given_name', alt: ['given_names', 'ism'] },
-        { name: '여권 번호', field: 'passport_no', alt: ['passport_number', 'passport_raqami'] },
-        { name: '생년월일', field: 'date_of_birth', alt: ['dob', 'tugilgan_sanasi'] },
-        { name: '만료일', field: 'date_of_expiry', alt: ['expiry', 'amal_qilish_muddati'] },
-        { name: '국적', field: 'nationality', alt: ['millati'] },
+        { labelKey: 'labelSurname', field: 'surname', alt: ['familiya'] },
+        { labelKey: 'labelGivenName', field: 'given_name', alt: ['given_names', 'ism'] },
+        { labelKey: 'labelPassportNo', field: 'passport_no', alt: ['passport_number', 'passport_raqami'] },
+        { labelKey: 'labelDateOfBirth', field: 'date_of_birth', alt: ['dob', 'tugilgan_sanasi'] },
+        { labelKey: 'labelDateOfExpiry', field: 'date_of_expiry', alt: ['expiry', 'amal_qilish_muddati'] },
+        { labelKey: 'labelNationality', field: 'nationality', alt: ['millati'] },
     ];
     
-    fieldsToCompare.forEach(({ name, field, alt }) => {
+    fieldsToCompare.forEach(({ labelKey, field, alt }) => {
         const ocrValue = getFieldValue(field, alt);
-        // User edited value (agar mavjud bo'lsa)
         const userValue = doc.edited_data && doc.edited_data[field] ? doc.edited_data[field] : null;
         const status = getStatus(userValue, ocrValue);
         
-        // Muddati o'tgan tekshiruvi
         let statusIcon = status.icon;
         let statusText = status.text;
         if (field === 'date_of_expiry' && ocrValue) {
@@ -3495,13 +3592,13 @@ function getComparisonData(extractedData, doc) {
                 const expiryDate = new Date(ocrValue);
                 if (expiryDate < new Date()) {
                     statusIcon = '❌';
-                    statusText = '만료됨';
+                    statusText = t('statusExpired');
                 }
             } catch (e) {}
         }
         
         comparison.push({
-            fieldName: name,
+            fieldName: t(labelKey),
             userValue: userValue || '-',
             ocrValue: ocrValue || '-',
             statusIcon: statusIcon,
@@ -3960,7 +4057,13 @@ document.addEventListener('DOMContentLoaded', () => {
             if (appScreen && appScreen.classList.contains('active') && !currentActive) {
                 const savedPage = localStorage.getItem('currentPage') || 'dashboard';
                 console.log('📄 No page active, restoring:', savedPage);
-                showPage(savedPage);
+                if (savedPage === 'documentDetail') {
+                    const docId = localStorage.getItem('documentDetailId');
+                    if (docId) viewDocument(docId);
+                    else showPage('documents');
+                } else {
+                    showPage(savedPage);
+                }
             }
         }, 300);
     });
@@ -3989,10 +4092,19 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    // Sahifa yuklanganda currentPage'ni restore qilish
+    // Sahifa yuklanganda currentPage'ni restore qilish (detail page bo'lsa – shu hujjatni qayta yuklash)
     const savedPage = localStorage.getItem('currentPage') || 'dashboard';
     console.log('📄 Restoring page from localStorage:', savedPage);
-    showPage(savedPage);
+    if (savedPage === 'documentDetail') {
+        const docId = localStorage.getItem('documentDetailId');
+        if (docId) {
+            viewDocument(docId);
+            return;
+        }
+        showPage('documents');
+    } else {
+        showPage(savedPage);
+    }
 });
 
 // Window load event - qo'shimcha tekshirish
@@ -4012,6 +4124,12 @@ window.addEventListener('load', () => {
     const currentActivePage = document.querySelector('.page.active');
     if (!currentActivePage || currentActivePage.id !== `${savedPage}Page`) {
         console.log('📄 Restoring page on window load:', savedPage);
-        showPage(savedPage);
+        if (savedPage === 'documentDetail') {
+            const docId = localStorage.getItem('documentDetailId');
+            if (docId) viewDocument(docId);
+            else showPage('documents');
+        } else {
+            showPage(savedPage);
+        }
     }
 });
