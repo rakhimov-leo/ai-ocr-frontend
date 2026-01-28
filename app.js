@@ -412,8 +412,22 @@ function showPage(pageName) {
     });
     
     currentPage = pageName;
+    if (pageName === 'admin') document.body.classList.add('mypage-visible');
+    else document.body.classList.remove('mypage-visible');
     // Current page'ni localStorage'ga saqlash (refresh uchun)
     localStorage.setItem('currentPage', pageName);
+    
+    // History: documentDetail faqat viewDocument orqali pushState qilinadi. Servis sahifalari (webfax, branch, ...) dan orqaga bosganda homepage ga qaytishi uchun pushState, asosiy sahifalar replaceState.
+    const servicePages = ['webfax', 'branch', 'forms', 'calculator', 'guide', 'statistics', 'chat'];
+    if (pageName === 'documentDetail') {
+        // hech narsa – viewDocument o'zi pushState qiladi
+    } else if (typeof history.replaceState === 'function' && typeof history.pushState === 'function') {
+        if (servicePages.includes(pageName)) {
+            history.pushState({ page: pageName }, '', window.location.pathname || '/');
+        } else {
+            history.replaceState({ page: pageName }, '', window.location.pathname || '/');
+        }
+    }
     
     // Sahifa yuklanganda ma'lumotlarni yuklash
     if (pageName === 'dashboard') {
@@ -424,6 +438,14 @@ function showPage(pageName) {
         loadAdminPanel();
     } else if (pageName === 'statistics') {
         loadStatistics();
+    }
+}
+
+// Detail sahifadan ortga – hujjatlar ro'yxatiga. To'g'ridan-to'g'ri sahifani almashtiramiz (history.back() ishonchli ishlamasligi mumkin).
+function goBackFromDetail() {
+    showPage('documents');
+    if (typeof history.replaceState === 'function') {
+        history.replaceState({ page: 'documents' }, '', window.location.pathname || '/');
     }
 }
 
@@ -515,20 +537,24 @@ async function loadDashboard() {
             totalNewsEl.textContent = '-';
         }
         
-        // Recent documents (agar mavjud bo'lsa)
+        // Recent documents (agar mavjud bo'lsa). Oddiy user: tartib raqami (1,2,3...), admin: haqiqiy id
         const recentDiv = document.getElementById('recentDocuments');
         if (recentDiv) {
             if (documents.length === 0) {
                 recentDiv.innerHTML = '<p>문서가 없습니다</p>';
             } else {
-                recentDiv.innerHTML = documents.map(doc => `
+                const forUser = userRole === 'user';
+                recentDiv.innerHTML = documents.map((doc, idx) => {
+                    const num = forUser ? (idx + 1) : doc.id;
+                    return `
                     <div class="document-card" onclick="viewDocument(${doc.id})">
-                        <h4>문서 #${doc.id}</h4>
+                        <h4>문서 #${num}</h4>
                         <p>유형: ${doc.file_type}</p>
                         <p>상태: ${doc.status}</p>
                         <p>신뢰도: ${doc.confidence || 0}%</p>
                     </div>
-                `).join('');
+                `;
+                }).join('');
             }
         }
         
@@ -539,14 +565,13 @@ async function loadDashboard() {
                 // Eng so'nggi document'larni news sifatida ko'rsatish
                 const latestDocs = documents.slice(0, 6); // Ko'proq item'lar uchun
                 
-                // Clean Code: map() funksiyasi orqali kodni qisqartirish va optimallashtirish
+                // Oddiy user: sarlavhada tartib raqami (1,2,3...), admin: haqiqiy id
+                const forUser = userRole === 'user';
                 newsList.innerHTML = latestDocs.map((doc, index) => {
                     const date = new Date(doc.created_at).toISOString().split('T')[0];
-                    // File type'ni format qilish
                     const fileTypeFormatted = doc.file_type || '기타';
-                    const title = `문서 #${doc.id} - ${fileTypeFormatted} 처리 완료`;
-                    
-                    // Click event uchun onclick qo'shish
+                    const num = forUser ? (index + 1) : doc.id;
+                    const title = `문서 #${num} - ${fileTypeFormatted} 처리 완료`;
                     return `
                         <div class="news-item" onclick="viewDocument(${doc.id})" data-doc-id="${doc.id}">
                             <span class="news-date">${date}</span>
@@ -625,14 +650,15 @@ async function loadDocuments() {
             return (b.id || 0) - (a.id || 0);
         });
         
-        // Har bir user uchun documentlar teskari raqamlanadi:
-        // Eng yangi document eng katta raqam bilan (documents.length), eng eski document 1-raqam bilan
+        // Oddiy user: haqiqiy DB id o'rniga shu user yaratgan hujjatlar ichida tartib raqami (1 = eng yangi)
         const totalDocs = sortedDocuments.length;
+        const useUserNumber = userRole === 'user';
         tbody.innerHTML = sortedDocuments.map((doc, index) => {
             const docId = doc.id ?? doc._id;
+            const displayNum = useUserNumber ? (index + 1) : (totalDocs - index);
             return `
             <tr>
-                <td>${totalDocs - index}</td>
+                <td>${displayNum}</td>
                 <td>${doc.file_type}</td>
                 <td><span class="status-badge status-${doc.status}">${doc.status}</span></td>
                 <td>${doc.confidence || 0}%</td>
@@ -905,22 +931,27 @@ async function viewDocument(id) {
             `;
         }
         
-        // Edit va Delete – tasdiqlangan hujjatda Tahrirlash ko‘rsatilmaydi
+        // Edit va Delete – tasdiqlangan hujjatda Tahrirlash ko‘rsatilmaydi. Ortga tugmasi – hujjatlar ro‘yxatiga.
         const docConfirmed = extractedData.metadata && (extractedData.metadata.confirmed === true || extractedData.metadata.submitted_for_review === true);
         html += `
-            <div class="document-actions" style="margin-top: 30px; display: flex; gap: 15px; justify-content: flex-end;">
-                ${!docConfirmed ? (doc.file_type === 'passport' ? `
-                    <button class="btn-primary" onclick="openEditPassportModal(${docId})" style="padding: 10px 20px;">
-                        ${t('btnEdit')}
-                    </button>
-                ` : `
-                    <button class="btn-primary" onclick="openEditDocumentModal(${docId})" style="padding: 10px 20px;">
-                        ${t('btnEdit')}
-                    </button>
-                `) : ''}
-                <button class="btn-danger" onclick="deleteDocument(${docId})" style="padding: 10px 20px;">
-                    ${t('btnDelete')}
+            <div class="document-actions" style="margin-top: 30px; display: flex; gap: 15px; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+                <button type="button" class="btn-secondary" onclick="goBackFromDetail()" style="padding: 10px 20px;">
+                    ${t('docBack')}
                 </button>
+                <div style="display: flex; gap: 15px;">
+                    ${!docConfirmed ? (doc.file_type === 'passport' ? `
+                        <button class="btn-primary" onclick="openEditPassportModal(${docId})" style="padding: 10px 20px;">
+                            ${t('btnEdit')}
+                        </button>
+                    ` : `
+                        <button class="btn-primary" onclick="openEditDocumentModal(${docId})" style="padding: 10px 20px;">
+                            ${t('btnEdit')}
+                        </button>
+                    `) : ''}
+                    <button class="btn-danger" onclick="deleteDocument(${docId})" style="padding: 10px 20px;">
+                        ${t('btnDelete')}
+                    </button>
+                </div>
             </div>
         `;
         
@@ -929,6 +960,10 @@ async function viewDocument(id) {
         localStorage.setItem('currentPage', 'documentDetail');
         localStorage.setItem('documentDetailId', String(docId));
         showPage('documentDetail');
+        // Brauzer orqaga bosganda shu hujjat detail o'rniga documents ga qaytishi uchun history'ga yozamiz
+        if (typeof history.pushState === 'function') {
+            history.pushState({ page: 'documentDetail', docId: docId }, '', window.location.pathname || '/');
+        }
         
     } catch (error) {
         console.error(t('docLoadError') + ':', error);
@@ -3218,27 +3253,159 @@ async function loadStatistics() {
     }
 }
 
-// ==================== ADMIN PANEL ====================
+// ==================== MY PAGE (Profile + Documents) ====================
+
+function renderMypageProfileView() {
+    const profileView = document.getElementById('mypageProfileView');
+    const documentsView = document.getElementById('mypageDocumentsView');
+    if (profileView) profileView.style.display = 'block';
+    if (documentsView) documentsView.style.display = 'none';
+    document.querySelectorAll('.mypage-nav-item[data-mypage]').forEach(el => {
+        el.classList.toggle('active', el.getAttribute('data-mypage') === 'profile');
+    });
+    // Profile form values from localStorage
+    const username = localStorage.getItem('username') || '';
+    const phone = localStorage.getItem('mypage_phone') || localStorage.getItem('phone') || '';
+    const address = localStorage.getItem('mypage_address') || '';
+    const unEl = document.getElementById('mypageUsername');
+    const phEl = document.getElementById('mypagePhone');
+    const adEl = document.getElementById('mypageAddress');
+    if (unEl) unEl.value = username;
+    if (phEl) phEl.value = phone;
+    if (adEl) adEl.value = address;
+    applyMypageTranslations();
+}
+
+function applyMypageTranslations() {
+    if (typeof t !== 'function') return;
+    document.querySelectorAll('#adminPage [data-i18n]').forEach(el => {
+        const k = el.getAttribute('data-i18n');
+        if (k) el.textContent = t(k);
+    });
+}
+
+async function renderMypageDocumentsView() {
+    const profileView = document.getElementById('mypageProfileView');
+    const documentsView = document.getElementById('mypageDocumentsView');
+    const filtersDiv = document.getElementById('adminFiltersDiv');
+    const headerH2 = document.getElementById('adminSectionHeaderH2');
+    if (profileView) profileView.style.display = 'none';
+    if (documentsView) documentsView.style.display = 'block';
+    document.querySelectorAll('.mypage-sidebar-nav .mypage-nav-item').forEach(el => el.classList.remove('active'));
+    document.querySelector('.mypage-nav-item[data-mypage="documents"]')?.classList.add('active');
+    const userRole = localStorage.getItem('user_role') || 'user';
+    if (headerH2) headerH2.textContent = typeof t === 'function' ? t('documentsTitle') : 'Documents';
+    if (filtersDiv) filtersDiv.style.display = userRole === 'admin' ? 'flex' : 'none';
+    if (userRole === 'admin') await loadAdminDocuments();
+    else await loadUserMyPageDocuments();
+}
+
+function setupMypageSidebar() {
+    const username = localStorage.getItem('username') || 'User';
+    const phone = localStorage.getItem('mypage_phone') || localStorage.getItem('phone') || '';
+    const role = (localStorage.getItem('user_role') || 'user').toUpperCase();
+    const initial = username.charAt(0).toUpperCase();
+    const nameEl = document.getElementById('mypageSidebarName');
+    const phoneEl = document.getElementById('mypageSidebarPhone');
+    const roleEl = document.getElementById('mypageSidebarRole');
+    const initSide = document.getElementById('mypageSidebarInitial');
+    const initProfile = document.getElementById('mypageProfileInitial');
+    if (nameEl) nameEl.textContent = username;
+    if (phoneEl) phoneEl.textContent = phone || '—';
+    if (roleEl) roleEl.textContent = role === 'ADMIN' ? 'ADMIN' : 'USER';
+    if (initSide) initSide.textContent = initial;
+    if (initProfile) initProfile.textContent = initial;
+    const navTexts = document.querySelectorAll('.mypage-sidebar-nav .mypage-nav-item .mypage-nav-text');
+    const labels = [
+        typeof t === 'function' ? t('myFavorites') : 'My Favorites',
+        typeof t === 'function' ? t('recentlyVisited') : 'Recently Visited',
+        typeof t === 'function' ? t('myFollowers') : 'My Followers',
+        typeof t === 'function' ? t('myFollowings') : 'My Followings',
+        typeof t === 'function' ? t('myProfile') : 'My Profile',
+        typeof t === 'function' ? t('logout') : 'Logout'
+    ];
+    navTexts.forEach((el, i) => { if (labels[i]) el.textContent = labels[i]; });
+    const logoutBtn = document.getElementById('mypageLogout');
+    if (logoutBtn) {
+        logoutBtn.onclick = (e) => { e.preventDefault(); handleLogout(); };
+    }
+    document.querySelectorAll('.mypage-nav-item[data-mypage]').forEach(link => {
+        link.onclick = (e) => {
+            e.preventDefault();
+            const page = link.getAttribute('data-mypage');
+            if (page === 'profile') renderMypageProfileView();
+            else if (page === 'documents' || page === 'favorites') renderMypageDocumentsView();
+        };
+    });
+    const aiChatBtn = document.getElementById('mypageAIChatBtn');
+    if (aiChatBtn) {
+        aiChatBtn.onclick = (e) => { e.preventDefault(); alert('AI Chat – tez kunda'); };
+    }
+    const updateBtn = document.getElementById('mypageUpdateBtn');
+    if (updateBtn) {
+        updateBtn.onclick = () => {
+            const unEl = document.getElementById('mypageUsername');
+            const phEl = document.getElementById('mypagePhone');
+            const adEl = document.getElementById('mypageAddress');
+            if (unEl) localStorage.setItem('username', unEl.value.trim());
+            if (phEl) localStorage.setItem('mypage_phone', phEl.value.trim());
+            if (adEl) localStorage.setItem('mypage_address', adEl.value.trim());
+            setupMypageSidebar();
+            alert(typeof t === 'function' ? t('success') : 'Saved');
+        };
+    }
+}
 
 async function loadAdminPanel() {
     try {
-        const userRole = localStorage.getItem('user_role') || 'admin';
+        setupMypageSidebar();
+        renderMypageProfileView();
+        applyMypageTranslations();
+    } catch (error) {
+        console.error('My Page yuklash xatosi:', error);
+    }
+}
+
+// Oddiy user uchun My Page – o‘z hujjatlarini ro‘yxati
+async function loadUserMyPageDocuments() {
+    const adminList = document.getElementById('adminDocumentsList');
+    if (!adminList) return;
+    try {
+        const userRole = localStorage.getItem('user_role') || 'user';
+        const documents = await apiCall(`/ocr/documents?skip=0&limit=100&user_role=${userRole}`);
+        const docViewText = typeof t === 'function' ? t('docView') : 'View';
         
-        // Admin bo'lmasa, boshqa sahifaga o'tkazish
-        if (userRole !== 'admin') {
-            showPage('dashboard');
+        if (documents.length === 0) {
+            adminList.innerHTML = '<div class="empty-state">' + (typeof t === 'function' ? t('docNotFound') : 'No documents') + '</div>';
             return;
         }
         
-        // Barcha document'larni yuklash (admin uchun)
-        await loadAdminDocuments();
+        const sorted = [...documents].sort((a, b) => {
+            if (a.created_at && b.created_at) return new Date(b.created_at) - new Date(a.created_at);
+            return (b.id || 0) - (a.id || 0);
+        });
         
-    } catch (error) {
-        console.error('Admin panel yuklash xatosi:', error);
-        const adminList = document.getElementById('adminDocumentsList');
-        if (adminList) {
-            adminList.innerHTML = `<div class="error">오류: ${error.message}</div>`;
-        }
+        adminList.innerHTML = sorted.map((doc, index) => {
+            const status = doc.status || (doc.extracted_data?.metadata?.verified ? 'verified' : 'pending');
+            const statusCls = status === 'verified' ? 'approved' : status === 'rejected' ? 'rejected' : 'pending';
+            const date = doc.created_at ? new Date(doc.created_at).toLocaleDateString() : '';
+            const displayNum = index + 1;
+            return `
+                <div class="admin-document-card ${statusCls}" onclick="viewDocument(${doc.id})" style="cursor: pointer;">
+                    <div class="admin-doc-header">
+                        <span class="admin-doc-id">#${displayNum}</span>
+                        <span class="admin-doc-status status-${statusCls}">${status}</span>
+                    </div>
+                    <div class="admin-doc-info">
+                        <p><strong>${doc.file_type || 'N/A'}</strong> · ${date}</p>
+                    </div>
+                    <button type="button" class="btn-small" onclick="event.stopPropagation(); viewDocument(${doc.id})">${docViewText}</button>
+                </div>
+            `;
+        }).join('');
+    } catch (err) {
+        console.error('User documents yuklash xatosi:', err);
+        adminList.innerHTML = '<div class="error">' + (err.message || 'Error') + '</div>';
     }
 }
 
@@ -3826,7 +3993,43 @@ async function rejectDocument(documentId) {
 
 // ==================== EVENT LISTENERS ====================
 
+// ==================== DARK MODE (Locohub uslubida) ====================
+function initDarkMode() {
+    const saved = localStorage.getItem('darkMode') === 'true';
+    applyDarkMode(saved);
+    updateDarkModeIcon(saved);
+}
+function applyDarkMode(isDark) {
+    if (isDark) {
+        document.documentElement.classList.add('dark-mode');
+        document.body.style.backgroundColor = '#0f0f0f';
+        document.body.style.color = '#e0e0e0';
+    } else {
+        document.documentElement.classList.remove('dark-mode');
+        document.body.style.backgroundColor = '';
+        document.body.style.color = '';
+    }
+}
+function updateDarkModeIcon(isDark) {
+    const el = document.getElementById('darkModeToggle');
+    if (el) el.textContent = isDark ? '☀️' : '🌙';
+}
+function toggleDarkMode() {
+    const next = localStorage.getItem('darkMode') !== 'true';
+    localStorage.setItem('darkMode', String(next));
+    applyDarkMode(next);
+    updateDarkModeIcon(next);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+    initDarkMode();
+    
+    const darkToggle = document.getElementById('darkModeToggle');
+    if (darkToggle) darkToggle.addEventListener('click', (e) => { e.preventDefault(); toggleDarkMode(); });
+    
+    const logoHomeLink = document.getElementById('logoHomeLink');
+    if (logoHomeLink) logoHomeLink.addEventListener('click', (e) => { e.preventDefault(); showPage('dashboard'); });
+    
     // Login form
     document.getElementById('loginForm').addEventListener('submit', handleLogin);
     
@@ -4105,6 +4308,20 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
         showPage(savedPage);
     }
+    
+    // Brauzer orqaga/oldinga: sayt ichida qolish (detail -> documents, homepage'dan chiqib ketmaslik)
+    window.addEventListener('popstate', function(e) {
+        const state = e.state;
+        if (state && state.page === 'documentDetail' && state.docId != null) {
+            viewDocument(state.docId);
+            return;
+        }
+        if (state && state.page) {
+            showPage(state.page);
+            return;
+        }
+        showPage('documents');
+    });
 });
 
 // Window load event - qo'shimcha tekshirish

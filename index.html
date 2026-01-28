@@ -7,6 +7,10 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📄</text></svg>">
     <link rel="stylesheet" href="styles.css?v=6">
     <link rel="stylesheet" href="admin-styles.css">
+    <link rel="stylesheet" href="dark-mode.css">
+    <script>
+        (function(){ try { if (localStorage.getItem('darkMode') === 'true') document.documentElement.classList.add('dark-mode'); } catch(e) {} })();
+    </script>
 </head>
 <body>
     <!-- Login Screen -->
@@ -87,7 +91,7 @@
                 <!-- PC versiyada: Barcha elementlar 1 qatorda -->
                 <!-- Mobile versiyada: 2 qatorga bo'linadi -->
                 <div class="nav-left">
-                    <div class="logo-modern">
+                    <div class="logo-modern" id="logoHomeLink" role="button" title="Bosh sahifa">
                         <div class="logo-icon-triangle">▲</div>
                         <span class="logo-text-modern">AI-OCR</span>
                     </div>
@@ -117,7 +121,7 @@
                     <div class="nav-icons-modern">
                         <span class="nav-icon-modern">⊞</span>
                         <span class="nav-icon-modern">🔔</span>
-                        <span class="nav-icon-modern">🌙</span>
+                        <span class="nav-icon-modern" id="darkModeToggle" title="Dark Mode">🌙</span>
                     </div>
                     <div class="profile-picture-modern">
                         <div class="avatar-circle-modern" id="profileDropdownToggle">👤</div>
@@ -477,28 +481,87 @@
                 </form>
             </div>
 
-            <!-- My Page (Admin Panel) -->
+            <!-- My Page (Profile + Documents) -->
             <div id="adminPage" class="page">
-                <div class="admin-header">
-                    <h1>관리자 패널 (Admin Panel)</h1>
-                    <p class="admin-subtitle">문서 검증 및 승인 센터</p>
-                </div>
-                
-                <!-- Admin Documents List -->
-                <div class="admin-documents-section">
-                    <div class="admin-section-header">
-                        <h2>대기 중인 문서 (Pending Documents)</h2>
-                        <div class="admin-filters">
-                            <button class="btn-filter active" onclick="filterAdminDocuments('all')">전체</button>
-                            <button class="btn-filter" onclick="filterAdminDocuments('pending')">대기 중</button>
-                            <button class="btn-filter" onclick="filterAdminDocuments('approved')">승인됨</button>
-                            <button class="btn-filter" onclick="filterAdminDocuments('rejected')">거부됨</button>
+                <div class="mypage-layout">
+                    <aside class="mypage-sidebar">
+                        <div class="mypage-sidebar-user">
+                            <div class="mypage-avatar-wrap">
+                                <img id="mypageSidebarAvatar" src="" alt="" class="mypage-avatar" onerror="this.style.display='none'; this.nextElementSibling.classList.add('show');">
+                                <div class="mypage-avatar-placeholder show"><span id="mypageSidebarInitial">A</span></div>
+                            </div>
+                            <p class="mypage-sidebar-name" id="mypageSidebarName">Admin</p>
+                            <p class="mypage-sidebar-phone"><span class="mypage-icon-phone"></span><span id="mypageSidebarPhone">01065656565</span></p>
+                            <span class="mypage-role-tag" id="mypageSidebarRole">ADMIN</span>
                         </div>
-                    </div>
-                    <div id="adminDocumentsList" class="admin-documents-list">
-                        <div class="loading">로딩 중...</div>
-                    </div>
+                        <nav class="mypage-sidebar-nav">
+                            <p class="mypage-nav-title">MANAGE LISTINGS</p>
+                            <a href="#" class="mypage-nav-item" data-mypage="favorites"><span class="mypage-icon-fav"></span><span class="mypage-nav-text">My Favorites</span></a>
+                            <a href="#" class="mypage-nav-item" data-mypage="documents"><span class="mypage-icon-search"></span><span class="mypage-nav-text">Recently Visited</span></a>
+                            <a href="#" class="mypage-nav-item" data-mypage="documents"><span class="mypage-icon-followers"></span><span class="mypage-nav-text">My Followers</span></a>
+                            <a href="#" class="mypage-nav-item" data-mypage="documents"><span class="mypage-icon-followings"></span><span class="mypage-nav-text">My Followings</span></a>
+                            <p class="mypage-nav-title">MANAGE ACCOUNT</p>
+                            <a href="#" class="mypage-nav-item active" data-mypage="profile"><span class="mypage-icon-user"></span><span class="mypage-nav-text">My Profile</span></a>
+                            <a href="#" class="mypage-nav-item mypage-nav-logout" id="mypageLogout"><span class="mypage-icon-logout"></span><span class="mypage-nav-text">Logout</span></a>
+                        </nav>
+                    </aside>
+                    <main class="mypage-content">
+                        <div id="mypageProfileView" class="mypage-profile-view">
+                            <div class="mypage-profile-header">
+                                <h1 class="mypage-profile-title" data-i18n="myProfile">My Profile</h1>
+                                <p class="mypage-profile-subtitle" data-i18n="weGladToSeeYou">We are glad to see you again!</p>
+                            </div>
+                            <div class="mypage-card">
+                                <h2 class="mypage-card-title" data-i18n="profilePhoto">Photo</h2>
+                                <div class="mypage-photo-row">
+                                    <div class="mypage-photo-wrap">
+                                        <img id="mypageProfileAvatar" src="" alt="" class="mypage-profile-avatar" onerror="this.style.display='none'; this.nextElementSibling.classList.add('show');">
+                                        <div class="mypage-avatar-placeholder show"><span id="mypageProfileInitial">A</span></div>
+                                    </div>
+                                    <div class="mypage-photo-actions">
+                                        <button type="button" class="btn-mypage-upload" id="mypageUploadPhotoBtn"><span data-i18n="uploadPhoto">Upload Profile Image</span></button>
+                                        <p class="mypage-photo-hint" data-i18n="photoHint">A photo must be in JPG, JPEG, PNG or WebP format!</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mypage-card">
+                                <h2 class="mypage-card-title" data-i18n="userInfo">User Information</h2>
+                                <div class="mypage-form-row">
+                                    <div class="form-group">
+                                        <label data-i18n="username">Username</label>
+                                        <input type="text" id="mypageUsername" class="form-input" value="">
+                                    </div>
+                                    <div class="form-group">
+                                        <label data-i18n="phone">Phone</label>
+                                        <input type="tel" id="mypagePhone" class="form-input" value="">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label data-i18n="address">Address</label>
+                                    <input type="text" id="mypageAddress" class="form-input" value="">
+                                </div>
+                            </div>
+                            <div class="mypage-actions">
+                                <button type="button" class="btn-mypage-update" id="mypageUpdateBtn"><span data-i18n="updateProfile">Update Profile</span> <span class="mypage-arrow">→</span></button>
+                            </div>
+                        </div>
+                        <div id="mypageDocumentsView" class="mypage-documents-view" style="display: none;">
+                            <div class="admin-documents-section">
+                                <div class="admin-section-header">
+                                    <h2 id="adminSectionHeaderH2">문서</h2>
+                                    <div class="admin-filters" id="adminFiltersDiv">
+                                        <button class="btn-filter active" onclick="filterAdminDocuments('all')">전체</button>
+                                        <button class="btn-filter" onclick="filterAdminDocuments('pending')">대기 중</button>
+                                        <button class="btn-filter" onclick="filterAdminDocuments('approved')">승인됨</button>
+                                        <button class="btn-filter" onclick="filterAdminDocuments('rejected')">거부됨</button>
+                                    </div>
+                                </div>
+                                <div id="adminDocumentsList" class="admin-documents-list"></div>
+                            </div>
+                        </div>
+                    </main>
                 </div>
+                <a href="#" class="mypage-float-aichat" id="mypageAIChatBtn" title="AI Chat"><span class="mypage-aichat-icon">✦</span> AI Chat</a>
             </div>
             
             <!-- Admin Document Verification Page -->

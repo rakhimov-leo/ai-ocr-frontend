@@ -1,3 +1,315 @@
+/* ==================== MY PAGE (Profile layout) ==================== */
+
+.mypage-layout {
+    display: flex;
+    min-height: 60vh;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.1);
+    background: #fff;
+}
+
+.mypage-sidebar {
+    width: 280px;
+    min-width: 280px;
+    background: linear-gradient(180deg, #7c3aed 0%, #5b21b6 50%, #4c1d95 100%);
+    color: #fff;
+    padding: 28px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.mypage-sidebar-user {
+    text-align: center;
+}
+
+.mypage-avatar-wrap {
+    position: relative;
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 12px;
+}
+
+.mypage-avatar,
+.mypage-profile-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid rgba(255,255,255,0.5);
+}
+
+.mypage-avatar-placeholder {
+    display: none;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.25);
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    font-weight: 700;
+    color: #fff;
+}
+
+.mypage-avatar-placeholder.show {
+    display: flex;
+}
+
+.mypage-sidebar-name {
+    margin: 0 0 6px;
+    font-size: 1.2em;
+    font-weight: 600;
+}
+
+.mypage-sidebar-phone {
+    margin: 0 0 10px;
+    font-size: 0.9em;
+    opacity: 0.95;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.mypage-icon-phone::before { content: "📞 "; }
+
+.mypage-role-tag {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.7em;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    background: rgba(255,255,255,0.2);
+    color: rgba(255,255,255,0.95);
+}
+
+.mypage-sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.mypage-nav-title {
+    margin: 14px 0 6px;
+    padding: 0 12px;
+    font-size: 0.68em;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    color: rgba(255,255,255,0.6);
+}
+
+.mypage-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    color: #fff;
+    text-decoration: none;
+    transition: background 0.2s;
+}
+
+.mypage-nav-item:hover {
+    background: rgba(255,255,255,0.15);
+}
+
+.mypage-nav-item.active {
+    background: rgba(255,255,255,0.25);
+}
+
+.mypage-nav-logout {
+    color: #fca5a5;
+}
+
+.mypage-nav-logout:hover {
+    background: rgba(239,68,68,0.2);
+}
+
+.mypage-icon-fav::before { content: "♥ "; opacity: 0.95; }
+.mypage-icon-search::before { content: "🔍 "; }
+.mypage-icon-followers::before { content: "👥 "; }
+.mypage-icon-followings::before { content: "👤 "; }
+.mypage-icon-user::before { content: "👤 "; }
+.mypage-icon-logout::before { content: "↪ "; }
+
+.mypage-content {
+    flex: 1;
+    padding: 32px 40px 40px;
+    background: #f8fafc;
+}
+
+.mypage-profile-header {
+    margin-bottom: 28px;
+}
+
+.mypage-profile-title {
+    font-size: 1.8em;
+    margin: 0 0 6px;
+    color: #1e293b;
+}
+
+.mypage-profile-subtitle {
+    margin: 0;
+    color: #64748b;
+    font-size: 1em;
+}
+
+.mypage-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.mypage-card-title {
+    font-size: 1.1em;
+    margin: 0 0 16px;
+    color: #334155;
+}
+
+.mypage-photo-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 24px;
+    flex-wrap: wrap;
+}
+
+.mypage-photo-wrap {
+    flex-shrink: 0;
+    position: relative;
+    width: 100px;
+    height: 100px;
+}
+
+.mypage-profile-avatar {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.mypage-photo-wrap .mypage-avatar-placeholder {
+    width: 100px;
+    height: 100px;
+    font-size: 2em;
+}
+
+.mypage-photo-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.mypage-photo-hint {
+    margin: 0;
+    font-size: 0.85em;
+    color: #64748b;
+}
+
+.btn-mypage-upload {
+    background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%);
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.btn-mypage-upload:hover {
+    opacity: 0.9;
+}
+
+.mypage-form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.mypage-form-row .form-group { margin-bottom: 0; }
+.mypage-card .form-group { margin-bottom: 16px; }
+.mypage-card .form-group:last-of-type { margin-bottom: 0; }
+
+.btn-mypage-update {
+    background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%);
+    color: #fff;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+    transition: opacity 0.2s;
+}
+
+.btn-mypage-update:hover { opacity: 0.9; }
+
+.mypage-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 8px;
+}
+
+.mypage-arrow { font-size: 1.1em; }
+
+.mypage-documents-view .admin-documents-section {
+    margin-top: 0;
+}
+
+/* Floating AI Chat button */
+.mypage-float-aichat {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%);
+    color: #fff;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 0.95em;
+    text-decoration: none;
+    box-shadow: 0 4px 16px rgba(124, 58, 237, 0.4);
+    transition: transform 0.2s, box-shadow 0.2s;
+    z-index: 100;
+}
+
+.mypage-float-aichat:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(124, 58, 237, 0.5);
+    color: #fff;
+}
+
+.mypage-aichat-icon {
+    font-size: 1.1em;
+    opacity: 0.95;
+}
+
+.mypage-float-aichat {
+    display: none;
+}
+
+body.mypage-visible .mypage-float-aichat {
+    display: inline-flex;
+}
+
+@media (max-width: 768px) {
+    .mypage-layout { flex-direction: column; }
+    .mypage-sidebar { width: 100%; min-width: 0; flex-direction: row; flex-wrap: wrap; justify-content: center; padding: 20px; }
+    .mypage-sidebar-user { flex: 1; text-align: left; }
+    .mypage-form-row { grid-template-columns: 1fr; }
+}
+
 /* ==================== ADMIN VERIFICATION PAGE ==================== */
 
 .admin-header {
