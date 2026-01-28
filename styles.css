@@ -2254,6 +2254,11 @@ body::before {
     border: 1px solid #e2e8f0;
 }
 
+.chat-loading {
+    color: #666;
+    font-style: italic;
+}
+
 .chat-input-container {
     display: flex;
     padding: 15px;

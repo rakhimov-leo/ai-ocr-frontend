@@ -12,12 +12,13 @@ Vanilla JavaScript frontend
 
 2. **Frontend**
    - `index.html`
-   - simple HTTP server
+   - **Lokal serverdan oching** (AI Chat uchun ham shart; `file://` da API bloklanadi):
      ```bash
      cd ~/Desktop/"AI-OCR frontend"
      python3 -m http.server 3020
      ```
    - http://localhost:3020
+   - **AI Chat (Gemini):** `config.local.js.example` dan `config.local.js` yarating va kalitlarni kiriting. `config.local.js` GitHub'ga chiqmaydi (.gitignore).
 
 ## Stack:
 

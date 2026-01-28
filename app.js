@@ -3268,7 +3268,9 @@ function handleCalculator() {
     }
 }
 
-// AI javob: avval Gemini yoki Groq API (Locohub dagi kabi), yo‘q bo‘lsa kalit-so‘z fallback
+// Kalit-so‘z javob + haqiqiy AI uchun eslatma
+var AI_CHAT_HINT = ' Haqiqiy AI (Gemini/Groq) uchun config.js da GEMINI_API_KEY yoki GROQ_API_KEY kiriting.';
+
 function getKeywordReply(message) {
     var lang = typeof getCurrentLanguage === 'function' ? getCurrentLanguage() : 'ko';
     var t = (typeof translations !== 'undefined' && translations[lang]) ? translations[lang] : (typeof translations !== 'undefined' ? translations.ko : {});
@@ -3291,13 +3293,13 @@ function getKeywordReply(message) {
 }
 
 function getAIReply(message) {
-    var geminiKey = (typeof CONFIG !== 'undefined' && CONFIG.GEMINI_API_KEY) ? CONFIG.GEMINI_API_KEY : '';
-    var groqKey = (typeof CONFIG !== 'undefined' && CONFIG.GROQ_API_KEY) ? CONFIG.GROQ_API_KEY : '';
+    var geminiKey = (typeof CONFIG !== 'undefined' && CONFIG.GEMINI_API_KEY) ? CONFIG.GEMINI_API_KEY : (typeof window !== 'undefined' && window.GEMINI_API_KEY) ? window.GEMINI_API_KEY : '';
+    var groqKey = (typeof CONFIG !== 'undefined' && CONFIG.GROQ_API_KEY) ? CONFIG.GROQ_API_KEY : (typeof window !== 'undefined' && window.GROQ_API_KEY) ? window.GROQ_API_KEY : '';
 
-    // 1) Gemini API (Google) – xuddi Locohubdagidek, lekin AI-OCR mavzusi
+    // 1) Gemini API (Google)
     if (geminiKey) {
         var systemPrompt = 'You are a helpful AI assistant for the AI-OCR system. The system offers: document upload and OCR, pension calculator, NPS (National Pension Service) branch finder in Korea, forms (passport, pension, ID). Answer briefly and in the same language the user writes.';
-        return fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + encodeURIComponent(geminiKey), {
+        return fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + encodeURIComponent(geminiKey), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -3307,13 +3309,28 @@ function getAIReply(message) {
         })
             .then(function(r) { return r.json(); })
             .then(function(data) {
-                var text = data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0];
-                if (text && text.text) return text.text.trim();
+                if (data.error) {
+                    console.warn('Gemini API error:', data.error);
+                    var code = data.error.code;
+                    var status = (data.error.status || '').toUpperCase();
+                    if (code === 503 || status === 'UNAVAILABLE' || (data.error.message && data.error.message.indexOf('overloaded') !== -1)) {
+                        var msg = (typeof t !== 'undefined' && t.chatBotOverloaded) ? t.chatBotOverloaded : 'AI modeli hozir band. Bir ozdan keyin qayta urinib ko\'ring.';
+                        return msg;
+                    }
+                    throw new Error(data.error.message || 'Gemini error');
+                }
+                var parts = data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts;
+                var text = parts && parts[0] && parts[0].text;
+                if (text) return text.trim();
                 throw new Error('No text in Gemini response');
             })
             .catch(function(err) {
                 console.warn('Gemini API error:', err);
-                return getKeywordReply(message);
+                var overloaded = err && err.message && (err.message.indexOf('overloaded') !== -1 || err.message.indexOf('503') !== -1);
+                if (overloaded) {
+                    return (typeof t !== 'undefined' && t.chatBotOverloaded) ? t.chatBotOverloaded : 'AI modeli hozir band. Bir ozdan keyin qayta urinib ko\'ring.';
+                }
+                return 'AI javob bermadi. Brauzer Konsol (F12) da xatolikni ko\'ring. Agar sahifani file:// ochgan bo\'lsangiz, lokal serverdan oching (masalan: Live Server yoki npx serve).';
             });
     }
 
@@ -3343,12 +3360,12 @@ function getAIReply(message) {
             })
             .catch(function(err) {
                 console.warn('Groq API error:', err);
-                return getKeywordReply(message);
+                return 'AI javob bermadi. Brauzer Konsol (F12) da xatolikni ko\'ring. Sahifani file:// emas, http:// orqali oching.';
             });
     }
 
-    // 3) API kaliti yo‘q – kalit-so‘z javob
-    return Promise.resolve(getKeywordReply(message));
+    // 3) API kaliti yo‘q – kalit-so‘z javob + eslatma
+    return Promise.resolve(getKeywordReply(message) + AI_CHAT_HINT);
 }
 
 function handleChatSend() {
@@ -3362,7 +3379,13 @@ function handleChatSend() {
     userMsg.innerHTML = '<p>' + message.replace(/</g, '&lt;') + '</p>';
     chatMessages.appendChild(userMsg);
     chatInput.value = '';
+    var loadingMsg = document.createElement('div');
+    loadingMsg.className = 'chat-message bot';
+    loadingMsg.innerHTML = '<p class="chat-loading">Javob yozilmoqda...</p>';
+    chatMessages.appendChild(loadingMsg);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
     getAIReply(message).then(function(reply) {
+        loadingMsg.remove();
         var botMsg = document.createElement('div');
         botMsg.className = 'chat-message bot';
         botMsg.innerHTML = '<p>' + reply.replace(/</g, '&lt;') + '</p>';
@@ -3395,7 +3418,13 @@ function initAIChatFloat() {
         userRow.innerHTML = '<div class="msg-right">' + text.replace(/</g, '&lt;') + '</div>';
         main.appendChild(userRow);
         content.scrollTop = content.scrollHeight;
+        var loadingRow = document.createElement('div');
+        loadingRow.className = 'msg-row';
+        loadingRow.innerHTML = '<div class="msg-left msg-loading">Javob yozilmoqda...</div>';
+        main.appendChild(loadingRow);
+        content.scrollTop = content.scrollHeight;
         getAIReply(text).then(function(reply) {
+            loadingRow.remove();
             var botRow = document.createElement('div');
             botRow.className = 'msg-row';
             botRow.innerHTML = '<div class="msg-left">' + reply.replace(/</g, '&lt;') + '</div>';

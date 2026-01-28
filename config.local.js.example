@@ -1,0 +1,10 @@
+// Bu faylni config.local.js deb nusxalang va kalitlarni kiriting.
+// config.local.js .gitignore da – GitHub'ga push qilinsa ham kalit ko'rinmaydi.
+// Nusxalash: cp config.local.js.example config.local.js  (yoki qo'ldan yarating)
+
+(function() {
+    if (typeof CONFIG === 'undefined') return;
+    CONFIG.GEMINI_API_KEY = '';  // https://aistudio.google.com/app/apikey
+    CONFIG.GROQ_API_KEY = '';    // https://console.groq.com/ (ixtiyoriy)
+    // CONFIG.API_BASE_URL = 'https://your-api.com/api';  // kerak bo'lsa
+})();
