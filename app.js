@@ -4316,23 +4316,35 @@ function initDarkMode() {
 function applyDarkMode(isDark) {
     if (isDark) {
         document.documentElement.classList.add('dark-mode');
-        document.body.style.backgroundColor = '#0f0f0f';
-        document.body.style.color = '#e0e0e0';
     } else {
         document.documentElement.classList.remove('dark-mode');
-        document.body.style.backgroundColor = '';
-        document.body.style.color = '';
     }
 }
 function updateDarkModeIcon(isDark) {
     const el = document.getElementById('darkModeToggle');
     if (el) el.textContent = isDark ? '☀️' : '🌙';
 }
+function playThemeEntranceOverlay() {
+    var overlay = document.createElement('div');
+    overlay.className = 'theme-entrance-overlay';
+    overlay.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(overlay);
+    requestAnimationFrame(function () {
+        requestAnimationFrame(function () { overlay.classList.add('theme-entrance-overlay--active'); });
+    });
+    overlay.addEventListener('transitionend', function onEnd() {
+        overlay.removeEventListener('transitionend', onEnd);
+        if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+    });
+}
+
 function toggleDarkMode() {
-    const next = localStorage.getItem('darkMode') !== 'true';
+    var wasDark = localStorage.getItem('darkMode') === 'true';
+    var next = !wasDark;
     localStorage.setItem('darkMode', String(next));
     applyDarkMode(next);
     updateDarkModeIcon(next);
+    if (wasDark && !next) playThemeEntranceOverlay();
 }
 
 // ==================== CURSOR GLOW (dark mode: yashil nuqta + glow sichqoncha kuzatadi, Locohub uslubi) ====================

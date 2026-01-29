@@ -1,5 +1,19 @@
 /* Dark Mode – Locohub uslubida (html.dark-mode) */
 
+body {
+    transition: background 0.6s ease, color 0.6s ease;
+}
+
+.featured-section,
+.top-nav-modern,
+.news-box,
+.services-box,
+.service-item,
+.document-card,
+.news-item {
+    transition: background-color 0.55s ease, color 0.55s ease, border-color 0.55s ease, box-shadow 0.55s ease;
+}
+
 html.dark-mode body {
     background: #0f0f0f !important;
     color: #e0e0e0;
@@ -363,3 +377,17 @@ html.dark-mode .error {
     transition: opacity 0.2s ease, width 0.2s ease, height 0.2s ease;
 }
 
+/* Dark ↔ Light oʻtishda kirish animatsiyasi (sekin asta) */
+.theme-entrance-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    pointer-events: none;
+    background: linear-gradient(180deg, #ffffff 0%, #f0f4f8 50%, #e8eef4 100%);
+    opacity: 1;
+    transition: opacity 0.7s ease-out;
+}
+
+.theme-entrance-overlay.theme-entrance-overlay--active {
+    opacity: 0;
+}

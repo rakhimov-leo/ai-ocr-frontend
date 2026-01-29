@@ -785,17 +785,17 @@ body::before {
     font-weight: 600;
 }
 
-/* Main Content */
+/* Main Content – sahifa scroll, pastdagi ham to‘liq ko‘rinadi */
 .main-content {
-    flex: 1;
-    padding: 100px 40px 40px 40px;
-    overflow-y: auto;
+    flex: 0 0 auto;
+    padding: 100px 40px 120px 40px;
     overflow-x: hidden;
+    overflow-y: visible;
     position: relative;
     z-index: 1;
     width: 100%;
     box-sizing: border-box;
-    background: transparent; /* Background transparent qilish */
+    background: transparent;
 }
 
 /* Profile Header Section (Next to Sidebar Profile) */
@@ -1432,6 +1432,110 @@ body::before {
     font-size: 0.9em;
     color: #333;
     text-align: center;
+}
+
+/* PC only (769px+): hamma bo'limlar teng ulchamda; mobile'ga tegilmaydi */
+@media (min-width: 769px) {
+    .featured-section,
+    .news-box,
+    .services-box {
+        padding: 16px 20px;
+        border-radius: 10px;
+    }
+    .featured-section {
+        margin-bottom: 12px;
+        gap: 14px;
+    }
+    .featured-content {
+        padding: 0;
+    }
+    .featured-title,
+    .box-header h2,
+    .services-box h2 {
+        font-size: 1.25em;
+        margin-bottom: 10px;
+        margin-top: 0;
+    }
+    .box-header {
+        margin-bottom: 10px;
+    }
+    .box-tabs {
+        margin-bottom: 10px;
+        gap: 8px;
+    }
+    .tab {
+        font-size: 0.88em;
+        padding: 6px 12px;
+    }
+    .btn-more {
+        padding: 5px 12px;
+        font-size: 0.88em;
+    }
+    .featured-list {
+        margin-bottom: 4px;
+        padding: 0;
+    }
+    .featured-list-item {
+        padding: 4px 0;
+        font-size: 0.9em;
+    }
+    .featured-section .checkbox-label {
+        gap: 6px;
+        padding: 2px 0;
+    }
+    .featured-description {
+        margin-top: 4px;
+        margin-bottom: 0;
+        font-size: 0.88em;
+    }
+    .featured-video {
+        align-self: center;
+    }
+    .featured-video-player {
+        aspect-ratio: 16 / 10;
+        border-radius: 10px;
+        object-fit: cover;
+    }
+    .dashboard-grid {
+        gap: 12px;
+        margin-top: 12px;
+    }
+    .news-list {
+        gap: 10px;
+    }
+    .news-item {
+        padding: 10px 12px;
+        gap: 5px;
+    }
+    .news-item::before {
+        width: 3px;
+    }
+    .news-date {
+        font-size: 0.8em;
+        letter-spacing: 0.35px;
+    }
+    .news-title {
+        font-size: 0.9em;
+        line-height: 1.4;
+    }
+    .services-box h2 {
+        margin-bottom: 12px;
+    }
+    .services-grid {
+        gap: 12px;
+    }
+    .service-item {
+        padding: 12px 14px;
+        gap: 8px;
+    }
+    .service-icon {
+        width: 44px;
+        height: 44px;
+        margin-bottom: 4px;
+    }
+    .service-item span {
+        font-size: 0.88em;
+    }
 }
 
 /* Stats Grid */
@@ -2672,16 +2776,17 @@ body::before {
         color: white;
     }
     
-    /* Main Content - Mobile (pastga tushirildi) */
+    /* Main Content - Mobile (pastdagi ham to'liq ko'rinsin) */
     .main-content {
-        padding: 90px 15px 15px 15px; /* 2 qatorli navigation uchun biroz ko'proq padding */
+        padding: 90px 15px 100px 15px;
         width: 100%;
         margin-left: 0;
         margin-top: 0;
         background: transparent;
         position: relative;
-        z-index: 1; /* Navigation menu'dan past */
-        overflow-x: hidden; /* Horizontal scroll'ni oldini olish */
+        z-index: 1;
+        overflow-x: hidden;
+        overflow-y: visible;
     }
     
     /* Dashboard page - Mobile */
