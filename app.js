@@ -4335,8 +4335,99 @@ function toggleDarkMode() {
     updateDarkModeIcon(next);
 }
 
+// ==================== CURSOR GLOW (dark mode: yashil nuqta + glow sichqoncha kuzatadi, Locohub uslubi) ====================
+function initCursorGlow() {
+    function isDark() { return document.documentElement.classList.contains('dark-mode'); }
+    var cursorGlow = null;
+    var cursorDot = null;
+    var active = false;
+    var hoverHandlers = [];
+
+    function removeCursor() {
+        if (cursorGlow && cursorGlow.parentNode) cursorGlow.parentNode.removeChild(cursorGlow);
+        if (cursorDot && cursorDot.parentNode) cursorDot.parentNode.removeChild(cursorDot);
+        cursorGlow = null;
+        cursorDot = null;
+        active = false;
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseleave', onLeave);
+        document.removeEventListener('mouseenter', onEnter);
+        hoverHandlers.forEach(function (h) {
+            if (h.el && h.enter) h.el.removeEventListener('mouseenter', h.enter);
+            if (h.el && h.leave) h.el.removeEventListener('mouseleave', h.leave);
+        });
+        hoverHandlers.length = 0;
+    }
+
+    function createCursor() {
+        var g = document.querySelector('.cursor-glow');
+        var d = document.querySelector('.cursor-dot-custom');
+        if (g) g.remove();
+        if (d) d.remove();
+        cursorGlow = document.createElement('div');
+        cursorGlow.className = 'cursor-glow';
+        cursorDot = document.createElement('div');
+        cursorDot.className = 'cursor-dot-custom';
+        document.body.appendChild(cursorGlow);
+        document.body.appendChild(cursorDot);
+        active = true;
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseleave', onLeave);
+        document.addEventListener('mouseenter', onEnter);
+        var sel = 'a, button, [role="button"], [onclick], input[type="submit"], input[type="button"], .btn-primary, .nav-link-modern, .service-item, .tab, .news-item-link';
+        document.querySelectorAll(sel).forEach(function (el) {
+            var enter = function () {
+                if (!cursorGlow || !cursorDot) return;
+                cursorGlow.style.width = '300px';
+                cursorGlow.style.height = '300px';
+                cursorGlow.style.background = 'radial-gradient(circle, rgba(52, 211, 153, 0.25) 0%, transparent 70%)';
+                cursorDot.style.width = '12px';
+                cursorDot.style.height = '12px';
+            };
+            var leave = function () {
+                if (!cursorGlow || !cursorDot) return;
+                cursorGlow.style.width = '200px';
+                cursorGlow.style.height = '200px';
+                cursorGlow.style.background = 'radial-gradient(circle, rgba(52, 211, 153, 0.15) 0%, transparent 70%)';
+                cursorDot.style.width = '8px';
+                cursorDot.style.height = '8px';
+            };
+            el.addEventListener('mouseenter', enter);
+            el.addEventListener('mouseleave', leave);
+            hoverHandlers.push({ el: el, enter: enter, leave: leave });
+        });
+    }
+
+    function onMove(e) {
+        if (!cursorGlow || !cursorDot) return;
+        cursorGlow.style.left = e.clientX + 'px';
+        cursorGlow.style.top = e.clientY + 'px';
+        cursorGlow.style.opacity = '1';
+        cursorDot.style.left = e.clientX + 'px';
+        cursorDot.style.top = e.clientY + 'px';
+        cursorDot.style.opacity = '1';
+    }
+    function onLeave() {
+        if (cursorGlow) cursorGlow.style.opacity = '0';
+        if (cursorDot) cursorDot.style.opacity = '0';
+    }
+    function onEnter() {
+        if (cursorDot) cursorDot.style.opacity = '1';
+    }
+
+    function sync() {
+        if (isDark() && !active) createCursor();
+        else if (!isDark() && active) removeCursor();
+    }
+
+    sync();
+    var obs = new MutationObserver(sync);
+    obs.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     initDarkMode();
+    initCursorGlow();
     
     const darkToggle = document.getElementById('darkModeToggle');
     if (darkToggle) darkToggle.addEventListener('click', (e) => { e.preventDefault(); toggleDarkMode(); });

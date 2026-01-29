@@ -884,7 +884,8 @@ body::before {
 
 .featured-content {
     flex: 1;
-    min-width: 0; /* Text wrap uchun */
+    min-width: 0;
+    max-width: 50%; /* Chap yarim – video bilan teng 50/50 */
 }
 
 .featured-title {
@@ -1087,50 +1088,29 @@ body::before {
     font-weight: 600;
 }
 
-.featured-illustration {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-        align-items: center;
-        justify-content: center;
-        width: auto;
-        min-width: 200px;
-        max-width: 250px;
-        flex-shrink: 0;
-        box-sizing: border-box;
-        overflow-x: hidden; /* Horizontal scroll'ni oldini olish */
-    }
-
-.illustration-item {
-    background: white;
-    padding: 12px;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+/* Oʻng yarim: video (teng 50%) */
+.featured-video {
+    flex: 1;
+    min-width: 0;
+    max-width: 50%;
     display: flex;
-    align-items: center;
+    flex-direction: column;
+    align-items: stretch;
     justify-content: center;
-    transition: all 0.3s ease;
-    width: 50px;
-    height: 50px;
-    flex-shrink: 0;
 }
 
-.illustration-item:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 4px 16px rgba(102, 126, 234, 0.2);
-    background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
-}
-
-.illustration-icon {
+.featured-video-player {
     width: 100%;
-    height: 100%;
-    color: #667eea;
-    transition: all 0.3s ease;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+    background: #111;
 }
 
-.illustration-item:hover .illustration-icon {
-    color: #764ba2;
-    transform: scale(1.1);
+.featured-video-player:focus {
+    outline: 2px solid #0066cc;
+    outline-offset: 2px;
 }
 
 .dashboard-grid {
@@ -1284,29 +1264,15 @@ body::before {
         padding: 18px;
     }
     
-    .illustration-item {
-        width: 60px;
-        height: 60px;
-        padding: 15px;
-    }
-    
-    .featured-illustration {
-        max-width: 280px;
-        gap: 12px;
+    .featured-video {
+        max-width: 100%;
     }
 }
 
 /* Tablet ekranlar uchun (768px - 1023px) */
 @media (min-width: 768px) and (max-width: 1023px) {
-    .illustration-item {
-        width: 55px;
-        height: 55px;
-        padding: 12px;
-    }
-    
-    .featured-illustration {
-        max-width: 220px;
-        gap: 10px;
+    .featured-video {
+        max-width: 50%;
     }
 }
 
@@ -1384,9 +1350,26 @@ body::before {
     color: #667eea;
 }
 
+/* Services qutisi – aylanuvchi gradient chegarasi */
+.services-box-gradient-wrap {
+    padding: 3px;
+    border-radius: 16px;
+    background: linear-gradient(90deg, #06b6d4, #8b5cf6, #ec4899, #f59e0b, #06b6d4);
+    background-size: 400% 100%;
+    animation: services-gradient-flow 5s ease-in-out infinite;
+    width: 100%;
+    box-sizing: border-box;
+    box-shadow: 0 0 24px rgba(139, 92, 246, 0.2), 0 0 48px rgba(6, 182, 212, 0.12);
+}
+
+@keyframes services-gradient-flow {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+}
+
 .services-box {
     background: white;
-    border-radius: 12px;
+    border-radius: 13px;
     padding: 25px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
@@ -2812,18 +2795,17 @@ body::before {
         flex: 1;
     }
     
-    .featured-illustration {
-        width: 100%;
-        max-width: 100%;
-        justify-content: center;
-        gap: 8px;
-        margin-top: 15px;
+    .featured-section {
+        flex-direction: column;
+        align-items: stretch;
     }
     
-    .illustration-item {
-        width: 45px;
-        height: 45px;
-        padding: 10px;
+    .featured-content {
+        max-width: 100%;
+    }
+    
+    .featured-video {
+        display: none; /* Mobile: video kerak emas */
     }
     
     .featured-title {
@@ -3114,22 +3096,6 @@ body::before {
     .featured-description {
         font-size: 0.85em;
         line-height: 1.5;
-    }
-    
-    .featured-illustration {
-        gap: 10px;
-        margin-top: 15px;
-    }
-    
-    .illustration-item {
-        width: 60px;
-        height: 60px;
-        padding: 12px;
-    }
-    
-    .illustration-icon {
-        width: 100%;
-        height: 100%;
     }
     
     /* Navigation menu ochilganda body scroll'ni to'xtatish */
