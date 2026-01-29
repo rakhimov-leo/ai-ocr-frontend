@@ -4442,7 +4442,8 @@ function initCursorGlow() {
 document.addEventListener('DOMContentLoaded', () => {
     initDarkMode();
     initCursorGlow();
-    
+    var hpVideo = document.querySelector('.featured-video-player');
+    if (hpVideo) hpVideo.playbackRate = 0.7;
     const darkToggle = document.getElementById('darkModeToggle');
     if (darkToggle) darkToggle.addEventListener('click', (e) => { e.preventDefault(); toggleDarkMode(); });
     

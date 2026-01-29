@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1" stdDeviation="0.6" flood-color="#333" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+  <rect width="64" height="64" fill="#fff" stroke="#bbb" stroke-width="1.2" rx="5" filter="url(#soft)"/>
+  <path d="M6 6h9v3h-6v5H6V6z" fill="#374151"/>
+  <path d="M58 6h-9v3h6v5h3V6z" fill="#374151"/>
+  <path d="M6 58v-9h3v6h6v3H6z" fill="#374151"/>
+  <path d="M58 58h-9v-3h-6v-6h3v9z" fill="#374151"/>
+  <text x="32" y="39" font-family="Arial, sans-serif" font-size="22" font-weight="bold" fill="#D32F2F" text-anchor="middle">OCR</text>
+</svg>
