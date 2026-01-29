@@ -4400,11 +4400,13 @@ function initCursorGlow() {
 
     function onMove(e) {
         if (!cursorGlow || !cursorDot) return;
-        cursorGlow.style.left = e.clientX + 'px';
-        cursorGlow.style.top = e.clientY + 'px';
+        var x = e.clientX;
+        var y = e.clientY;
+        cursorGlow.style.left = x + 'px';
+        cursorGlow.style.top = y + 'px';
         cursorGlow.style.opacity = '1';
-        cursorDot.style.left = e.clientX + 'px';
-        cursorDot.style.top = e.clientY + 'px';
+        cursorDot.style.left = x + 'px';
+        cursorDot.style.top = y + 'px';
         cursorDot.style.opacity = '1';
     }
     function onLeave() {
