@@ -78,6 +78,10 @@ html.dark-mode .box-header h2 {
     color: #7dd3fc;
 }
 
+html.dark-mode .news-box {
+    background: #1a1a1e;
+}
+
 html.dark-mode .document-card,
 html.dark-mode .news-item {
     background: #1a1a1e;
@@ -89,6 +93,14 @@ html.dark-mode .document-card:hover,
 html.dark-mode .news-item:hover {
     border-color: #444;
     background: #222228;
+}
+
+html.dark-mode .news-item-link .news-title {
+    color: #e0e0e0;
+}
+
+html.dark-mode .news-item-link:hover .news-title {
+    color: #7dd3fc;
 }
 
 /* Page header, table */

@@ -3435,6 +3435,7 @@ function handleChatSend() {
 
 // Locohub-uslubidagi float AI Chat: ochish/yopish va yuborish
 function initAIChatFloat() {
+    var wrap = document.querySelector('.aichat-btn-gradient-wrap');
     var btn = document.getElementById('aiChatFloatBtn');
     var frame = document.getElementById('aiChatFrame');
     var icon = document.getElementById('aiChatBtnIcon');
@@ -3443,11 +3444,14 @@ function initAIChatFloat() {
     var input = document.getElementById('aiChatInput');
     var sendBtn = document.getElementById('aiChatSendBtn');
     if (!btn || !frame || !main || !input || !sendBtn) return;
-    btn.addEventListener('click', function(e) {
+    var toggleChat = function(e) {
         e.preventDefault();
+        e.stopPropagation();
         frame.classList.toggle('open');
-        icon.textContent = frame.classList.contains('open') ? '×' : '✦';
-    });
+        if (icon) icon.textContent = frame.classList.contains('open') ? '×' : '✦';
+    };
+    if (wrap) wrap.addEventListener('click', toggleChat);
+    else btn.addEventListener('click', toggleChat);
     function sendFloatMessage() {
         var text = input.value.trim();
         if (!text) return;
