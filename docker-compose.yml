@@ -1,0 +1,22 @@
+services:
+  ai-ocr-frontend:
+    container_name: ai-ocr-frontend
+    image: nginx:alpine
+    restart: always
+
+    working_dir: /usr/share/nginx/html
+
+    volumes:
+      # Frontend papkasini nginx root'iga beramiz
+      - ./:/usr/share/nginx/html:ro
+
+    ports:
+      # Host:3020  → container:80
+      - "3020:80"
+
+    networks:
+      - ai-ocr-frontend-network
+
+networks:
+  ai-ocr-frontend-network:
+    driver: bridge
