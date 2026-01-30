@@ -16,6 +16,10 @@
     </script>
 </head>
 <body>
+    <!-- Welcome overlay – ochilganda markazda, 5 sekunddan keyin yo'qoladi -->
+    <div id="welcomeOverlay" class="welcome-overlay" aria-hidden="false">
+        <span class="welcome-overlay-text">Welcome to AI-OCR</span>
+    </div>
     <!-- Login Screen -->
     <div id="loginScreen" class="screen">
         <div class="login-container">
@@ -47,7 +51,10 @@
                 </div>
                 
                 <div class="login-switch">
-                    <p>새 계정이 필요하신가요? <a href="#" id="showSignup">회원가입</a></p>
+                    <p><span id="needAccountText">새 계정이 필요하신가요?</span> <a href="#" id="showSignup">회원가입</a></p>
+                </div>
+                <div class="login-switch" style="margin-top: 12px;">
+                    <p><a href="#" id="browseWithoutLogin">로그인 없이 둘러보기</a></p>
                 </div>
                 </div>
                 
@@ -79,7 +86,10 @@
                     </form>
                     
                     <div class="login-switch">
-                        <p>이미 계정이 있으신가요? <a href="#" id="showLogin">로그인</a></p>
+                        <p><span id="haveAccountText">이미 계정이 있으신가요?</span> <a href="#" id="showLogin">로그인</a></p>
+                    </div>
+                    <div class="login-switch" style="margin-top: 12px;">
+                        <p><a href="#" id="browseWithoutLoginSignup">로그인 없이 둘러보기</a></p>
                     </div>
                 </div>
             </div>
@@ -106,6 +116,8 @@
                     <a href="#" data-page="documents" class="nav-link-modern">Documents</a>
                     <a href="#" data-page="upload" class="nav-link-modern">Upload</a>
                     <a href="#" data-page="admin" class="nav-link-modern" id="adminNavLink">My Page</a>
+                    <a href="#" data-page="adminPanel" class="nav-link-modern" id="adminPanelNavLink" style="display: none;">Admin</a>
+                    <a href="#" data-page="aboutUs" class="nav-link-modern">About Us</a>
                 </nav>
                 <div class="nav-right-modern">
                     <!-- Language Selector -->
@@ -126,7 +138,7 @@
                         <span class="nav-icon-modern">🔔</span>
                         <span class="nav-icon-modern" id="darkModeToggle" title="Dark Mode">🌙</span>
                     </div>
-                    <div class="profile-picture-modern">
+                    <div class="profile-picture-modern" id="profileSection">
                         <div class="avatar-circle-modern" id="profileDropdownToggle">👤</div>
                         <!-- Profile Dropdown Overlay (Mobile uchun) -->
                         <div class="profile-dropdown-overlay" id="profileDropdownOverlay"></div>
@@ -140,7 +152,10 @@
                                 </svg>
                             </button>
                             <div class="profile-dropdown-content">
-                                <button class="profile-dropdown-logout" id="topNavLogoutBtn">
+                                <button type="button" class="profile-dropdown-logout profile-dropdown-login" id="topNavLoginBtn" onclick="if(window.showLoginScreen)showLoginScreen();return false;">
+                                    <span>🔑 로그인</span>
+                                </button>
+                                <button type="button" class="profile-dropdown-logout" id="topNavLogoutBtn" style="display: none;" onclick="if(window.handleLogout)handleLogout();return false;">
                                     <span>🚪 로그아웃</span>
                                 </button>
                             </div>
@@ -155,6 +170,8 @@
                         <a href="#" data-page="documents" class="nav-link-modern">Documents</a>
                         <a href="#" data-page="upload" class="nav-link-modern">Upload</a>
                         <a href="#" data-page="admin" class="nav-link-modern" id="adminNavLinkMobile">My Page</a>
+                        <a href="#" data-page="adminPanel" class="nav-link-modern" id="adminPanelNavLinkMobile" style="display: none;">Admin</a>
+                        <a href="#" data-page="aboutUs" class="nav-link-modern">About Us</a>
                     </nav>
                 </div>
             </div>
@@ -410,7 +427,9 @@
             <!-- Upload -->
             <div id="uploadPage" class="page">
                 <h1>문서 업로드</h1>
-                
+                <div id="uploadGuestMessage" class="upload-guest-message" style="display: none; margin-bottom: 16px; padding: 16px; background: #fef3c7; border-radius: 8px; color: #92400e;">
+                    <strong id="uploadGuestMessageText">로그인 또는 회원가입 후 문서를 업로드할 수 있습니다.</strong>
+                </div>
                 <form id="uploadForm" class="upload-form">
                     <div class="form-group">
                         <label>파일</label>
@@ -459,7 +478,7 @@
                         <nav class="mypage-sidebar-nav">
                             <p class="mypage-nav-title">MANAGE ACCOUNT</p>
                             <a href="#" class="mypage-nav-item active" data-mypage="profile"><span class="mypage-icon-user"></span><span class="mypage-nav-text">My Profile</span></a>
-                            <a href="#" class="mypage-nav-item mypage-nav-logout" id="mypageLogout"><span class="mypage-icon-logout"></span><span class="mypage-nav-text">Logout</span></a>
+                            <a href="#" class="mypage-nav-item mypage-nav-logout" id="mypageLogout" onclick="if(window.handleLogout)handleLogout();return false;"><span class="mypage-icon-logout"></span><span class="mypage-nav-text">Logout</span></a>
                         </nav>
                     </aside>
                     <main class="mypage-content">
@@ -525,6 +544,55 @@
             <div id="adminVerificationPage" class="page">
                 <button onclick="showPage('admin')" class="btn-back">← 뒤로</button>
                 <div id="adminVerificationContent"></div>
+            </div>
+
+            <!-- Admin Panel Page (faqat admin uchun: obunachilar + skaner ma'lumotlari) -->
+            <div id="adminPanelPage" class="page">
+                <div class="page-header" style="margin-bottom: 24px;">
+                    <h1 id="adminPanelTitle">Admin</h1>
+                </div>
+                <div class="admin-panel-sections">
+                    <section class="admin-panel-section">
+                        <h2 id="adminSubscribersTitle">Obunachilar (Ro'yxatdan o'tganlar)</h2>
+                        <p class="admin-panel-desc" id="adminSubscribersDesc">Signup qilishda kiritilgan ma'lumotlar</p>
+                        <div class="admin-table-wrap">
+                            <table class="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th id="thSubscriberUsername">Foydalanuvchi</th>
+                                        <th id="thSubscriberEmail">Email</th>
+                                        <th id="thSubscriberCreated">Ro'yxatdan o'tgan sana</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="adminSubscribersList">
+                                    <tr><td colspan="3" class="loading">Yuklanmoqda...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <p id="adminSubscribersNote" class="admin-panel-note" style="display: none; margin-top: 8px; font-size: 0.9em; color: #6b7280;"></p>
+                    </section>
+                    <section class="admin-panel-section">
+                        <h2 id="adminScannerTitle">Skaner ma'lumotlari</h2>
+                        <p class="admin-panel-desc" id="adminScannerDesc">OCR / yuklangan hujjatlar ro'yxati</p>
+                        <div class="admin-table-wrap">
+                            <table class="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th id="thScannerFileType">Fayl turi</th>
+                                        <th id="thScannerUser">Foydalanuvchi</th>
+                                        <th id="thScannerStatus">Holat</th>
+                                        <th id="thScannerCreated">Sana</th>
+                                        <th id="thScannerAction">Amal</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="adminScannerList">
+                                    <tr><td colspan="6" class="loading">Yuklanmoqda...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                </div>
             </div>
 
             <!-- Branch Finder Page -->
@@ -664,6 +732,28 @@
                     </div>
                 </div>
             </div>
+
+            <!-- About Us Page -->
+            <div id="aboutUsPage" class="page">
+                <div class="page-header">
+                    <h1 id="aboutUsTitle" data-i18n="aboutUsTitle">About Us</h1>
+                </div>
+                <div class="service-content about-us-content">
+                    <p class="about-us-intro" id="aboutUsIntro" data-i18n="aboutUsIntro">AI-OCR is a document recognition service that uses artificial intelligence to extract text and data from images—such as passports, IDs, and application forms. It supports multiple languages and helps individuals and organizations process documents quickly and accurately.</p>
+                    <section class="about-section">
+                        <h2 id="aboutUsMissionTitle" data-i18n="aboutUsMissionTitle">Our Mission</h2>
+                        <p id="aboutUsMission" data-i18n="aboutUsMission">We aim to make document processing fast, accurate, and accessible for everyone. We support multilingual users and offer free or discounted service for low-income groups where applicable.</p>
+                    </section>
+                    <section class="about-section">
+                        <h2 id="aboutUsFeaturesTitle" data-i18n="aboutUsFeaturesTitle">What We Offer</h2>
+                        <p id="aboutUsFeatures" data-i18n="aboutUsFeatures">Passport and ID recognition, multi-language OCR (Korean, Uzbek, Russian, and more), real-time verification, secure data handling, pension calculator, branch finder, form downloads, and web fax inquiry.</p>
+                    </section>
+                    <section class="about-section">
+                        <h2 id="aboutUsWhoTitle" data-i18n="aboutUsWhoTitle">Who We Serve</h2>
+                        <p id="aboutUsWho" data-i18n="aboutUsWho">Individuals who need to submit translated documents, businesses handling paperwork, and anyone who benefits from fast, reliable document digitization—with a focus on accessibility for non-Korean speakers and underserved communities.</p>
+                    </section>
+                </div>
+            </div>
         </main>
 
         <!-- AI Chat (Locohub-style floating panel) -->
@@ -693,6 +783,7 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="config.js"></script>
     <script src="config.local.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>

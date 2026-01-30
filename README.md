@@ -7,7 +7,7 @@ Vanilla JavaScript frontend
    ```bash
    cd /Users/alina/Desktop/AI-OCR
    source venv/bin/activate
-   uvicorn main:app --reload --port 8020
+   uvicorn main:app --reload --port 8030
    ```
 
 2. **Frontend**
@@ -15,9 +15,9 @@ Vanilla JavaScript frontend
    - **Lokal serverdan oching** (AI Chat uchun ham shart; `file://` da API bloklanadi):
      ```bash
      cd ~/Desktop/"AI-OCR frontend"
-     python3 -m http.server 3020
+     python3 -m http.server 3030
      ```
-   - http://localhost:3020
+   - http://localhost:3030
    - **AI Chat (Gemini):** `config.local.js.example` dan `config.local.js` yarating va kalitlarni kiriting. `config.local.js` GitHub'ga chiqmaydi (.gitignore).
 
 ## Stack:

@@ -1,5 +1,6 @@
 # Maxfiy kalitlar – GitHub'da ko'rinmasin
 config.local.js
+.env
 
 # Logs
 *.log

@@ -6,6 +6,28 @@ const translations = {
         navDocuments: '문서',
         navUpload: '업로드',
         navMyPage: '내 페이지',
+        navAdmin: '관리자',
+        adminPanelTitle: '관리자',
+        adminSubscribersTitle: '구독자 (가입자)',
+        adminSubscribersDesc: '회원가입 시 입력한 정보',
+        thSubscriberUsername: '사용자명',
+        thSubscriberEmail: '이메일',
+        thSubscriberCreated: '가입일',
+        adminScannerTitle: '스캔 데이터',
+        adminScannerDesc: 'OCR / 업로드 문서 목록',
+        thScannerFileType: '파일 유형',
+        thScannerUser: '사용자',
+        thScannerStatus: '상태',
+        thScannerCreated: '날짜',
+        thScannerAction: '작업',
+        adminPanelLoading: '로딩 중...',
+        adminSubscribersEmpty: '구독자가 없습니다.',
+        adminSubscribersEmailNote: '이메일은 백엔드 /auth/users API에서 제공됩니다.',
+        adminScannerEmpty: '스캔 문서가 없습니다.',
+        adminPanelError: '오류',
+        statusApproved: '승인됨',
+        statusRejected: '거부됨',
+        statusPending: '대기 중',
         // Login
         loginTitle: 'AI-OCR 시스템',
         loginSubtitle: '로그인',
@@ -20,6 +42,19 @@ const translations = {
         testUser: '사용자: user / user123',
         needAccount: '새 계정이 필요하신가요?',
         haveAccount: '이미 계정이 있으신가요?',
+        pleaseSignUpToScan: '문서 스캔을 위해 회원가입해 주세요.',
+        browseWithoutLogin: '로그인 없이 둘러보기',
+        loginSuccess: '로그인 성공!',
+        logoutSuccess: '로그아웃되었습니다.',
+        navAboutUs: '소개',
+        aboutUsTitle: '소개',
+        aboutUsIntro: 'AI-OCR은 여권, 신분증, 신청서 등 이미지에서 텍스트와 데이터를 추출하는 AI 기반 문서 인식 서비스입니다. 다국어를 지원하며 개인과 기관이 문서를 빠르고 정확하게 처리할 수 있도록 돕습니다.',
+        aboutUsMissionTitle: '우리의 미션',
+        aboutUsMission: '문서 처리를 누구에게나 빠르고, 정확하며, 접근 가능하게 만드는 것입니다. 다국어 사용자를 지원하며, 해당되는 경우 저소득층에게 무료 또는 할인 서비스를 제공합니다.',
+        aboutUsFeaturesTitle: '제공 서비스',
+        aboutUsFeatures: '여권·신분증 인식, 다국어 OCR(한국어, 우즈벡어, 러시아어 등), 실시간 검증, 안전한 데이터 처리, 연금 계산기, 지사 찾기, 서식 다운로드, 웹팩스 조회.',
+        aboutUsWhoTitle: '대상',
+        aboutUsWho: '번역·제출용 문서가 필요한 개인, 서류 업무를 처리하는 기업, 빠르고 신뢰할 수 있는 문서 디지털화가 필요한 모든 이용자. 비한국어 사용자와 취약 계층의 접근성 확대에 중점을 둡니다.',
         // Dashboard
         dashboardTitle: '대시보드',
         featuredTitle: '2026년 AI-OCR 시스템, 이렇게 달라집니다',
@@ -92,6 +127,7 @@ const translations = {
         uploadBtn: '업로드',
         uploadSuccess: '문서가 성공적으로 업로드되었습니다!',
         uploadSelectFile: '파일을 선택하세요!',
+        uploadGuestMessage: '로그인 또는 회원가입 후 문서를 업로드할 수 있습니다.',
         // Admin/My Page
         myPageTitle: '내 페이지',
         myInfo: '내 정보',
@@ -198,6 +234,7 @@ const translations = {
         confirmErr: '확인 오류',
         btnEdit: '수정 (Tahrirlash)',
         btnDelete: '삭제 (O\'chirish)',
+        deleteNotAllowedAfter4Hours: '문서는 생성 후 4시간 이내에만 삭제할 수 있습니다.',
         docLoadError: '문서 로드 오류',
         saveErrorAlert: '저장 중 오류가 발생했습니다',
         statusMatch: '일치',
@@ -212,6 +249,28 @@ const translations = {
         navDocuments: 'Documents',
         navUpload: 'Upload',
         navMyPage: 'My Page',
+        navAdmin: 'Admin',
+        adminPanelTitle: 'Admin',
+        adminSubscribersTitle: 'Subscribers (Registered users)',
+        adminSubscribersDesc: 'Information entered at signup',
+        thSubscriberUsername: 'Username',
+        thSubscriberEmail: 'Email',
+        thSubscriberCreated: 'Registered date',
+        adminScannerTitle: 'Scanner data',
+        adminScannerDesc: 'OCR / uploaded documents list',
+        thScannerFileType: 'File type',
+        thScannerUser: 'User',
+        thScannerStatus: 'Status',
+        thScannerCreated: 'Date',
+        thScannerAction: 'Action',
+        adminPanelLoading: 'Loading...',
+        adminSubscribersEmpty: 'No subscribers.',
+        adminSubscribersEmailNote: 'Email is provided by the backend /auth/users API.',
+        adminScannerEmpty: 'No scan documents.',
+        adminPanelError: 'Error',
+        statusApproved: 'Approved',
+        statusRejected: 'Rejected',
+        statusPending: 'Pending',
         loginTitle: 'AI-OCR System',
         loginSubtitle: 'Login',
         username: 'Username',
@@ -225,6 +284,19 @@ const translations = {
         testUser: 'User: user / user123',
         needAccount: 'Need a new account?',
         haveAccount: 'Already have an account?',
+        pleaseSignUpToScan: 'Please sign up to scan documents.',
+        browseWithoutLogin: 'Browse without logging in',
+        loginSuccess: 'Login successful!',
+        logoutSuccess: 'Logged out successfully.',
+        navAboutUs: 'About Us',
+        aboutUsTitle: 'About Us',
+        aboutUsIntro: 'AI-OCR is a document recognition service that uses artificial intelligence to extract text and data from images—such as passports, IDs, and application forms. It supports multiple languages and helps individuals and organizations process documents quickly and accurately.',
+        aboutUsMissionTitle: 'Our Mission',
+        aboutUsMission: 'We aim to make document processing fast, accurate, and accessible for everyone. We support multilingual users and offer free or discounted service for low-income groups where applicable.',
+        aboutUsFeaturesTitle: 'What We Offer',
+        aboutUsFeatures: 'Passport and ID recognition, multi-language OCR (Korean, Uzbek, Russian, and more), real-time verification, secure data handling, pension calculator, branch finder, form downloads, and web fax inquiry.',
+        aboutUsWhoTitle: 'Who We Serve',
+        aboutUsWho: 'Individuals who need to submit translated documents, businesses handling paperwork, and anyone who benefits from fast, reliable document digitization—with a focus on accessibility for non-Korean speakers and underserved communities.',
         dashboardTitle: 'Dashboard',
         featuredTitle: '2026 AI-OCR System, Here\'s What\'s Changing',
         featuredItem1: '○ (Accuracy Improvement) OCR Accuracy 95% → 98%',
@@ -294,6 +366,7 @@ const translations = {
         uploadBtn: 'Upload',
         uploadSuccess: 'Document uploaded successfully!',
         uploadSelectFile: 'Please select a file!',
+        uploadGuestMessage: 'You can upload documents after logging in or signing up.',
         myPageTitle: 'My Page',
         myInfo: 'My Information',
         welcomeBack: 'Welcome back!',
@@ -397,6 +470,7 @@ const translations = {
         confirmErr: 'Confirmation error',
         btnEdit: 'Edit (Tahrirlash)',
         btnDelete: 'Delete (O\'chirish)',
+        deleteNotAllowedAfter4Hours: 'You can only delete a document within 4 hours of creation.',
         docLoadError: 'Document load error',
         saveErrorAlert: 'An error occurred while saving',
         statusMatch: 'Match',
@@ -411,6 +485,28 @@ const translations = {
         navDocuments: 'Hujjatlar',
         navUpload: 'Yuklash',
         navMyPage: 'Mening sahifam',
+        navAdmin: 'Admin',
+        adminPanelTitle: 'Admin',
+        adminSubscribersTitle: 'Obunachilar (Ro\'yxatdan o\'tganlar)',
+        adminSubscribersDesc: 'Ro\'yxatdan o\'tishda kiritilgan ma\'lumotlar',
+        thSubscriberUsername: 'Foydalanuvchi',
+        thSubscriberEmail: 'Email',
+        thSubscriberCreated: 'Ro\'yxatdan o\'tgan sana',
+        adminScannerTitle: 'Skaner ma\'lumotlari',
+        adminScannerDesc: 'OCR / yuklangan hujjatlar ro\'yxati',
+        thScannerFileType: 'Fayl turi',
+        thScannerUser: 'Foydalanuvchi',
+        thScannerStatus: 'Holat',
+        thScannerCreated: 'Sana',
+        thScannerAction: 'Amal',
+        adminPanelLoading: 'Yuklanmoqda...',
+        adminSubscribersEmpty: 'Obunachilar yo\'q.',
+        adminSubscribersEmailNote: 'Email backend /auth/users API orqali taqdim etiladi.',
+        adminScannerEmpty: 'Skaner hujjatlar yo\'q.',
+        adminPanelError: 'Xato',
+        statusApproved: 'Tasdiqlangan',
+        statusRejected: 'Rad etilgan',
+        statusPending: 'Kutilmoqda',
         loginTitle: 'AI-OCR Tizimi',
         loginSubtitle: 'Kirish',
         username: 'Foydalanuvchi nomi',
@@ -424,6 +520,19 @@ const translations = {
         testUser: 'Foydalanuvchi: user / user123',
         needAccount: 'Yangi hisob kerakmi?',
         haveAccount: 'Hisobingiz bormi?',
+        pleaseSignUpToScan: 'Hujjat skaner qilish uchun ro\'yxatdan o\'ting.',
+        browseWithoutLogin: 'Kirishsiz saytni ko\'rish',
+        loginSuccess: 'Kirish muvaffaqiyatli!',
+        logoutSuccess: 'Chiqish muvaffaqiyatli.',
+        navAboutUs: 'Biz haqimizda',
+        aboutUsTitle: 'Biz haqimizda',
+        aboutUsIntro: 'AI-OCR — pasport, ID va ariza kabi rasmlardan matn va ma\'lumotlarni ajratib oladigan sun\'iy intellekt asosidagi hujjat tanib olish xizmati. Ko\'p tillarni qo\'llab-quvvatlaydi va shaxslar hamda tashkilotlar uchun hujjatlarni tez va aniq qayta ishlashga yordam beradi.',
+        aboutUsMissionTitle: 'Vazifamiz',
+        aboutUsMission: 'Hujjat qayta ishlashni hamma uchun tez, aniq va ochiq qilish. Ko\'p tilli foydalanuvchilarni qo\'llab-quvvatlash va tegishli hollarda past daromadli guruhlar uchun bepul yoki chegirmali xizmat taklif qilish.',
+        aboutUsFeaturesTitle: 'Nimalar taklif qilamiz',
+        aboutUsFeatures: 'Pasport va ID tanib olish, ko\'p tilli OCR (koreys, o\'zbek, rus va boshqalar), real vaqtda tekshiruv, xavfsiz ma\'lumotlar bilan ishlash, pensiya kalkulyatori, filial topish, shakllar yuklash va veb-faks so\'rovlari.',
+        aboutUsWhoTitle: 'Kimlar uchun',
+        aboutUsWho: 'Tarjima hujjatlarini taqdim qilishi kerak bo\'lgan shaxslar, hujjatlar bilan ishlovchi bizneslar va tez, ishonchli raqamlashtirishdan foyda ko\'radigan har bir kishi—koreys tilida gapirmaydiganlar va kam xizmat ko\'rsatilgan jamoalar uchun ochiqlikni ta\'minlash.',
         dashboardTitle: 'Boshqaruv paneli',
         featuredTitle: '2026 AI-OCR Tizimi, Qanday O\'zgaradi',
         featuredItem1: '○ (Aniqlik yaxshilandi) OCR aniqlik 95% → 98%',
@@ -493,6 +602,7 @@ const translations = {
         uploadBtn: 'Yuklash',
         uploadSuccess: 'Hujjat muvaffaqiyatli yuklandi!',
         uploadSelectFile: 'Iltimos, fayl tanlang!',
+        uploadGuestMessage: 'Hujjat yuklash uchun kirish yoki ro\'yxatdan o\'ting.',
         myPageTitle: 'Mening sahifam',
         myInfo: 'Mening ma\'lumotlarim',
         welcomeBack: 'Qaytganingiz bilan!',
@@ -596,6 +706,7 @@ const translations = {
         confirmErr: 'Tasdiqlash xatosi',
         btnEdit: 'Tahrirlash',
         btnDelete: 'O\'chirish',
+        deleteNotAllowedAfter4Hours: 'Hujjatni faqat yaratilganidan keyin 4 soat ichida o\'chirish mumkin.',
         docLoadError: 'Hujjat yuklash xatosi',
         saveErrorAlert: 'Saqlashda xato yuz berdi',
         statusMatch: 'Mos',
@@ -610,6 +721,28 @@ const translations = {
         navDocuments: 'Документы',
         navUpload: 'Загрузка',
         navMyPage: 'Моя страница',
+        navAdmin: 'Админ',
+        adminPanelTitle: 'Админ',
+        adminSubscribersTitle: 'Подписчики (зарегистрированные)',
+        adminSubscribersDesc: 'Данные, введённые при регистрации',
+        thSubscriberUsername: 'Пользователь',
+        thSubscriberEmail: 'Email',
+        thSubscriberCreated: 'Дата регистрации',
+        adminScannerTitle: 'Данные сканера',
+        adminScannerDesc: 'Список OCR / загруженных документов',
+        thScannerFileType: 'Тип файла',
+        thScannerUser: 'Пользователь',
+        thScannerStatus: 'Статус',
+        thScannerCreated: 'Дата',
+        thScannerAction: 'Действие',
+        adminPanelLoading: 'Загрузка...',
+        adminSubscribersEmpty: 'Нет подписчиков.',
+        adminSubscribersEmailNote: 'Email предоставляется бэкендом /auth/users API.',
+        adminScannerEmpty: 'Нет отсканированных документов.',
+        adminPanelError: 'Ошибка',
+        statusApproved: 'Подтверждено',
+        statusRejected: 'Отклонено',
+        statusPending: 'Ожидание',
         loginTitle: 'AI-OCR Система',
         loginSubtitle: 'Вход',
         username: 'Имя пользователя',
@@ -623,6 +756,19 @@ const translations = {
         testUser: 'Пользователь: user / user123',
         needAccount: 'Нужен новый аккаунт?',
         haveAccount: 'Уже есть аккаунт?',
+        pleaseSignUpToScan: 'Зарегистрируйтесь для сканирования документов.',
+        browseWithoutLogin: 'Смотреть без входа',
+        loginSuccess: 'Вход выполнен!',
+        logoutSuccess: 'Выход выполнен.',
+        navAboutUs: 'О нас',
+        aboutUsTitle: 'О нас',
+        aboutUsIntro: 'AI-OCR — сервис распознавания документов на основе искусственного интеллекта: извлечение текста и данных из изображений (паспорта, удостоверения, заявления). Поддержка нескольких языков, быстрая и точная обработка документов для частных лиц и организаций.',
+        aboutUsMissionTitle: 'Наша миссия',
+        aboutUsMission: 'Сделать обработку документов быстрой, точной и доступной для всех. Поддержка многоязычных пользователей, бесплатный или льготный сервис для малообеспеченных групп, где применимо.',
+        aboutUsFeaturesTitle: 'Что мы предлагаем',
+        aboutUsFeatures: 'Распознавание паспортов и удостоверений, многоязычный OCR (корейский, узбекский, русский и др.), проверка в реальном времени, безопасная обработка данных, калькулятор пенсий, поиск филиалов, формы для скачивания, веб-факс.',
+        aboutUsWhoTitle: 'Для кого',
+        aboutUsWho: 'Частные лица, которым нужны переведённые документы; компании, работающие с документами; все, кому важна быстрая и надёжная оцифровка — с акцентом на доступность для тех, кто не говорит по-корейски, и для нуждающихся сообществ.',
         dashboardTitle: 'Панель управления',
         featuredTitle: 'Система AI-OCR 2026, Вот Что Изменится',
         featuredItem1: '○ (Улучшение точности) Точность OCR 95% → 98%',
@@ -692,6 +838,7 @@ const translations = {
         uploadBtn: 'Загрузить',
         uploadSuccess: 'Документ успешно загружен!',
         uploadSelectFile: 'Пожалуйста, выберите файл!',
+        uploadGuestMessage: 'Вы можете загружать документы после входа или регистрации.',
         myPageTitle: 'Моя страница',
         myInfo: 'Моя информация',
         welcomeBack: 'С возвращением!',
@@ -795,6 +942,7 @@ const translations = {
         confirmErr: 'Ошибка подтверждения',
         btnEdit: 'Изменить (Tahrirlash)',
         btnDelete: 'Удалить (O\'chirish)',
+        deleteNotAllowedAfter4Hours: 'Документ можно удалить только в течение 4 часов после создания.',
         docLoadError: 'Ошибка загрузки документа',
         saveErrorAlert: 'Ошибка при сохранении',
         statusMatch: 'Совпадает',
@@ -809,6 +957,28 @@ const translations = {
         navDocuments: 'Баримт бичиг',
         navUpload: 'Байршуулах',
         navMyPage: 'Миний хуудас',
+        navAdmin: 'Админ',
+        adminPanelTitle: 'Админ',
+        adminSubscribersTitle: 'Бүртгүүлэгчид',
+        adminSubscribersDesc: 'Бүртгүүлэхэд оруулсан мэдээлэл',
+        thSubscriberUsername: 'Хэрэглэгч',
+        thSubscriberEmail: 'Имэйл',
+        thSubscriberCreated: 'Бүртгүүлсэн огноо',
+        adminScannerTitle: 'Сканер мэдээлэл',
+        adminScannerDesc: 'OCR / байршуулсан баримтын жагсаалт',
+        thScannerFileType: 'Файлын төрөл',
+        thScannerUser: 'Хэрэглэгч',
+        thScannerStatus: 'Төлөв',
+        thScannerCreated: 'Огноо',
+        thScannerAction: 'Үйлдэл',
+        adminPanelLoading: 'Уншиж байна...',
+        adminSubscribersEmpty: 'Бүртгүүлэгч байхгүй.',
+        adminSubscribersEmailNote: 'Имэйл нь backend /auth/users API-аар өгөгдөнө.',
+        adminScannerEmpty: 'Сканердсан баримт байхгүй.',
+        adminPanelError: 'Алдаа',
+        statusApproved: 'Батлагдсан',
+        statusRejected: 'Татгалзсан',
+        statusPending: 'Хүлээгдэж буй',
         loginTitle: 'AI-OCR Систем',
         loginSubtitle: 'Нэвтрэх',
         username: 'Хэрэглэгчийн нэр',
@@ -822,6 +992,19 @@ const translations = {
         testUser: 'Хэрэглэгч: user / user123',
         needAccount: 'Шинэ данс хэрэгтэй юу?',
         haveAccount: 'Данстай байна уу?',
+        pleaseSignUpToScan: 'Баримт скан хийхийн тулд бүртгүүлнэ үү.',
+        browseWithoutLogin: 'Нэвтрэлгүйгээр үзэх',
+        loginSuccess: 'Амжилттай нэвтэрлээ!',
+        logoutSuccess: 'Амжилттай гарлаа.',
+        navAboutUs: 'Бидний тухай',
+        aboutUsTitle: 'Бидний тухай',
+        aboutUsIntro: 'AI-OCR нь паспорт, иргэний үнэмлэх, өргөдлийн маягт зэрэг дүрснээс текст болон өгөгдлийг задлах хиймэл оюун ухаан суурилсан баримт таних үйлчилгээ. Олон хэл дэмжин, хувь хүн болон байгууллагад баримтыг хурдан, нарийвч боловсруулахад туслана.',
+        aboutUsMissionTitle: 'Бидний зорилго',
+        aboutUsMission: 'Баримт боловсруулалтыг хурдан, нарийвч, хүн бүрт хүртээмжтэй болгох. Олон хэлт хэрэглэгчийг дэмжиж, хамаарах тохиолдолд бага орлоготой бүлгүүдэд үнэгүй эсвэл хөнгөлөлттэй үйлчилгээ санал болгоно.',
+        aboutUsFeaturesTitle: 'Бидний санал',
+        aboutUsFeatures: 'Паспорт, иргэний үнэмлэх таних, олон хэлний OCR (солонгос, узбек, орос гэх мэт), бодит цагийн шалгалт, аюулгүй өгөгдөл, тэтгэврийн тооцоолуур, салбар хайх, маягт татах, вэб факс асуулга.',
+        aboutUsWhoTitle: 'Хэнд зориулсан',
+        aboutUsWho: 'Орчуулсан баримт гаргах шаардлагатай хувь хүмүүс, баримттай ажилладаг бизнесүүд, хурдан найдвартай дижиталчлалаас ашигтай хүн бүр — солонгос хэл мэддэггүй болон үйлчилгээг бага авдаг нийгэмд хүртээмжийг нэмэгдүүлэхэд анхаарна.',
         dashboardTitle: 'Хяналтын самбар',
         featuredTitle: '2026 AI-OCR Систем, Энэ Нь Хэрхэн Өөрчлөгдөнө',
         featuredItem1: '○ (Нарийвчлал сайжруулах) OCR нарийвчлал 95% → 98%',
@@ -891,6 +1074,7 @@ const translations = {
         uploadBtn: 'Байршуулах',
         uploadSuccess: 'Баримт бичиг амжилттай байршуулсан!',
         uploadSelectFile: 'Файл сонгоно уу!',
+        uploadGuestMessage: 'Нэвтрэх эсвэл бүртгүүлсний дараа баримт байршуулж болно.',
         myPageTitle: 'Миний хуудас',
         myInfo: 'Миний мэдээлэл',
         welcomeBack: 'Дахин уулзсанд баяртай!',
@@ -994,6 +1178,7 @@ const translations = {
         confirmErr: 'Баталгаажуулалтын алдаа',
         btnEdit: 'Засах (Tahrirlash)',
         btnDelete: 'Устгах (O\'chirish)',
+        deleteNotAllowedAfter4Hours: 'Баримтыг үүсгэснээс хойш 4 цагийн дотор л устгаж болно.',
         docLoadError: 'Баримт ачааллах алдаа',
         saveErrorAlert: 'Хадгалахад алдаа гарлаа',
         statusMatch: 'Таарна',
@@ -1008,6 +1193,28 @@ const translations = {
         navDocuments: '文档',
         navUpload: '上传',
         navMyPage: '我的页面',
+        navAdmin: '管理员',
+        adminPanelTitle: '管理员',
+        adminSubscribersTitle: '订阅者（注册用户）',
+        adminSubscribersDesc: '注册时填写的信息',
+        thSubscriberUsername: '用户名',
+        thSubscriberEmail: '邮箱',
+        thSubscriberCreated: '注册日期',
+        adminScannerTitle: '扫描数据',
+        adminScannerDesc: 'OCR / 已上传文档列表',
+        thScannerFileType: '文件类型',
+        thScannerUser: '用户',
+        thScannerStatus: '状态',
+        thScannerCreated: '日期',
+        thScannerAction: '操作',
+        adminPanelLoading: '加载中...',
+        adminSubscribersEmpty: '暂无订阅者。',
+        adminSubscribersEmailNote: '邮箱由后端 /auth/users API 提供。',
+        adminScannerEmpty: '暂无扫描文档。',
+        adminPanelError: '错误',
+        statusApproved: '已批准',
+        statusRejected: '已拒绝',
+        statusPending: '待处理',
         loginTitle: 'AI-OCR 系统',
         loginSubtitle: '登录',
         username: '用户名',
@@ -1021,6 +1228,19 @@ const translations = {
         testUser: '用户: user / user123',
         needAccount: '需要新账户？',
         haveAccount: '已有账户？',
+        pleaseSignUpToScan: '请注册以扫描文档。',
+        browseWithoutLogin: '不登录浏览',
+        loginSuccess: '登录成功！',
+        logoutSuccess: '已成功退出。',
+        navAboutUs: '关于我们',
+        aboutUsTitle: '关于我们',
+        aboutUsIntro: 'AI-OCR 是基于人工智能的文档识别服务，可从护照、身份证、申请表等图像中提取文字与数据，支持多语言，帮助个人和机构快速、准确地处理文档。',
+        aboutUsMissionTitle: '我们的使命',
+        aboutUsMission: '让文档处理对每个人来说都快速、准确、可及。我们支持多语言用户，并在适用情况下为低收入群体提供免费或优惠服务。',
+        aboutUsFeaturesTitle: '我们提供',
+        aboutUsFeatures: '护照与身份证识别、多语言 OCR（韩语、乌兹别克语、俄语等）、实时验证、安全数据处理、养老金计算器、分支机构查询、表单下载、网络传真查询。',
+        aboutUsWhoTitle: '服务对象',
+        aboutUsWho: '需要提交翻译文档的个人、处理文书的企事业单位，以及一切需要快速可靠文档数字化的人——尤其关注非韩语使用者和服务不足群体的可及性。',
         dashboardTitle: '仪表板',
         featuredTitle: '2026 AI-OCR 系统，变化如下',
         featuredItem1: '○ (准确度提升) OCR 准确度 95% → 98%',
@@ -1090,6 +1310,7 @@ const translations = {
         uploadBtn: '上传',
         uploadSuccess: '文档上传成功！',
         uploadSelectFile: '请选择文件！',
+        uploadGuestMessage: '登录或注册后可上传文档。',
         myPageTitle: '我的页面',
         myInfo: '我的信息',
         welcomeBack: '欢迎回来！',
@@ -1193,6 +1414,7 @@ const translations = {
         confirmErr: '确认错误',
         btnEdit: '编辑 (Tahrirlash)',
         btnDelete: '删除 (O\'chirish)',
+        deleteNotAllowedAfter4Hours: '文档只能在创建后4小时内删除。',
         docLoadError: '文档加载错误',
         saveErrorAlert: '保存时发生错误',
         statusMatch: '匹配',
@@ -1207,6 +1429,28 @@ const translations = {
         navDocuments: 'Tài liệu',
         navUpload: 'Tải lên',
         navMyPage: 'Trang của tôi',
+        navAdmin: 'Quản trị',
+        adminPanelTitle: 'Quản trị',
+        adminSubscribersTitle: 'Người đăng ký',
+        adminSubscribersDesc: 'Thông tin nhập khi đăng ký',
+        thSubscriberUsername: 'Tên đăng nhập',
+        thSubscriberEmail: 'Email',
+        thSubscriberCreated: 'Ngày đăng ký',
+        adminScannerTitle: 'Dữ liệu scanner',
+        adminScannerDesc: 'Danh sách OCR / tài liệu đã tải',
+        thScannerFileType: 'Loại tệp',
+        thScannerUser: 'Người dùng',
+        thScannerStatus: 'Trạng thái',
+        thScannerCreated: 'Ngày',
+        thScannerAction: 'Thao tác',
+        adminPanelLoading: 'Đang tải...',
+        adminSubscribersEmpty: 'Chưa có người đăng ký.',
+        adminSubscribersEmailNote: 'Email do backend API /auth/users cung cấp.',
+        adminScannerEmpty: 'Chưa có tài liệu quét.',
+        adminPanelError: 'Lỗi',
+        statusApproved: 'Đã duyệt',
+        statusRejected: 'Từ chối',
+        statusPending: 'Chờ xử lý',
         loginTitle: 'Hệ thống AI-OCR',
         loginSubtitle: 'Đăng nhập',
         username: 'Tên người dùng',
@@ -1220,6 +1464,19 @@ const translations = {
         testUser: 'Người dùng: user / user123',
         needAccount: 'Cần tài khoản mới?',
         haveAccount: 'Đã có tài khoản?',
+        pleaseSignUpToScan: 'Vui lòng đăng ký để quét tài liệu.',
+        browseWithoutLogin: 'Duyệt không cần đăng nhập',
+        loginSuccess: 'Đăng nhập thành công!',
+        logoutSuccess: 'Đăng xuất thành công.',
+        navAboutUs: 'Về chúng tôi',
+        aboutUsTitle: 'Về chúng tôi',
+        aboutUsIntro: 'AI-OCR là dịch vụ nhận dạng tài liệu dùng trí tuệ nhân tạo để trích xuất chữ và dữ liệu từ ảnh—như hộ chiếu, CMND, đơn xin. Hỗ trợ đa ngôn ngữ, giúp cá nhân và tổ chức xử lý tài liệu nhanh, chính xác.',
+        aboutUsMissionTitle: 'Sứ mệnh',
+        aboutUsMission: 'Làm cho việc xử lý tài liệu nhanh, chính xác và dễ tiếp cận cho mọi người. Hỗ trợ người dùng đa ngôn ngữ, cung cấp dịch vụ miễn phí hoặc giảm giá cho nhóm thu nhập thấp khi áp dụng.',
+        aboutUsFeaturesTitle: 'Chúng tôi cung cấp',
+        aboutUsFeatures: 'Nhận dạng hộ chiếu và CMND, OCR đa ngôn ngữ (Hàn, Uzbek, Nga,...), xác minh thời gian thực, xử lý dữ liệu an toàn, máy tính lương hưu, tìm chi nhánh, tải mẫu đơn, tra cứu web fax.',
+        aboutUsWhoTitle: 'Đối tượng phục vụ',
+        aboutUsWho: 'Cá nhân cần nộp tài liệu đã dịch, doanh nghiệp xử lý hồ sơ, và bất kỳ ai cần số hóa tài liệu nhanh, tin cậy—tập trung vào tiếp cận cho người không nói tiếng Hàn và cộng đồng thiếu dịch vụ.',
         dashboardTitle: 'Bảng điều khiển',
         featuredTitle: 'Hệ thống AI-OCR 2026, Đây Là Những Gì Thay Đổi',
         featuredItem1: '○ (Cải thiện độ chính xác) Độ chính xác OCR 95% → 98%',
@@ -1289,6 +1546,7 @@ const translations = {
         uploadBtn: 'Tải lên',
         uploadSuccess: 'Tài liệu đã được tải lên thành công!',
         uploadSelectFile: 'Vui lòng chọn tệp!',
+        uploadGuestMessage: 'Bạn có thể tải tài liệu lên sau khi đăng nhập hoặc đăng ký.',
         myPageTitle: 'Trang của tôi',
         myInfo: 'Thông tin của tôi',
         welcomeBack: 'Chào mừng trở lại!',
@@ -1392,6 +1650,7 @@ const translations = {
         confirmErr: 'Lỗi xác nhận',
         btnEdit: 'Chỉnh sửa (Tahrirlash)',
         btnDelete: 'Xóa (O\'chirish)',
+        deleteNotAllowedAfter4Hours: 'Bạn chỉ có thể xóa tài liệu trong vòng 4 giờ sau khi tạo.',
         docLoadError: 'Lỗi tải tài liệu',
         saveErrorAlert: 'Lỗi khi lưu',
         statusMatch: 'Khớp',
@@ -1406,6 +1665,28 @@ const translations = {
         navDocuments: 'เอกสาร',
         navUpload: 'อัปโหลด',
         navMyPage: 'หน้าของฉัน',
+        navAdmin: 'แอดมิน',
+        adminPanelTitle: 'แอดมิน',
+        adminSubscribersTitle: 'ผู้สมัครสมาชิก',
+        adminSubscribersDesc: 'ข้อมูลที่กรอกเมื่อสมัคร',
+        thSubscriberUsername: 'ชื่อผู้ใช้',
+        thSubscriberEmail: 'อีเมล',
+        thSubscriberCreated: 'วันที่สมัคร',
+        adminScannerTitle: 'ข้อมูลสแกนเนอร์',
+        adminScannerDesc: 'รายการ OCR / เอกสารที่อัปโหลด',
+        thScannerFileType: 'ประเภทไฟล์',
+        thScannerUser: 'ผู้ใช้',
+        thScannerStatus: 'สถานะ',
+        thScannerCreated: 'วันที่',
+        thScannerAction: 'การดำเนินการ',
+        adminPanelLoading: 'กำลังโหลด...',
+        adminSubscribersEmpty: 'ไม่มีผู้สมัครสมาชิก',
+        adminSubscribersEmailNote: 'อีเมลมาจาก backend API /auth/users',
+        adminScannerEmpty: 'ไม่มีเอกสารสแกน',
+        adminPanelError: 'ข้อผิดพลาด',
+        statusApproved: 'อนุมัติแล้ว',
+        statusRejected: 'ปฏิเสธ',
+        statusPending: 'รอดำเนินการ',
         loginTitle: 'ระบบ AI-OCR',
         loginSubtitle: 'เข้าสู่ระบบ',
         username: 'ชื่อผู้ใช้',
@@ -1419,6 +1700,19 @@ const translations = {
         testUser: 'ผู้ใช้: user / user123',
         needAccount: 'ต้องการบัญชีใหม่?',
         haveAccount: 'มีบัญชีอยู่แล้ว?',
+        pleaseSignUpToScan: 'กรุณาลงทะเบียนเพื่อสแกนเอกสาร',
+        browseWithoutLogin: 'ดูโดยไม่เข้าสู่ระบบ',
+        loginSuccess: 'เข้าสู่ระบบสำเร็จ!',
+        logoutSuccess: 'ออกจากระบบสำเร็จ',
+        navAboutUs: 'เกี่ยวกับเรา',
+        aboutUsTitle: 'เกี่ยวกับเรา',
+        aboutUsIntro: 'AI-OCR คือบริการรู้จำเอกสารด้วย AI แยกข้อความและข้อมูลจากภาพ เช่น พาสปอร์ต บัตรประชาชน ใบสมัคร รองรับหลายภาษา ช่วยบุคคลและองค์กรประมวลผลเอกสารได้รวดเร็วและแม่นยำ',
+        aboutUsMissionTitle: 'พันธกิจของเรา',
+        aboutUsMission: 'ทำให้การประมวลผลเอกสารรวดเร็ว แม่นยำ และเข้าถึงได้สำหรับทุกคน รองรับผู้ใช้หลายภาษา และให้บริการฟรีหรือส่วนลดสำหรับกลุ่มรายได้ต่ำตามความเหมาะสม',
+        aboutUsFeaturesTitle: 'สิ่งที่เรานำเสนอ',
+        aboutUsFeatures: 'รู้จำพาสปอร์ตและบัตรประชาชน OCR หลายภาษา (เกาหลี อุซเบก รัสเซีย ฯลฯ) ตรวจสอบแบบเรียลไทม์ จัดการข้อมูลอย่างปลอดภัย เครื่องคำนวณบำนาญ ค้นหาสาขา ดาวน์โหลดแบบฟอร์ม เว็บแฟกซ์',
+        aboutUsWhoTitle: 'เราให้บริการใคร',
+        aboutUsWho: 'บุคคลที่ต้องส่งเอกสารแปล ธุรกิจที่จัดการเอกสาร และทุกคนที่ได้ประโยชน์จากการแปลงเอกสารเป็นดิจิทัลที่รวดเร็วและเชื่อถือได้ โดยเน้นการเข้าถึงสำหรับผู้ที่ไม่พูดเกาหลีและชุมชนที่ได้รับบริการน้อย',
         dashboardTitle: 'แดชบอร์ด',
         featuredTitle: 'ระบบ AI-OCR 2026 นี่คือสิ่งที่เปลี่ยนแปลง',
         featuredItem1: '○ (ปรับปรุงความแม่นยำ) ความแม่นยำ OCR 95% → 98%',
@@ -1488,6 +1782,7 @@ const translations = {
         uploadBtn: 'อัปโหลด',
         uploadSuccess: 'อัปโหลดเอกสารสำเร็จ!',
         uploadSelectFile: 'กรุณาเลือกไฟล์!',
+        uploadGuestMessage: 'คุณสามารถอัปโหลดเอกสารได้หลังจากเข้าสู่ระบบหรือสมัครสมาชิก',
         myPageTitle: 'หน้าของฉัน',
         myInfo: 'ข้อมูลของฉัน',
         welcomeBack: 'ยินดีต้อนรับกลับ!',
@@ -1591,6 +1886,7 @@ const translations = {
         confirmErr: 'ข้อผิดพลาดการยืนยัน',
         btnEdit: 'แก้ไข (Tahrirlash)',
         btnDelete: 'ลบ (O\'chirish)',
+        deleteNotAllowedAfter4Hours: 'คุณสามารถลบเอกสารได้ภายใน 4 ชั่วโมงหลังจากสร้างเท่านั้น',
         docLoadError: 'ข้อผิดพลาดโหลดเอกสาร',
         saveErrorAlert: 'เกิดข้อผิดพลาดในการบันทึก',
         statusMatch: 'ตรงกัน',
@@ -1657,6 +1953,22 @@ function applyTranslations(lang) {
         if (link) link.textContent = t.navMyPage;
     });
     
+    const adminPanelLinks = document.querySelectorAll('[data-page="adminPanel"]');
+    adminPanelLinks.forEach(link => {
+        if (link) link.textContent = t.navAdmin || 'Admin';
+    });
+    
+    const aboutUsLinks = document.querySelectorAll('[data-page="aboutUs"]');
+    aboutUsLinks.forEach(link => {
+        if (link) link.textContent = t.navAboutUs || 'About Us';
+    });
+    
+    // About Us sahifa matnlari
+    document.querySelectorAll('#aboutUsPage [data-i18n]').forEach(el => {
+        const k = el.getAttribute('data-i18n');
+        if (k && t[k]) el.textContent = t[k];
+    });
+    
     // Debug: navigation link'larni tekshirish
     console.log('🌐 Language changed to:', lang, {
         homeLinks: homeLinks.length,
@@ -1692,6 +2004,32 @@ function applyTranslations(lang) {
     
     const showLoginLink = document.getElementById('showLogin');
     if (showLoginLink) showLoginLink.textContent = t.showLogin;
+    
+    // Login/Signup – needAccount, haveAccount, browseWithoutLogin
+    const needAccountText = document.getElementById('needAccountText');
+    if (needAccountText) needAccountText.textContent = t.needAccount;
+    const haveAccountText = document.getElementById('haveAccountText');
+    if (haveAccountText) haveAccountText.textContent = t.haveAccount;
+    const browseWithoutLoginEl = document.getElementById('browseWithoutLogin');
+    if (browseWithoutLoginEl) browseWithoutLoginEl.textContent = t.browseWithoutLogin;
+    const browseWithoutLoginSignupEl = document.getElementById('browseWithoutLoginSignup');
+    if (browseWithoutLoginSignupEl) browseWithoutLoginSignupEl.textContent = t.browseWithoutLogin;
+    
+    // Top nav dropdown: Login va Logout tugmalari (tanlangan tilda)
+    const topNavLoginBtn = document.getElementById('topNavLoginBtn');
+    if (topNavLoginBtn) {
+        const loginSpan = topNavLoginBtn.querySelector('span');
+        if (loginSpan) loginSpan.textContent = '🔑 ' + (t.showLogin || 'Login');
+    }
+    const topNavLogoutBtn = document.getElementById('topNavLogoutBtn');
+    if (topNavLogoutBtn) {
+        const logoutSpan = topNavLogoutBtn.querySelector('span');
+        if (logoutSpan) logoutSpan.textContent = '🚪 ' + (t.logout || 'Logout');
+    }
+    
+    // Signup form tugmasi
+    const signupSubmitBtn = document.querySelector('#signupForm button[type="submit"]');
+    if (signupSubmitBtn) signupSubmitBtn.textContent = t.signupButton;
     
     // Test account hints
     const testAccountEl = document.querySelector('.login-hint p strong');
@@ -1783,6 +2121,8 @@ function applyTranslations(lang) {
     // Upload page
     const uploadTitle = document.querySelector('#uploadPage h1');
     if (uploadTitle) uploadTitle.textContent = t.uploadTitle;
+    const uploadGuestMessageText = document.getElementById('uploadGuestMessageText');
+    if (uploadGuestMessageText) uploadGuestMessageText.textContent = t.uploadGuestMessage || t.pleaseSignUpToScan;
     
     const uploadLabels = document.querySelectorAll('#uploadForm label');
     if (uploadLabels.length >= 3) {
@@ -1835,6 +2175,34 @@ function applyTranslations(lang) {
         userInfoLabels[1].textContent = t.phone;
         userInfoLabels[2].textContent = t.email;
     }
+    
+    // Admin Panel page (obunachilar + skaner)
+    const adminPanelTitle = document.getElementById('adminPanelTitle');
+    if (adminPanelTitle) adminPanelTitle.textContent = t.adminPanelTitle || 'Admin';
+    const adminSubscribersTitle = document.getElementById('adminSubscribersTitle');
+    if (adminSubscribersTitle) adminSubscribersTitle.textContent = t.adminSubscribersTitle || 'Obunachilar';
+    const adminSubscribersDesc = document.getElementById('adminSubscribersDesc');
+    if (adminSubscribersDesc) adminSubscribersDesc.textContent = t.adminSubscribersDesc || '';
+    const thSubscriberUsername = document.getElementById('thSubscriberUsername');
+    if (thSubscriberUsername) thSubscriberUsername.textContent = t.thSubscriberUsername || 'Foydalanuvchi';
+    const thSubscriberEmail = document.getElementById('thSubscriberEmail');
+    if (thSubscriberEmail) thSubscriberEmail.textContent = t.thSubscriberEmail || 'Email';
+    const thSubscriberCreated = document.getElementById('thSubscriberCreated');
+    if (thSubscriberCreated) thSubscriberCreated.textContent = t.thSubscriberCreated || 'Sana';
+    const adminScannerTitle = document.getElementById('adminScannerTitle');
+    if (adminScannerTitle) adminScannerTitle.textContent = t.adminScannerTitle || 'Skaner ma\'lumotlari';
+    const adminScannerDesc = document.getElementById('adminScannerDesc');
+    if (adminScannerDesc) adminScannerDesc.textContent = t.adminScannerDesc || '';
+    const thScannerFileType = document.getElementById('thScannerFileType');
+    if (thScannerFileType) thScannerFileType.textContent = t.thScannerFileType || 'Fayl turi';
+    const thScannerUser = document.getElementById('thScannerUser');
+    if (thScannerUser) thScannerUser.textContent = t.thScannerUser || 'Foydalanuvchi';
+    const thScannerStatus = document.getElementById('thScannerStatus');
+    if (thScannerStatus) thScannerStatus.textContent = t.thScannerStatus || 'Holat';
+    const thScannerCreated = document.getElementById('thScannerCreated');
+    if (thScannerCreated) thScannerCreated.textContent = t.thScannerCreated || 'Sana';
+    const thScannerAction = document.getElementById('thScannerAction');
+    if (thScannerAction) thScannerAction.textContent = t.thScannerAction || 'Amal';
     
     // Service pages: Branch, Forms, Calculator, Guide, Webfax, Statistics, Chat
     const branchTitle = document.querySelector('#branchPage .page-header h1');

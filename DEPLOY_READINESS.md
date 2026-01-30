@@ -44,11 +44,11 @@
 - Statik HTML/CSS/JS, build yo‘q
 - API chaqiruvlari `CONFIG.API_BASE_URL` orqali
 - `config.local.js` maxfiy kalitlar uchun, `.gitignore` da
-- `config.local.js.example` bor, `config.js` da default `http://127.0.0.1:8020/api`
+- `config.local.js.example` bor, `config.js` da default `http://localhost:8030/api`
 
 ### Deploydan oldin qilish kerak
 
-1. **Backend manzili**: Hozir `config.js` da `API_BASE_URL: 'http://127.0.0.1:8020/api'`.  
+1. **Backend manzili**: Hozir `config.js` da `API_BASE_URL: 'http://localhost:8030/api'`.  
    Production’da buni o‘zgartirish kerak.
 
    **Variant A – `config.local.js` (tavsiya):**  

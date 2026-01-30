@@ -1,3 +1,6 @@
+# Port: .env da FRONTEND_PORT=3030 (deploy default) yoki serverda FRONTEND_PORT=80
+# Default: 3030. Serverda 80 qilsangiz, http://server-ip/ ishlatiladi.
+
 services:
   ai-ocr-frontend:
     container_name: ai-ocr-frontend
@@ -11,8 +14,8 @@ services:
       - ./:/usr/share/nginx/html:ro
 
     ports:
-      # Host:3020  → container:80
-      - "3020:80"
+      # Host port: .env dan FRONTEND_PORT, bo'lmasa 3030
+      - "${FRONTEND_PORT:-3030}:80"
 
     networks:
       - ai-ocr-frontend-network

@@ -90,6 +90,38 @@ async function handleLogin(e) {
         if (adminNavLink) {
             adminNavLink.style.display = 'inline-block';
         }
+        const adminNavLinkMobile = document.getElementById('adminNavLinkMobile');
+        if (adminNavLinkMobile) {
+            adminNavLinkMobile.style.display = 'inline-block';
+        }
+        // Admin Panel link'ni faqat admin uchun ko'rsatish
+        const adminPanelNavLink = document.getElementById('adminPanelNavLink');
+        const adminPanelNavLinkMobile = document.getElementById('adminPanelNavLinkMobile');
+        if (data.role === 'admin') {
+            if (adminPanelNavLink) adminPanelNavLink.style.display = 'inline-block';
+            if (adminPanelNavLinkMobile) adminPanelNavLinkMobile.style.display = 'inline-block';
+        } else {
+            if (adminPanelNavLink) adminPanelNavLink.style.display = 'none';
+            if (adminPanelNavLinkMobile) adminPanelNavLinkMobile.style.display = 'none';
+        }
+        
+        // Profil dropdown: Login yashirish, Logout ko'rsatish
+        var topNavLoginBtn = document.getElementById('topNavLoginBtn');
+        var topNavLogoutBtn = document.getElementById('topNavLogoutBtn');
+        if (topNavLoginBtn) topNavLoginBtn.style.display = 'none';
+        if (topNavLogoutBtn) topNavLogoutBtn.style.display = '';
+        
+        // SweetAlert: login muvaffaqiyatli bildirish
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                icon: 'success',
+                title: typeof t === 'function' ? t('loginSuccess') : 'Login successful!',
+                timer: 2000,
+                showConfirmButton: false,
+                toast: true,
+                position: 'top-end'
+            });
+        }
         
         // Home page'ga o'tish (default)
         showPage('dashboard');
@@ -115,60 +147,78 @@ async function handleLogin(e) {
     }
 }
 
-// Logout - User va Admin uchun
+// Logout - User va Admin uchun (localStorage + sessionStorage tozalash)
 function handleLogout() {
-    // Barcha localStorage ma'lumotlarini tozalash
-    localStorage.removeItem('token');
-    localStorage.removeItem('user_role');
-    localStorage.removeItem('username');
+    var keys = ['token', 'user_role', 'username'];
+    keys.forEach(function(k) {
+        try { localStorage.removeItem(k); sessionStorage.removeItem(k); } catch (e) {}
+    });
     
     // Current user'ni null qilish
     currentUser = null;
     currentPage = 'dashboard';
     
-    // App screen'ni yashirish, login screen'ni ko'rsatish
+    // Logoutdan keyin bosh sahifa (mehmon) ko'rsatish – login ekrani emas
     const appScreen = document.getElementById('appScreen');
     const loginScreen = document.getElementById('loginScreen');
+    if (loginScreen) loginScreen.classList.remove('active');
+    if (appScreen) appScreen.classList.add('active');
     
-    if (appScreen) appScreen.classList.remove('active');
-    if (loginScreen) loginScreen.classList.add('active');
+    // My Page yashirish; profil ikonka qoladi, dropdownda "Login" ko‘rsatish
+    var adminNavLink = document.getElementById('adminNavLink');
+    var adminNavLinkMobile = document.getElementById('adminNavLinkMobile');
+    var adminPanelNavLink = document.getElementById('adminPanelNavLink');
+    var adminPanelNavLinkMobile = document.getElementById('adminPanelNavLinkMobile');
+    var profileSection = document.getElementById('profileSection');
+    var topNavLoginBtn = document.getElementById('topNavLoginBtn');
+    var topNavLogoutBtn = document.getElementById('topNavLogoutBtn');
+    if (adminNavLink) adminNavLink.style.display = 'none';
+    if (adminNavLinkMobile) adminNavLinkMobile.style.display = 'none';
+    if (adminPanelNavLink) adminPanelNavLink.style.display = 'none';
+    if (adminPanelNavLinkMobile) adminPanelNavLinkMobile.style.display = 'none';
+    if (profileSection) profileSection.style.display = '';
+    if (topNavLoginBtn) topNavLoginBtn.style.display = '';
+    if (topNavLogoutBtn) topNavLogoutBtn.style.display = 'none';
     
-    // Form'larni tozalash
-    const loginForm = document.getElementById('loginForm');
-    const signupForm = document.getElementById('signupForm');
+    showPage('dashboard');
     
+    // Form'larni tozalash (keyingi login uchun)
+    var loginForm = document.getElementById('loginForm');
+    var signupForm = document.getElementById('signupForm');
     if (loginForm) loginForm.reset();
     if (signupForm) signupForm.reset();
-    
-    // Login form'ni ko'rsatish
-    const loginFormContainer = document.getElementById('loginFormContainer');
-    const signupFormContainer = document.getElementById('signupFormContainer');
-    
+    var loginFormContainer = document.getElementById('loginFormContainer');
+    var signupFormContainer = document.getElementById('signupFormContainer');
     if (loginFormContainer) loginFormContainer.style.display = 'block';
     if (signupFormContainer) signupFormContainer.style.display = 'none';
-    
-    // Error message'larni yashirish
-    const loginError = document.getElementById('loginError');
-    const signupError = document.getElementById('signupError');
-    
+    var loginError = document.getElementById('loginError');
+    var signupError = document.getElementById('signupError');
     if (loginError) loginError.style.display = 'none';
     if (signupError) signupError.style.display = 'none';
     
-    // Navigation menu'larni yopish (mobile uchun)
-    const navLinks = document.getElementById('navLinks');
-    
+    var navLinks = document.getElementById('navLinks');
     if (navLinks) navLinks.classList.remove('active');
     if (document.body) document.body.classList.remove('menu-open');
-    
-    // Profile dropdown'ni yopish
-    const profileDropdown = document.getElementById('profileDropdown');
+    var profileDropdown = document.getElementById('profileDropdown');
     if (profileDropdown) profileDropdown.classList.remove('active');
-    const profileDropdownOverlay = document.getElementById('profileDropdownOverlay');
+    var profileDropdownOverlay = document.getElementById('profileDropdownOverlay');
     if (profileDropdownOverlay) profileDropdownOverlay.classList.remove('active');
     
-    // Console'da log qilish
+    // SweetAlert: logout bildirish
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            icon: 'info',
+            title: typeof t === 'function' ? t('logoutSuccess') : 'Logged out successfully',
+            timer: 2000,
+            showConfirmButton: false,
+            toast: true,
+            position: 'top-end'
+        });
+    }
+    
     console.log('Logout muvaffaqiyatli');
 }
+window.handleLogout = handleLogout;
 
 // Signup
 async function handleSignup(e) {
@@ -226,14 +276,41 @@ async function handleSignup(e) {
     }
 }
 
-// Check authentication on load
+// Refresh (F5) da joriy sahifada qolish; yangi kirishda (navigate) har doim homepage
+function getInitialPage() {
+    var nav = performance.getEntriesByType && performance.getEntriesByType('navigation')[0];
+    var isReload = nav && nav.type === 'reload';
+    if (!isReload) return 'dashboard';
+    var saved = localStorage.getItem('currentPage') || 'dashboard';
+    if (saved === 'admin' && !localStorage.getItem('token')) return 'dashboard';
+    if (saved === 'adminPanel' && localStorage.getItem('user_role') !== 'admin') return 'dashboard';
+    var pageEl = document.getElementById(saved + 'Page');
+    if (!pageEl) return 'dashboard';
+    return saved;
+}
+
 // Check authentication on load
 function checkAuth() {
-    const token = localStorage.getItem('token');
-    const role = localStorage.getItem('user_role');
-    const username = localStorage.getItem('username');
+    var token = localStorage.getItem('token');
+    var role = localStorage.getItem('user_role');
+    var username = localStorage.getItem('username');
+    token = token ? String(token).trim() : '';
+    role = role ? String(role).trim() : '';
+    username = username ? String(username).trim() : '';
     
-    console.log('checkAuth called:', { token: !!token, role, username });
+    // Token bo'lmasa yoki bo'sh bo'lsa – mehmon (eski kalitlarni ham tozalash)
+    if (!token || !role || !username) {
+        try {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user_role');
+            localStorage.removeItem('username');
+        } catch (e) {}
+        token = '';
+        role = '';
+        username = '';
+    }
+    
+    console.log('checkAuth called:', { token: !!token, role: !!role, username: !!username });
     
     if (token && role && username) {
         currentUser = { role, username: username || 'user' };
@@ -261,46 +338,98 @@ function checkAuth() {
         if (adminNavLink) {
             adminNavLink.style.display = 'inline-block';
         }
-        
         const adminNavLinkMobile = document.getElementById('adminNavLinkMobile');
         if (adminNavLinkMobile) {
             adminNavLinkMobile.style.display = 'inline-block';
         }
+        // Admin Panel link'ni faqat admin uchun ko'rsatish
+        const adminPanelNavLink = document.getElementById('adminPanelNavLink');
+        const adminPanelNavLinkMobile = document.getElementById('adminPanelNavLinkMobile');
+        if (role === 'admin') {
+            if (adminPanelNavLink) adminPanelNavLink.style.display = 'inline-block';
+            if (adminPanelNavLinkMobile) adminPanelNavLinkMobile.style.display = 'inline-block';
+        } else {
+            if (adminPanelNavLink) adminPanelNavLink.style.display = 'none';
+            if (adminPanelNavLinkMobile) adminPanelNavLinkMobile.style.display = 'none';
+        }
+        // Profil ikonka doim; dropdownda "Logout" ko‘rsatish (Login yashirish)
+        var profileSection = document.getElementById('profileSection');
+        if (profileSection) profileSection.style.display = '';
+        var topNavLoginBtn = document.getElementById('topNavLoginBtn');
+        var topNavLogoutBtn = document.getElementById('topNavLogoutBtn');
+        if (topNavLoginBtn) topNavLoginBtn.style.display = 'none';
+        if (topNavLogoutBtn) topNavLogoutBtn.style.display = '';
         
-        // Refresh'da current page'ni restore qilish
-        // Kichik kutish - DOM to'liq yuklanguncha
+        // Refresh da saqlangan sahifa; yangi kirishda homepage
         setTimeout(() => {
-            // Default: dashboard (homepage)
-            const savedPage = localStorage.getItem('currentPage') || 'dashboard';
-            
-            // Barcha page'larni yashirish
+            const savedPage = getInitialPage();
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            
-            // Tanlangan page'ni ko'rsatish
             const targetPage = document.getElementById(`${savedPage}Page`);
             if (targetPage) {
                 targetPage.classList.add('active');
             } else {
-                // Agar page topilmasa, dashboard'ni ko'rsatish
                 const dashboardPage = document.getElementById('dashboardPage');
-                if (dashboardPage) {
-                    dashboardPage.classList.add('active');
-                }
+                if (dashboardPage) dashboardPage.classList.add('active');
             }
-            
-            // showPage funksiyasini chaqirish (navigation va boshqa ishlarni bajarish uchun)
             showPage(savedPage);
         }, 100);
     } else {
-        // Token yo'q – login ekranini ko'rsatish, app'ni yashirish
+        // Token yo'q – saytni login/signup so'ramasdan ko'rsatish (boshqa websitelardek)
+        currentUser = null;
         const loginScreen = document.getElementById('loginScreen');
         const appScreen = document.getElementById('appScreen');
         
-        if (loginScreen) loginScreen.classList.add('active');
-        if (appScreen) appScreen.classList.remove('active');
+        if (loginScreen) loginScreen.classList.remove('active');
+        if (appScreen) appScreen.classList.add('active');
         
-        currentUser = null;
+        // Mehmon uchun My Page yashirish; profil ikonka (👤) doim ko‘rinadi, dropdownda "Login"
+        const adminNavLink = document.getElementById('adminNavLink');
+        const adminNavLinkMobile = document.getElementById('adminNavLinkMobile');
+    if (adminNavLink) adminNavLink.style.display = 'none';
+    if (adminNavLinkMobile) adminNavLinkMobile.style.display = 'none';
+    var adminPanelNavLink = document.getElementById('adminPanelNavLink');
+    var adminPanelNavLinkMobile = document.getElementById('adminPanelNavLinkMobile');
+    if (adminPanelNavLink) adminPanelNavLink.style.display = 'none';
+    if (adminPanelNavLinkMobile) adminPanelNavLinkMobile.style.display = 'none';
+    var profileSection = document.getElementById('profileSection');
+        if (profileSection) profileSection.style.display = '';
+        var topNavLoginBtn = document.getElementById('topNavLoginBtn');
+        var topNavLogoutBtn = document.getElementById('topNavLogoutBtn');
+        if (topNavLoginBtn) topNavLoginBtn.style.display = '';
+        if (topNavLogoutBtn) topNavLogoutBtn.style.display = 'none';
+        
+        // Refresh da saqlangan sahifa; yangi kirishda homepage
+        setTimeout(() => {
+            const savedPage = getInitialPage();
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            const targetPage = document.getElementById(`${savedPage}Page`);
+            if (targetPage) {
+                targetPage.classList.add('active');
+            } else {
+                const dashboardPage = document.getElementById('dashboardPage');
+                if (dashboardPage) dashboardPage.classList.add('active');
+            }
+            showPage(savedPage);
+        }, 100);
     }
+}
+
+// Login ekranini ko'rsatish (masalan, hujjat skaner qilishda ro'yxatdan o'tish kerak bo'lganda)
+function showLoginScreen() {
+    const loginScreen = document.getElementById('loginScreen');
+    const appScreen = document.getElementById('appScreen');
+    if (loginScreen) loginScreen.classList.add('active');
+    if (appScreen) appScreen.classList.remove('active');
+}
+window.showLoginScreen = showLoginScreen;
+
+// Saytni login qilmasdan ko'rish (login ekranidan qaytish)
+function showAppWithoutLogin() {
+    const loginScreen = document.getElementById('loginScreen');
+    const appScreen = document.getElementById('appScreen');
+    if (loginScreen) loginScreen.classList.remove('active');
+    if (appScreen) appScreen.classList.add('active');
+    showPage('dashboard');
 }
 
 // ==================== API HELPERS ====================
@@ -321,7 +450,8 @@ async function apiCall(endpoint, options = {}) {
     if (!response.ok) {
         const errText = await response.text();
         if (response.status === 401) {
-            handleLogout();
+            // Faqat avval login qilgan foydalanuvchi uchun logout (mehmon saytda qoladi)
+            if (token) handleLogout();
             throw new Error('인증 오류');
         }
         let errorMsg = 'API 오류';
@@ -349,6 +479,14 @@ function showPage(pageName) {
     // Global scope'ga qo'shish
     if (!window.showPage) {
         window.showPage = showPage;
+    }
+    // Mehmon (login qilmagan) uchun My Page sahifasi mavjud emas
+    if (pageName === 'admin' && !localStorage.getItem('token')) {
+        pageName = 'dashboard';
+    }
+    // Admin Panel faqat admin uchun; boshqalar dashboard'ga
+    if (pageName === 'adminPanel' && localStorage.getItem('user_role') !== 'admin') {
+        pageName = 'dashboard';
     }
     console.log('📄 showPage called with:', pageName);
     
@@ -418,8 +556,8 @@ function showPage(pageName) {
     localStorage.setItem('currentPage', pageName);
     
     // History: asosiy sahifalarga (dashboard, documents, …) pushState qilamiz, shunda orqaga bosganda oldingi sahifa to'g'ri ochiladi. Servis sahifalari ham pushState. Faqat birinchi yuklanishda replaceState.
-    const servicePages = ['webfax', 'branch', 'forms', 'calculator', 'guide', 'statistics', 'chat'];
-    const mainPages = ['dashboard', 'documents', 'upload', 'admin'];
+    const servicePages = ['webfax', 'branch', 'forms', 'calculator', 'guide', 'statistics', 'chat', 'aboutUs'];
+    const mainPages = ['dashboard', 'documents', 'upload', 'admin', 'adminPanel'];
     if (pageName === 'documentDetail') {
         // hech narsa – viewDocument o'zi pushState qiladi
     } else if (typeof history.replaceState === 'function' && typeof history.pushState === 'function') {
@@ -438,8 +576,12 @@ function showPage(pageName) {
         loadDashboard();
     } else if (pageName === 'documents') {
         loadDocuments();
+    } else if (pageName === 'upload') {
+        updateUploadPageForAuth();
     } else if (pageName === 'admin') {
         loadAdminPanel();
+    } else if (pageName === 'adminPanel') {
+        loadAdminPanelPage();
     } else if (pageName === 'statistics') {
         loadStatistics();
     } else if (pageName === 'branch') {
@@ -447,6 +589,23 @@ function showPage(pageName) {
     } else if (pageName === 'webfax') {
         loadWebfax();
     }
+}
+
+// Upload sahifasi: mehmon uchun fayl tanlash/yuklash bloklangan
+function updateUploadPageForAuth() {
+    var fileInput = document.getElementById('fileInput');
+    var uploadBtn = document.getElementById('uploadBtn');
+    var uploadForm = document.getElementById('uploadForm');
+    var guestMessage = document.getElementById('uploadGuestMessage');
+    var hasToken = !!localStorage.getItem('token');
+    if (fileInput) {
+        fileInput.disabled = !hasToken;
+        if (!hasToken) fileInput.value = '';
+    }
+    if (uploadBtn) uploadBtn.disabled = !hasToken;
+    if (guestMessage) guestMessage.style.display = hasToken ? 'none' : 'block';
+    if (uploadForm && !hasToken) uploadForm.style.pointerEvents = 'none';
+    if (uploadForm && hasToken) uploadForm.style.pointerEvents = '';
 }
 
 // Koreyadagi NPS (Milliy pensiya xizmati) filiallari xaritasi
@@ -694,6 +853,11 @@ async function loadDashboard() {
 
 async function loadDocuments() {
     const tbody = document.getElementById('documentsTableBody');
+    if (!localStorage.getItem('token')) {
+        const msg = typeof t === 'function' ? t('pleaseSignUpToScan') : '문서를 보려면 로그인하세요.';
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px;">' + msg + '</td></tr>';
+        return;
+    }
     tbody.innerHTML = '<tr><td colspan="6" class="loading">로딩 중...</td></tr>';
     
     try {
@@ -1000,14 +1164,16 @@ async function viewDocument(id) {
             `;
         }
         
-        // Edit va Delete – tasdiqlangan hujjatda Tahrirlash ko‘rsatilmaydi. Ortga tugmasi – hujjatlar ro‘yxatiga.
+        // Edit va Delete – tasdiqlangan hujjatda Tahrirlash ko‘rsatilmaydi. Oddiy user o‘z hujjatini faqat 4 soat ichida o‘chira oladi.
         const docConfirmed = extractedData.metadata && (extractedData.metadata.confirmed === true || extractedData.metadata.submitted_for_review === true);
+        var canDelete = isAdmin || (doc.created_at && isWithin4Hours(doc.created_at));
+        var createdAtArg = (doc.created_at != null && doc.created_at !== '') ? JSON.stringify(String(doc.created_at)) : '""';
         html += `
             <div class="document-actions" style="margin-top: 30px; display: flex; gap: 15px; justify-content: space-between; align-items: center; flex-wrap: wrap;">
                 <button type="button" class="btn-secondary" onclick="goBackFromDetail()" style="padding: 10px 20px;">
                     ${t('docBack')}
                 </button>
-                <div style="display: flex; gap: 15px;">
+                <div style="display: flex; gap: 15px; align-items: center;">
                     ${!docConfirmed ? (doc.file_type === 'passport' ? `
                         <button class="btn-primary" onclick="openEditPassportModal(${docId})" style="padding: 10px 20px;">
                             ${t('btnEdit')}
@@ -1017,9 +1183,7 @@ async function viewDocument(id) {
                             ${t('btnEdit')}
                         </button>
                     `) : ''}
-                    <button class="btn-danger" onclick="deleteDocument(${docId})" style="padding: 10px 20px;">
-                        ${t('btnDelete')}
-                    </button>
+                    ${canDelete ? `<button class="btn-danger" onclick="deleteDocument(${docId}, ${createdAtArg})" style="padding: 10px 20px;">${t('btnDelete')}</button>` : (!isAdmin ? `<span style="font-size: 0.9em; color: #6b7280;">${typeof t === 'function' ? t('deleteNotAllowedAfter4Hours') : 'O\'chirish faqat 4 soat ichida mumkin.'}</span>` : '')}
                 </div>
             </div>
         `;
@@ -3092,15 +3256,32 @@ async function savePassportData() {
 
 // ==================== DELETE DOCUMENT ====================
 
-// Global scope'ga qo'shish (onclick event'lar uchun)
-window.deleteDocument = async function(documentId) {
+// Hujjat yaratilganidan 4 soat o'tmaganmi tekshirish (oddiy user faqat shu vaqt ichida o'chira oladi)
+function isWithin4Hours(createdAtStr) {
+    if (!createdAtStr) return false;
+    var created = new Date(createdAtStr).getTime();
+    if (isNaN(created)) return false;
+    var now = Date.now();
+    return (now - created) <= 4 * 60 * 60 * 1000;
+}
+
+// Global scope'ga qo'shish (onclick event'lar uchun). created_atOptional – oddiy user uchun 4 soat tekshiruvi
+window.deleteDocument = async function(documentId, created_atOptional) {
+    var userRole = localStorage.getItem('user_role') || 'user';
+    // Oddiy user: 4 soatdan oshgan hujjatni o'chirishga ruxsat yo'q
+    if (userRole !== 'admin') {
+        if (!created_atOptional || !isWithin4Hours(created_atOptional)) {
+            var msg = typeof t === 'function' ? t('deleteNotAllowedAfter4Hours') : 'Hujjatni faqat yaratilganidan keyin 4 soat ichida o\'chirish mumkin.';
+            alert(msg);
+            return;
+        }
+    }
     // Tasdiqlash
     if (!confirm('정말로 이 문서를 삭제하시겠습니까? (Bu hujjatni o\'chirishni tasdiqlaysizmi?)\n\n참고: 문서는 관리자에게 여전히 표시됩니다.')) {
         return;
     }
     
     try {
-        const userRole = localStorage.getItem('user_role') || 'user';
         const token = localStorage.getItem('token');
         
         // Soft delete - faqat user uchun yashirish, admin'da ko'rinadi
@@ -3142,6 +3323,15 @@ window.openEditDocumentModal = function(documentId) {
 
 async function handleUpload(e) {
     e.preventDefault();
+    
+    // Hujjat skaner qilish uchun ro'yxatdan o'tish kerak
+    if (!localStorage.getItem('token')) {
+        const msg = typeof t === 'function' ? t('pleaseSignUpToScan') : 'Hujjat skaner qilish uchun ro\'yxatdan o\'ting. / Please sign up to scan documents.';
+        alert(msg);
+        showLoginScreen();
+        return;
+    }
+    
     const fileInput = document.getElementById('fileInput');
     const fileType = document.getElementById('fileType').value;
     const language = document.getElementById('language').value;
@@ -3798,6 +3988,112 @@ async function loadAdminDocuments(filter = 'all') {
     }
 }
 
+// Admin Panel sahifasi: obunachilar ro'yxati + skaner (OCR) hujjatlar
+async function loadAdminPanelPage() {
+    const subscribersTbody = document.getElementById('adminSubscribersList');
+    const scannerTbody = document.getElementById('adminScannerList');
+    const loadingMsg = typeof t === 'function' ? t('adminPanelLoading') : 'Yuklanmoqda...';
+    const emptySubs = typeof t === 'function' ? t('adminSubscribersEmpty') : 'Obunachilar yo\'q';
+    const emptyScanner = typeof t === 'function' ? t('adminScannerEmpty') : 'Skaner hujjatlar yo\'q';
+    const errMsg = typeof t === 'function' ? t('adminPanelError') : 'Xato';
+    const emailNote = typeof t === 'function' ? t('adminSubscribersEmailNote') : 'Email backend /auth/users orqali';
+
+    if (subscribersTbody) subscribersTbody.innerHTML = '<tr><td colspan="3" class="loading">' + loadingMsg + '</td></tr>';
+    if (scannerTbody) scannerTbody.innerHTML = '<tr><td colspan="6" class="loading">' + loadingMsg + '</td></tr>';
+
+    const userRole = localStorage.getItem('user_role') || 'admin';
+
+    // 1) Obunachilar va skaner hujjatlarini parallel yuklash
+    let users = [];
+    let documents = [];
+    try {
+        users = await apiCall('/auth/users');
+        if (!Array.isArray(users)) users = [];
+    } catch (e) {
+        console.warn('Admin: users API not available', e);
+        users = [];
+    }
+    try {
+        const docsRaw = await apiCall('/ocr/documents?skip=0&limit=100&user_role=' + userRole);
+        documents = Array.isArray(docsRaw) ? docsRaw : [];
+    } catch (e) {
+        console.warn('Admin: documents API error', e);
+        documents = [];
+    }
+
+    // 2) Agar /auth/users bo'sh bo'lsa – skaner hujjatlaridan foydalanuvchilarni chiqarish (Neo, Leo va b.)
+    if (users.length === 0 && documents.length > 0) {
+        var docSorted = documents.slice().sort(function (a, b) {
+            var ta = a.created_at ? new Date(a.created_at).getTime() : 0;
+            var tb = b.created_at ? new Date(b.created_at).getTime() : 0;
+            return tb - ta;
+        });
+        var seen = {};
+        docSorted.forEach(function (doc) {
+            var uname = (doc.created_by_username || '').trim();
+            if (!uname || uname === '-') return;
+            if (seen[uname]) return;
+            seen[uname] = true;
+            users.push({
+                username: uname,
+                email: null,
+                created_at: doc.created_at || null
+            });
+        });
+        users.sort(function (a, b) {
+            var da = a.created_at ? new Date(a.created_at).getTime() : 0;
+            var db = b.created_at ? new Date(b.created_at).getTime() : 0;
+            return db - da;
+        });
+    }
+
+    if (subscribersTbody) {
+        if (users.length === 0) {
+            subscribersTbody.innerHTML = '<tr><td colspan="3" class="empty">' + emptySubs + '</td></tr>';
+        } else {
+            subscribersTbody.innerHTML = users.map(function (u) {
+                var username = (u.username || u.email || '-');
+                var email = (u.email != null && u.email !== '') ? u.email : '-';
+                var created = u.created_at ? new Date(u.created_at).toLocaleString() : '-';
+                return '<tr><td>' + escapeHtml(username) + '</td><td>' + escapeHtml(email) + '</td><td>' + escapeHtml(created) + '</td></tr>';
+            }).join('');
+        }
+    }
+
+    // 3) Skaner ma'lumotlari – OCR jadvali
+    var list = documents;
+    var sorted = list.slice().sort(function (a, b) {
+        if (a.created_at && b.created_at) return new Date(b.created_at) - new Date(a.created_at);
+        return (b.id || 0) - (a.id || 0);
+    });
+    var statusText = function (doc) {
+        var meta = doc.extracted_data && doc.extracted_data.metadata ? doc.extracted_data.metadata : {};
+        if (meta.verified) return typeof t === 'function' ? t('statusApproved') || 'Tasdiqlangan' : 'Tasdiqlangan';
+        if (meta.rejected) return typeof t === 'function' ? t('statusRejected') || 'Rad etilgan' : 'Rad etilgan';
+        return typeof t === 'function' ? t('statusPending') || 'Kutilmoqda' : 'Kutilmoqda';
+    };
+    var viewLabel = typeof t === 'function' ? t('docView') || 'Ko\'rish' : 'Ko\'rish';
+    if (scannerTbody) {
+        if (sorted.length === 0) {
+            scannerTbody.innerHTML = '<tr><td colspan="6" class="empty">' + emptyScanner + '</td></tr>';
+        } else {
+            scannerTbody.innerHTML = sorted.map(function (doc) {
+                var createdBy = doc.created_by_username || '-';
+                var createdDate = doc.created_at ? new Date(doc.created_at).toLocaleString() : '-';
+                var status = statusText(doc);
+                return '<tr><td>' + (doc.id || '-') + '</td><td>' + escapeHtml(doc.file_type || '-') + '</td><td>' + escapeHtml(createdBy) + '</td><td>' + escapeHtml(status) + '</td><td>' + escapeHtml(createdDate) + '</td><td><a href="#" onclick="viewAdminDocument(' + doc.id + '); return false;">' + viewLabel + '</a></td></tr>';
+            }).join('');
+        }
+    }
+
+    // Izoh: email faqat backend /auth/users orqali ko'rinadi
+    var noteEl = document.getElementById('adminSubscribersNote');
+    if (noteEl) {
+        noteEl.textContent = users.length > 0 && !users.some(function (u) { return u.email; }) ? emailNote : '';
+        noteEl.style.display = noteEl.textContent ? 'block' : 'none';
+    }
+}
+
 // Filter funksiyasi
 function filterAdminDocuments(filter) {
     // Filter button'larni active qilish
@@ -4442,6 +4738,28 @@ function initCursorGlow() {
 document.addEventListener('DOMContentLoaded', () => {
     initDarkMode();
     initCursorGlow();
+    // Welcome overlay: yangi kirishda har doim; sayt ichida F5 da – faqat har 5-refresh da (1,6,11...)
+    (function () {
+        var overlay = document.getElementById('welcomeOverlay');
+        if (!overlay) return;
+        var nav = performance.getEntriesByType && performance.getEntriesByType('navigation')[0];
+        var isReload = nav && nav.type === 'reload';
+        if (isReload) {
+            var key = 'welcomeVisitCount';
+            var count = (parseInt(localStorage.getItem(key), 10) || 0) + 1;
+            localStorage.setItem(key, String(count));
+            if (count % 5 !== 1) {
+                overlay.remove();
+                return;
+            }
+        }
+        setTimeout(function () {
+            overlay.classList.add('welcome-overlay-hide');
+            setTimeout(function () {
+                overlay.remove();
+            }, 700);
+        }, 5000);
+    })();
     var hpVideo = document.querySelector('.featured-video-player');
     if (hpVideo) hpVideo.playbackRate = 0.7;
     const darkToggle = document.getElementById('darkModeToggle');
@@ -4469,6 +4787,16 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('signupFormContainer').style.display = 'none';
         document.getElementById('loginFormContainer').style.display = 'block';
     });
+    
+    // Login qilmasdan saytni ko'rish (boshqa websitelardek)
+    const browseWithoutLoginEl = document.getElementById('browseWithoutLogin');
+    if (browseWithoutLoginEl) {
+        browseWithoutLoginEl.addEventListener('click', (e) => { e.preventDefault(); showAppWithoutLogin(); });
+    }
+    const browseWithoutLoginSignupEl = document.getElementById('browseWithoutLoginSignup');
+    if (browseWithoutLoginSignupEl) {
+        browseWithoutLoginSignupEl.addEventListener('click', (e) => { e.preventDefault(); showAppWithoutLogin(); });
+    }
     
     // Profile dropdown toggle va logout
     const profileDropdownToggle = document.getElementById('profileDropdownToggle');
@@ -4555,17 +4883,29 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    // Logout button (top navigation dropdown)
+    // Logout: top nav dropdown tugmasi
     if (topNavLogoutBtn && profileDropdown) {
         topNavLogoutBtn.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            // Dropdown'ni yopish
             closeProfileDropdown();
-            // Logout qilish
             handleLogout();
         });
     }
+    
+    // Logout / Login – document delegation
+    document.addEventListener('click', function(e) {
+        var el = e.target.closest('.profile-dropdown-logout, #topNavLogoutBtn, #topNavLoginBtn, #mypageLogout, .mypage-nav-logout');
+        if (!el) return;
+        e.preventDefault();
+        e.stopPropagation();
+        if (typeof closeProfileDropdown === 'function') closeProfileDropdown();
+        if (el.id === 'topNavLoginBtn') {
+            if (typeof showLoginScreen === 'function') showLoginScreen();
+        } else {
+            handleLogout();
+        }
+    }, true);
     
     // Top navigation links (nav-link-modern)
     const navLinks = document.querySelectorAll('.nav-link-modern');
@@ -4702,20 +5042,12 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('🔄 Window loaded, checking auth again...');
         checkAuth();
         
-        // Faqat hech qanday sahifa active bo‘lmaganda saved page’ni ko‘rsatish (dashboard’ni majburan emas)
+        // Hech qanday sahifa active bo‘lmasa – refresh bo‘lsa saqlangan, yo‘q bo‘lsa homepage
         setTimeout(() => {
             const appScreen = document.getElementById('appScreen');
             const currentActive = document.querySelector('.page.active');
             if (appScreen && appScreen.classList.contains('active') && !currentActive) {
-                const savedPage = localStorage.getItem('currentPage') || 'dashboard';
-                console.log('📄 No page active, restoring:', savedPage);
-                if (savedPage === 'documentDetail') {
-                    const docId = localStorage.getItem('documentDetailId');
-                    if (docId) viewDocument(docId);
-                    else showPage('documents');
-                } else {
-                    showPage(savedPage);
-                }
+                showPage(getInitialPage());
             }
         }, 300);
     });
@@ -4744,23 +5076,11 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    // Sahifa yuklanganda currentPage'ni restore qilish (detail page bo'lsa – shu hujjatni qayta yuklash)
-    const savedPage = localStorage.getItem('currentPage') || 'dashboard';
-    console.log('📄 Restoring page from localStorage:', savedPage);
-    if (savedPage === 'documentDetail') {
-        const docId = localStorage.getItem('documentDetailId');
-        if (docId) {
-            viewDocument(docId);
-            return;
-        }
-        showPage('documents');
-    } else {
-        showPage(savedPage);
-    }
+    // Sahifa checkAuth'da getInitialPage() orqali o'rnatiladi (refresh = saqlangan, navigate = homepage)
     
     // Brauzer orqaga/oldinga: sayt ichida qolish. Documents (yoki boshqa asosiy sahifa)dan orqaga bosganda servis sahifasiga tushmaslik – to'g'ridan-to'g'ri dashboard.
-    const mainPages = ['dashboard', 'documents', 'upload', 'admin'];
-    const servicePages = ['webfax', 'branch', 'forms', 'calculator', 'guide', 'statistics', 'chat'];
+    const mainPages = ['dashboard', 'documents', 'upload', 'admin', 'adminPanel'];
+    const servicePages = ['webfax', 'branch', 'forms', 'calculator', 'guide', 'statistics', 'chat', 'aboutUs'];
     window.addEventListener('popstate', function(e) {
         const state = e.state;
         const fromPage = currentPage;
@@ -4796,17 +5116,9 @@ window.addEventListener('load', () => {
         console.log('✅ Navigation links found after window load:', navLinks.length);
     }
     
-    // Agar sahifa allaqachon yuklangan bo'lsa, currentPage'ni restore qilish
-    const savedPage = localStorage.getItem('currentPage') || 'dashboard';
-    const currentActivePage = document.querySelector('.page.active');
-    if (!currentActivePage || currentActivePage.id !== `${savedPage}Page`) {
-        console.log('📄 Restoring page on window load:', savedPage);
-        if (savedPage === 'documentDetail') {
-            const docId = localStorage.getItem('documentDetailId');
-            if (docId) viewDocument(docId);
-            else showPage('documents');
-        } else {
-            showPage(savedPage);
-        }
+    // Sahifa allaqachon checkAuth/getInitialPage orqali o‘rnatilgan; bu yerda faqat fallback (active yo‘q bo‘lsa)
+    var currentActivePage = document.querySelector('.page.active');
+    if (!currentActivePage) {
+        showPage(getInitialPage());
     }
 });

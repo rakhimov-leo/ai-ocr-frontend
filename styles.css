@@ -27,6 +27,48 @@ body::before {
     }
 }
 
+/* ==================== WELCOME OVERLAY (ochilganda 5 sekund) ==================== */
+.welcome-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(102, 126, 234, 0.92);
+    opacity: 1;
+    transition: opacity 0.7s ease-out;
+    pointer-events: none;
+}
+.welcome-overlay.welcome-overlay-hide {
+    opacity: 0;
+    pointer-events: none;
+}
+.welcome-overlay-text {
+    font-size: clamp(2rem, 6vw, 3.5rem);
+    font-weight: 700;
+    color: #fff;
+    text-shadow: 0 2px 20px rgba(0, 0, 0, 0.2);
+    letter-spacing: 0.02em;
+    animation: welcome-zoom-fade 2s cubic-bezier(0.22, 0.61, 0.36, 1) 3s forwards;
+}
+@keyframes welcome-zoom-fade {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(3.5);
+        opacity: 0;
+    }
+}
+html.dark-mode .welcome-overlay {
+    background: rgba(30, 41, 59, 0.95);
+}
+
 /* ==================== LOGIN SCREEN ==================== */
 
 .screen {
@@ -824,13 +866,133 @@ body::before {
     background: #f5f7fa;
 }
 
+@keyframes page-in {
+    from {
+        opacity: 0;
+        transform: translateY(16px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 .page {
     display: none;
 }
 
 .page.active {
     display: block;
+    animation: page-in 0.6s cubic-bezier(0.22, 0.61, 0.36, 1) both;
 }
+
+/* Sahifa ichidagi kontent – sekin ochilish animatsiyasi (barcha page.lar uchun) */
+@keyframes content-in {
+    from { opacity: 0; transform: translateY(14px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.page.active .page-header {
+    animation: content-in 0.55s ease-out 0.12s both;
+}
+
+.page.active .documents-table {
+    animation: content-in 0.55s ease-out 0.2s both;
+}
+
+.page.active .service-content {
+    animation: content-in 0.55s ease-out 0.18s both;
+}
+
+.page.active .upload-form,
+.page.active .upload-guest-message {
+    animation: content-in 0.55s ease-out 0.2s both;
+}
+
+.page.active .upload-form { animation-delay: 0.25s; }
+.page.active .upload-guest-message { animation-delay: 0.15s; }
+
+/* Upload page: h1 (page-header yo'q) */
+#uploadPage.page.active > h1 {
+    animation: content-in 0.55s ease-out 0.08s both;
+}
+
+.page.active .admin-panel-sections {
+    animation: none; /* ichidagi section'lar alohida */
+}
+
+.page.active .admin-panel-section {
+    animation: content-in 0.5s ease-out both;
+}
+
+.page.active .admin-panel-section:nth-child(1) { animation-delay: 0.15s; }
+.page.active .admin-panel-section:nth-child(2) { animation-delay: 0.3s; }
+
+.page.active .form-item {
+    animation: content-in 0.45s ease-out both;
+}
+
+.page.active .form-item:nth-child(1) { animation-delay: 0.22s; }
+.page.active .form-item:nth-child(2) { animation-delay: 0.32s; }
+.page.active .form-item:nth-child(3) { animation-delay: 0.42s; }
+
+.page.active .guide-section {
+    animation: content-in 0.5s ease-out both;
+}
+
+.page.active .guide-section:nth-child(1) { animation-delay: 0.2s; }
+.page.active .guide-section:nth-child(2) { animation-delay: 0.32s; }
+.page.active .guide-section:nth-child(3) { animation-delay: 0.44s; }
+
+.page.active .about-section {
+    animation: content-in 0.5s ease-out both;
+}
+.page.active .about-section:nth-child(1) { animation-delay: 0.2s; }
+.page.active .about-section:nth-child(2) { animation-delay: 0.32s; }
+.page.active .about-section:nth-child(3) { animation-delay: 0.44s; }
+
+.page.active .webfax-list,
+.page.active .webfax-item {
+    animation: content-in 0.5s ease-out 0.25s both;
+}
+
+.page.active .chat-container {
+    animation: content-in 0.5s ease-out 0.2s both;
+}
+
+/* Document detail / Admin verification – orqaga tugma va kontent */
+.page.active .btn-back {
+    animation: content-in 0.4s ease-out 0.08s both;
+}
+
+#documentDetailPage.page.active #documentDetailContent,
+#adminVerificationPage.page.active #adminVerificationContent {
+    animation: content-in 0.5s ease-out 0.18s both;
+}
+
+/* My Page (admin/profile) – sidebar va content */
+.page.active .mypage-layout {
+    animation: none;
+}
+
+.page.active .mypage-sidebar {
+    animation: content-in 0.5s ease-out 0.1s both;
+}
+
+.page.active .mypage-content {
+    animation: content-in 0.5s ease-out 0.2s both;
+}
+
+.page.active .mypage-profile-view .mypage-profile-header,
+.page.active .mypage-profile-view .mypage-card {
+    animation: content-in 0.45s ease-out both;
+}
+
+.page.active .mypage-profile-view .mypage-profile-header { animation-delay: 0.25s; }
+.page.active .mypage-profile-view .mypage-card:nth-of-type(1) { animation-delay: 0.35s; }
+.page.active .mypage-profile-view .mypage-card:nth-of-type(2) { animation-delay: 0.45s; }
+.page.active .mypage-profile-view .mypage-card:nth-of-type(3) { animation-delay: 0.55s; }
+.page.active .mypage-profile-view .mypage-actions { animation: content-in 0.45s ease-out 0.65s both; }
 
 .branch-map-container.map-initialized .leaflet-container {
     border-radius: 12px;
@@ -870,46 +1032,93 @@ body::before {
 
 /* ==================== DASHBOARD (NPS Style) ==================== */
 
+/* Featured section – animatsiya (sekinroq boshlanish) */
+@keyframes featured-bg-shift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+}
+@keyframes featured-title-in {
+    from { opacity: 0; transform: translateX(-24px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+@keyframes featured-item-in {
+    from { opacity: 0; transform: translateX(-16px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+@keyframes featured-desc-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+@keyframes featured-video-in {
+    from { opacity: 0; transform: translateX(16px) scale(0.98); }
+    to { opacity: 1; transform: translateX(0) scale(1); }
+}
+/* News & Services bloklari – kirish animatsiyasi */
+@keyframes dashboard-box-in {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+@keyframes news-item-in {
+    from { opacity: 0; transform: translateX(-14px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+@keyframes service-item-in {
+    from { opacity: 0; transform: translateY(14px) scale(0.97); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
 .featured-section {
-    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
-    border-radius: 12px;
-    padding: 40px;
+    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 50%, #90caf9 100%);
+    background-size: 200% 200%;
+    animation: featured-bg-shift 12s ease-in-out infinite;
+    border-radius: 16px;
+    padding: 48px 40px;
     margin-bottom: 30px;
+    min-height: 380px;
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    gap: 30px;
+    align-items: center;
+    box-shadow: 0 8px 24px rgba(0, 102, 204, 0.12);
+    gap: 40px;
+    overflow: hidden;
 }
 
 .featured-content {
     flex: 1;
     min-width: 0;
-    max-width: 50%; /* Chap yarim – video bilan teng 50/50 */
+    max-width: 50%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
 .featured-title {
     font-size: 2em;
     color: #0066cc;
-    margin-bottom: 20px;
+    margin-bottom: 24px;
     font-weight: 700;
+    animation: featured-title-in 1s ease-out both;
 }
 
 .featured-list {
     list-style: none;
-    margin-bottom: 15px;
+    margin-bottom: 20px;
     padding: 0;
 }
 
 .featured-list-item {
-    padding: 12px 0;
+    padding: 14px 0;
     color: #333;
     font-size: 1.1em;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
     transition: all 0.3s ease;
     position: relative;
     padding-left: 0;
+    animation: featured-item-in 0.9s ease-out both;
 }
+.featured-list-item:nth-child(1) { animation-delay: 0.4s; }
+.featured-list-item:nth-child(2) { animation-delay: 0.7s; }
+.featured-list-item:nth-child(3) { animation-delay: 1s; }
 
 .featured-list-item::before {
     content: '';
@@ -929,9 +1138,10 @@ body::before {
 }
 
 .featured-list-item:hover {
-    background: rgba(102, 126, 234, 0.05);
+    background: rgba(102, 126, 234, 0.08);
     padding-left: 8px;
     border-radius: 6px;
+    transform: translateX(4px);
 }
 
 .featured-checkbox:checked ~ .featured-text {
@@ -1047,6 +1257,7 @@ body::before {
     margin-bottom: 20px;
     font-size: 1em;
     font-weight: 500;
+    animation: featured-desc-in 0.9s ease-out 1.2s both;
 }
 
 .featured-link {
@@ -1097,6 +1308,7 @@ body::before {
     flex-direction: column;
     align-items: stretch;
     justify-content: center;
+    animation: featured-video-in 1s ease-out 0.5s both;
 }
 
 .featured-video-player {
@@ -1104,7 +1316,7 @@ body::before {
     aspect-ratio: 16 / 9;
     object-fit: cover;
     border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+    box-shadow: 0 8px 24px rgba(0, 102, 204, 0.15);
     background: #111;
 }
 
@@ -1120,13 +1332,13 @@ body::before {
     margin-top: 30px;
 }
 
-/* Yangiliklar qutisi – aylanuvchi gradient chegarasi (AI Insight uslubida) */
+/* Yangiliklar qutisi – kirish animatsiyasi + aylanuvchi gradient */
 .news-box-gradient-wrap {
     padding: 3px;
     border-radius: 16px;
     background: linear-gradient(90deg, #06b6d4, #8b5cf6, #ec4899, #f59e0b, #06b6d4);
     background-size: 400% 100%;
-    animation: news-gradient-flow 5s ease-in-out infinite;
+    animation: news-gradient-flow 7s ease-in-out infinite, dashboard-box-in 1s ease-out 0.5s both;
     width: 100%;
     box-sizing: border-box;
     box-shadow: 0 0 24px rgba(139, 92, 246, 0.25), 0 0 48px rgba(6, 182, 212, 0.15);
@@ -1288,7 +1500,14 @@ body::before {
     cursor: pointer;
     position: relative;
     overflow: hidden;
+    animation: news-item-in 0.85s ease-out both;
 }
+.news-item:nth-child(1) { animation-delay: 0.7s; }
+.news-item:nth-child(2) { animation-delay: 0.9s; }
+.news-item:nth-child(3) { animation-delay: 1.1s; }
+.news-item:nth-child(4) { animation-delay: 1.3s; }
+.news-item:nth-child(5) { animation-delay: 1.5s; }
+.news-item:nth-child(6) { animation-delay: 1.7s; }
 
 .news-item-link {
     text-decoration: none;
@@ -1350,13 +1569,13 @@ body::before {
     color: #667eea;
 }
 
-/* Services qutisi – aylanuvchi gradient chegarasi */
+/* Services qutisi – kirish animatsiyasi + aylanuvchi gradient */
 .services-box-gradient-wrap {
     padding: 3px;
     border-radius: 16px;
     background: linear-gradient(90deg, #06b6d4, #8b5cf6, #ec4899, #f59e0b, #06b6d4);
     background-size: 400% 100%;
-    animation: services-gradient-flow 5s ease-in-out infinite;
+    animation: services-gradient-flow 7s ease-in-out infinite, dashboard-box-in 1s ease-out 0.8s both;
     width: 100%;
     box-sizing: border-box;
     box-shadow: 0 0 24px rgba(139, 92, 246, 0.2), 0 0 48px rgba(6, 182, 212, 0.12);
@@ -1397,7 +1616,16 @@ body::before {
     cursor: pointer;
     background: #fafafa;
     border: 1px solid transparent;
+    animation: service-item-in 0.8s ease-out both;
 }
+.service-item:nth-child(1) { animation-delay: 1s; }
+.service-item:nth-child(2) { animation-delay: 1.15s; }
+.service-item:nth-child(3) { animation-delay: 1.3s; }
+.service-item:nth-child(4) { animation-delay: 1.45s; }
+.service-item:nth-child(5) { animation-delay: 1.6s; }
+.service-item:nth-child(6) { animation-delay: 1.75s; }
+.service-item:nth-child(7) { animation-delay: 1.9s; }
+.service-item:nth-child(8) { animation-delay: 2.05s; }
 
 .service-item:hover {
     background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
@@ -2185,6 +2413,37 @@ body::before {
     border-radius: 12px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     margin-top: 20px;
+}
+
+/* About Us page */
+.about-us-content {
+    max-width: 800px;
+}
+.about-us-intro {
+    font-size: 1.1em;
+    line-height: 1.6;
+    color: #374151;
+    margin-bottom: 28px;
+}
+.about-section {
+    margin-bottom: 28px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid #e5e7eb;
+}
+.about-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+.about-section h2 {
+    font-size: 1.25em;
+    color: #0066cc;
+    margin-bottom: 10px;
+}
+.about-section p {
+    line-height: 1.6;
+    color: #4b5563;
+    margin: 0;
 }
 
 .forms-list {
