@@ -1,36 +1,9 @@
 # AI-OCR Frontend
 
-Vanilla JavaScript frontend
+Vanilla JavaScript frontend for AI-OCR document processing.
 
-1. **Backend**
+## Run
 
-   ```bash
-   cd /Users/alina/Desktop/AI-OCR
-   source venv/bin/activate
-   uvicorn main:app --reload --port 8030
-   ```
-
-2. **Frontend**
-   - `index.html`
-   - **Lokal serverdan oching** (AI Chat uchun ham shart; `file://` da API bloklanadi):
-     ```bash
-     cd ~/Desktop/"AI-OCR frontend"
-     python3 -m http.server 3030
-     ```
-   - http://localhost:3030
-   - **AI Chat (Gemini):** `config.local.js.example` dan `config.local.js` yarating va kalitlarni kiriting. `config.local.js` GitHub'ga chiqmaydi (.gitignore).
-
-## Stack:
-
-- **Vanilla JavaScript**
-- **HTML5**
-- **CSS3**
-- **Fetch API** - connection via backend
-
-## API Endpoints:
-
-- `POST /api/auth/login` - Login
-- `GET /api/auth/me` - Current user
-- `GET /api/ocr/documents` - Documents
-- `GET /api/ocr/documents/{id}` - Document detail
-- `POST /api/ocr/upload` - Document
+1. Start backend (see main AI-OCR repo).
+2. Open `index.html` via local server.
+3. Visit http://localhost:3030
