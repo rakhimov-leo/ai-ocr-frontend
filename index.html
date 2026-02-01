@@ -23,6 +23,7 @@
     <!-- Login Screen -->
     <div id="loginScreen" class="screen">
         <div class="login-container">
+                <div class="login-card-gradient-wrap">
                 <div class="login-card">
                 <h1>AI-OCR 시스템</h1>
                 <p class="subtitle">로그인</p>
@@ -31,7 +32,7 @@
                     <form id="loginForm">
                     <div class="form-group">
                         <label>사용자명</label>
-                        <input type="text" id="username" placeholder="admin 또는 user" required>
+                        <input type="text" id="username" placeholder="" required>
                     </div>
                     
                     <div class="form-group">
@@ -43,12 +44,6 @@
                     
                     <button type="submit" class="btn-primary">로그인</button>
                 </form>
-                
-                <div class="login-hint">
-                    <p><strong>테스트 계정:</strong></p>
-                    <p>관리자: admin / admin123</p>
-                    <p>사용자: user / user123</p>
-                </div>
                 
                 <div class="login-switch">
                     <p><span id="needAccountText">새 계정이 필요하신가요?</span> <a href="#" id="showSignup">회원가입</a></p>
@@ -62,12 +57,25 @@
                     <form id="signupForm">
                         <div class="form-group">
                             <label>사용자명</label>
-                            <input type="text" id="signupUsername" placeholder="사용자명" required>
+                            <input type="text" id="signupUsername" placeholder="" required>
                         </div>
                         
                         <div class="form-group">
                             <label>이메일 (선택사항)</label>
                             <input type="email" id="signupEmail" placeholder="email@example.com">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label id="signupRoleLabel">Maqom</label>
+                            <select id="signupRole">
+                                <option value="user">User</option>
+                                <option value="agent">Agent</option>
+                            </select>
+                        </div>
+                        
+                        <div id="signupAdminPasswordGroup" class="form-group" style="display: none;">
+                            <label id="signupAdminPasswordLabel">Admin bo'lish uchun maxfiy kalit</label>
+                            <input type="password" id="signupAdminPassword" placeholder="Maxfiy kalitni kiriting">
                         </div>
                         
                         <div class="form-group">
@@ -91,6 +99,7 @@
                     <div class="login-switch" style="margin-top: 12px;">
                         <p><a href="#" id="browseWithoutLoginSignup">로그인 없이 둘러보기</a></p>
                     </div>
+                </div>
                 </div>
             </div>
         </div>
@@ -354,27 +363,38 @@
 
             <!-- Documents -->
             <div id="documentsPage" class="page">
-                <div class="page-header">
-                    <h1>문서</h1>
-                    <a href="#" data-page="upload" class="btn-primary">+ 새 문서</a>
+                <div class="documents-page-header">
+                    <div class="page-header">
+                        <h1>문서</h1>
+                        <a href="#" data-page="upload" class="btn-primary">+ 새 문서</a>
+                    </div>
+                    <div class="documents-search-wrap">
+                        <input type="text" id="documentsSearch" class="documents-search" placeholder="ID, fayl turi, holat bo'yicha qidirish..." aria-label="Qidirish">
+                    </div>
                 </div>
-                
-                <div class="documents-table">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>파일 유형</th>
-                                <th>상태</th>
-                                <th>신뢰도</th>
-                                <th>생성일</th>
-                                <th>작업</th>
-                            </tr>
-                        </thead>
-                        <tbody id="documentsTableBody">
-                            <tr><td colspan="6" class="loading">로딩 중...</td></tr>
-                        </tbody>
-                    </table>
+                <div class="documents-table-wrap">
+                    <div class="documents-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>파일 유형</th>
+                                    <th>Account</th>
+                                    <th>상태</th>
+                                    <th>신뢰도</th>
+                                    <th>생성일</th>
+                                    <th>작업</th>
+                                </tr>
+                            </thead>
+                            <tbody id="documentsTableBody">
+                                <tr><td colspan="7" class="loading">로딩 중...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div id="documentsControls" class="documents-controls" style="display: none;">
+                    <span id="documentsShowMore" class="documents-show-more" role="button" tabindex="0">Show more</span>
+                    <div id="documentsPagination" class="documents-pagination" style="display: none;"></div>
                 </div>
             </div>
 
@@ -458,7 +478,9 @@
                     
                     <div id="uploadError" class="error" style="display: none;"></div>
                     
-                    <button type="submit" class="btn-primary" id="uploadBtn">업로드</button>
+                    <div class="upload-btn-rainbow-wrap">
+                        <button type="submit" class="btn-primary" id="uploadBtn">업로드</button>
+                    </div>
                 </form>
             </div>
 
@@ -552,10 +574,10 @@
                     <h1 id="adminPanelTitle">Admin</h1>
                 </div>
                 <div class="admin-panel-sections">
-                    <section class="admin-panel-section">
+                    <section id="adminSubscribersSection" class="admin-panel-section">
                         <h2 id="adminSubscribersTitle">Obunachilar (Ro'yxatdan o'tganlar)</h2>
                         <p class="admin-panel-desc" id="adminSubscribersDesc">Signup qilishda kiritilgan ma'lumotlar</p>
-                        <div class="admin-table-wrap">
+                        <div class="admin-table-wrap admin-subscribers-table-wrap">
                             <table class="admin-table">
                                 <thead>
                                     <tr>
@@ -569,12 +591,22 @@
                                 </tbody>
                             </table>
                         </div>
+                        <div id="adminSubscribersControls" class="admin-subscribers-controls" style="display: none;">
+                            <span id="adminSubscribersShowMore" class="admin-subscribers-show-more" role="button" tabindex="0">Show more</span>
+                        </div>
                         <p id="adminSubscribersNote" class="admin-panel-note" style="display: none; margin-top: 8px; font-size: 0.9em; color: #6b7280;"></p>
                     </section>
                     <section class="admin-panel-section">
-                        <h2 id="adminScannerTitle">Skaner ma'lumotlari</h2>
-                        <p class="admin-panel-desc" id="adminScannerDesc">OCR / yuklangan hujjatlar ro'yxati</p>
-                        <div class="admin-table-wrap">
+                        <div class="admin-scanner-header">
+                            <div>
+                                <h2 id="adminScannerTitle">Skaner ma'lumotlari</h2>
+                                <p class="admin-panel-desc" id="adminScannerDesc">OCR / yuklangan hujjatlar ro'yxati</p>
+                            </div>
+                            <div class="admin-scanner-search-wrap">
+                                <input type="text" id="adminScannerSearch" class="admin-scanner-search" placeholder="ID, foydalanuvchi, fayl turi..." aria-label="Qidirish">
+                            </div>
+                        </div>
+                        <div class="admin-table-wrap admin-scanner-table-wrap">
                             <table class="admin-table">
                                 <thead>
                                     <tr>
@@ -590,6 +622,10 @@
                                     <tr><td colspan="6" class="loading">Yuklanmoqda...</td></tr>
                                 </tbody>
                             </table>
+                        </div>
+                        <div id="adminScannerControls" class="admin-scanner-controls" style="display: none;">
+                            <span id="adminScannerShowMore" class="admin-btn-show-more" role="button" tabindex="0">Show more</span>
+                            <div id="adminScannerPagination" class="admin-scanner-pagination" style="display: none;"></div>
                         </div>
                     </section>
                 </div>

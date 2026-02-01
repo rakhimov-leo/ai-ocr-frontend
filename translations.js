@@ -7,7 +7,9 @@ const translations = {
         navUpload: '업로드',
         navMyPage: '내 페이지',
         navAdmin: '관리자',
+        navAgent: '에이전트',
         adminPanelTitle: '관리자',
+        agentPanelTitle: '에이전트',
         adminSubscribersTitle: '구독자 (가입자)',
         adminSubscribersDesc: '회원가입 시 입력한 정보',
         thSubscriberUsername: '사용자명',
@@ -24,6 +26,11 @@ const translations = {
         adminSubscribersEmpty: '구독자가 없습니다.',
         adminSubscribersEmailNote: '이메일은 백엔드 /auth/users API에서 제공됩니다.',
         adminScannerEmpty: '스캔 문서가 없습니다.',
+        adminSearchPlaceholder: 'ID, 사용자, 파일 유형 검색...',
+        documentsSearchPlaceholder: 'ID, 파일 유형, 상태 검색...',
+        adminShowMore: 'Show more',
+        adminPrev: '이전',
+        adminNext: '다음',
         adminPanelError: '오류',
         statusApproved: '승인됨',
         statusRejected: '거부됨',
@@ -32,18 +39,27 @@ const translations = {
         loginTitle: 'AI-OCR 시스템',
         loginSubtitle: '로그인',
         username: '사용자명',
+        usernamePlaceholder: '사용자명',
         password: '비밀번호',
         loginButton: '로그인',
         signupButton: '회원가입',
         showSignup: '회원가입',
         showLogin: '로그인',
-        testAccount: '테스트 계정:',
-        testAdmin: '관리자: admin / admin123',
-        testUser: '사용자: user / user123',
         needAccount: '새 계정이 필요하신가요?',
         haveAccount: '이미 계정이 있으신가요?',
         pleaseSignUpToScan: '문서 스캔을 위해 회원가입해 주세요.',
         browseWithoutLogin: '로그인 없이 둘러보기',
+        signupRoleLabel: '역할',
+        signupRoleUser: 'User',
+        signupRoleAgent: 'Agent',
+        signupAdminPasswordLabel: '관리자 권한을 위한 비밀 키',
+        signupPasswordMin: '비밀번호는 최소 6자 이상이어야 합니다',
+        signupPasswordMismatch: '비밀번호가 일치하지 않습니다',
+        signupUserSuccess: '계정이 생성되었습니다',
+        signupUserPassword: '비밀번호',
+        signupUserPasswordHint: '저장해 두고 로그인하세요',
+        signupAgentSecretRequired: 'Agent로 가입하려면 비밀 키가 필요합니다.',
+        signupAgentSecretNotConfigured: 'Agent 가입이 설정되지 않았습니다. 관리자에게 문의하세요.',
         loginSuccess: '로그인 성공!',
         logoutSuccess: '로그아웃되었습니다.',
         navAboutUs: '소개',
@@ -94,6 +110,7 @@ const translations = {
         btnNewDoc: '+ 새 문서',
         docId: 'ID',
         docFileType: '파일 유형',
+        docUser: '계정',
         docStatus: '상태',
         docConfidence: '신뢰도',
         docCreated: '생성일',
@@ -250,7 +267,9 @@ const translations = {
         navUpload: 'Upload',
         navMyPage: 'My Page',
         navAdmin: 'Admin',
+        navAgent: 'Agent',
         adminPanelTitle: 'Admin',
+        agentPanelTitle: 'Agent',
         adminSubscribersTitle: 'Subscribers (Registered users)',
         adminSubscribersDesc: 'Information entered at signup',
         thSubscriberUsername: 'Username',
@@ -267,6 +286,11 @@ const translations = {
         adminSubscribersEmpty: 'No subscribers.',
         adminSubscribersEmailNote: 'Email is provided by the backend /auth/users API.',
         adminScannerEmpty: 'No scan documents.',
+        adminSearchPlaceholder: 'Search ID, user, file type...',
+        documentsSearchPlaceholder: 'Search ID, file type, status...',
+        adminShowMore: 'Show more',
+        adminPrev: 'Previous',
+        adminNext: 'Next',
         adminPanelError: 'Error',
         statusApproved: 'Approved',
         statusRejected: 'Rejected',
@@ -274,18 +298,27 @@ const translations = {
         loginTitle: 'AI-OCR System',
         loginSubtitle: 'Login',
         username: 'Username',
+        usernamePlaceholder: 'Username',
         password: 'Password',
         loginButton: 'Login',
         signupButton: 'Sign Up',
         showSignup: 'Sign Up',
         showLogin: 'Login',
-        testAccount: 'Test Account:',
-        testAdmin: 'Admin: admin / admin123',
-        testUser: 'User: user / user123',
         needAccount: 'Need a new account?',
         haveAccount: 'Already have an account?',
         pleaseSignUpToScan: 'Please sign up to scan documents.',
         browseWithoutLogin: 'Browse without logging in',
+        signupRoleLabel: 'Role',
+        signupRoleUser: 'User',
+        signupRoleAgent: 'Agent',
+        signupAdminPasswordLabel: 'Secret key to become admin',
+        signupPasswordMin: 'Password must be at least 6 characters',
+        signupPasswordMismatch: 'Passwords do not match',
+        signupUserSuccess: 'Account created',
+        signupUserPassword: 'Password',
+        signupUserPasswordHint: 'Save it and log in',
+        signupAgentSecretRequired: 'Secret key is required to sign up as agent.',
+        signupAgentSecretNotConfigured: 'Agent signup not configured. Contact administrator.',
         loginSuccess: 'Login successful!',
         logoutSuccess: 'Logged out successfully.',
         navAboutUs: 'About Us',
@@ -334,6 +367,7 @@ const translations = {
         btnNewDoc: '+ New Document',
         docId: 'ID',
         docFileType: 'File Type',
+        docUser: 'Account',
         docStatus: 'Status',
         docConfidence: 'Confidence',
         docCreated: 'Created',
@@ -486,7 +520,9 @@ const translations = {
         navUpload: 'Yuklash',
         navMyPage: 'Mening sahifam',
         navAdmin: 'Admin',
+        navAgent: 'Agent',
         adminPanelTitle: 'Admin',
+        agentPanelTitle: 'Agent',
         adminSubscribersTitle: 'Obunachilar (Ro\'yxatdan o\'tganlar)',
         adminSubscribersDesc: 'Ro\'yxatdan o\'tishda kiritilgan ma\'lumotlar',
         thSubscriberUsername: 'Foydalanuvchi',
@@ -503,6 +539,11 @@ const translations = {
         adminSubscribersEmpty: 'Obunachilar yo\'q.',
         adminSubscribersEmailNote: 'Email backend /auth/users API orqali taqdim etiladi.',
         adminScannerEmpty: 'Skaner hujjatlar yo\'q.',
+        adminSearchPlaceholder: 'ID, foydalanuvchi, fayl turi bo\'yicha qidirish...',
+        documentsSearchPlaceholder: 'ID, fayl turi, account, holat...',
+        adminShowMore: 'Show more',
+        adminPrev: 'Oldingi',
+        adminNext: 'Keyingi',
         adminPanelError: 'Xato',
         statusApproved: 'Tasdiqlangan',
         statusRejected: 'Rad etilgan',
@@ -510,18 +551,27 @@ const translations = {
         loginTitle: 'AI-OCR Tizimi',
         loginSubtitle: 'Kirish',
         username: 'Foydalanuvchi nomi',
+        usernamePlaceholder: 'Foydalanuvchi nomi',
         password: 'Parol',
         loginButton: 'Kirish',
         signupButton: 'Ro\'yxatdan o\'tish',
         showSignup: 'Ro\'yxatdan o\'tish',
         showLogin: 'Kirish',
-        testAccount: 'Test hisob:',
-        testAdmin: 'Admin: admin / admin123',
-        testUser: 'Foydalanuvchi: user / user123',
         needAccount: 'Yangi hisob kerakmi?',
         haveAccount: 'Hisobingiz bormi?',
         pleaseSignUpToScan: 'Hujjat skaner qilish uchun ro\'yxatdan o\'ting.',
         browseWithoutLogin: 'Kirishsiz saytni ko\'rish',
+        signupRoleLabel: 'Maqom',
+        signupRoleUser: 'User',
+        signupRoleAgent: 'Agent',
+        signupAdminPasswordLabel: 'Admin bo\'lish uchun maxfiy kalit',
+        signupPasswordMin: 'Parol kamida 6 belgi bo\'lishi kerak',
+        signupPasswordMismatch: 'Parollar mos kelmadi',
+        signupUserSuccess: 'Hisob yaratildi',
+        signupUserPassword: 'Parolingiz',
+        signupUserPasswordHint: 'Uni saqlab qoling va login qiling',
+        signupAgentSecretRequired: 'Agent sifatida ro\'yxatdan o\'tish uchun maxfiy kalit majburiy.',
+        signupAgentSecretNotConfigured: 'Agent signup sozlanmagan. Administrator bilan bog\'laning.',
         loginSuccess: 'Kirish muvaffaqiyatli!',
         logoutSuccess: 'Chiqish muvaffaqiyatli.',
         navAboutUs: 'Biz haqimizda',
@@ -570,6 +620,7 @@ const translations = {
         btnNewDoc: '+ Yangi hujjat',
         docId: 'ID',
         docFileType: 'Fayl turi',
+        docUser: 'Account',
         docStatus: 'Holat',
         docConfidence: 'Ishonch',
         docCreated: 'Yaratilgan',
@@ -722,7 +773,9 @@ const translations = {
         navUpload: 'Загрузка',
         navMyPage: 'Моя страница',
         navAdmin: 'Админ',
+        navAgent: 'Агент',
         adminPanelTitle: 'Админ',
+        agentPanelTitle: 'Агент',
         adminSubscribersTitle: 'Подписчики (зарегистрированные)',
         adminSubscribersDesc: 'Данные, введённые при регистрации',
         thSubscriberUsername: 'Пользователь',
@@ -739,6 +792,11 @@ const translations = {
         adminSubscribersEmpty: 'Нет подписчиков.',
         adminSubscribersEmailNote: 'Email предоставляется бэкендом /auth/users API.',
         adminScannerEmpty: 'Нет отсканированных документов.',
+        adminSearchPlaceholder: 'Поиск по ID, пользователю, типу файла...',
+        documentsSearchPlaceholder: 'Поиск по ID, типу файла, статусу...',
+        adminShowMore: 'Show more',
+        adminPrev: 'Назад',
+        adminNext: 'Далее',
         adminPanelError: 'Ошибка',
         statusApproved: 'Подтверждено',
         statusRejected: 'Отклонено',
@@ -746,18 +804,27 @@ const translations = {
         loginTitle: 'AI-OCR Система',
         loginSubtitle: 'Вход',
         username: 'Имя пользователя',
+        usernamePlaceholder: 'Имя пользователя',
         password: 'Пароль',
         loginButton: 'Войти',
         signupButton: 'Регистрация',
         showSignup: 'Регистрация',
         showLogin: 'Войти',
-        testAccount: 'Тестовый аккаунт:',
-        testAdmin: 'Админ: admin / admin123',
-        testUser: 'Пользователь: user / user123',
         needAccount: 'Нужен новый аккаунт?',
         haveAccount: 'Уже есть аккаунт?',
         pleaseSignUpToScan: 'Зарегистрируйтесь для сканирования документов.',
         browseWithoutLogin: 'Смотреть без входа',
+        signupRoleLabel: 'Роль',
+        signupRoleUser: 'User',
+        signupRoleAgent: 'Agent',
+        signupAdminPasswordLabel: 'Секретный ключ для админа',
+        signupPasswordMin: 'Пароль минимум 6 символов',
+        signupPasswordMismatch: 'Пароли не совпадают',
+        signupUserSuccess: 'Аккаунт создан',
+        signupUserPassword: 'Пароль',
+        signupUserPasswordHint: 'Сохраните и войдите',
+        signupAgentSecretRequired: 'Секретный ключ обязателен для регистрации как agent.',
+        signupAgentSecretNotConfigured: 'Регистрация agent не настроена. Обратитесь к администратору.',
         loginSuccess: 'Вход выполнен!',
         logoutSuccess: 'Выход выполнен.',
         navAboutUs: 'О нас',
@@ -806,6 +873,7 @@ const translations = {
         btnNewDoc: '+ Новый документ',
         docId: 'ID',
         docFileType: 'Тип файла',
+        docUser: 'Аккаунт',
         docStatus: 'Статус',
         docConfidence: 'Уверенность',
         docCreated: 'Создан',
@@ -958,7 +1026,9 @@ const translations = {
         navUpload: 'Байршуулах',
         navMyPage: 'Миний хуудас',
         navAdmin: 'Админ',
+        navAgent: 'Агент',
         adminPanelTitle: 'Админ',
+        agentPanelTitle: 'Агент',
         adminSubscribersTitle: 'Бүртгүүлэгчид',
         adminSubscribersDesc: 'Бүртгүүлэхэд оруулсан мэдээлэл',
         thSubscriberUsername: 'Хэрэглэгч',
@@ -975,6 +1045,11 @@ const translations = {
         adminSubscribersEmpty: 'Бүртгүүлэгч байхгүй.',
         adminSubscribersEmailNote: 'Имэйл нь backend /auth/users API-аар өгөгдөнө.',
         adminScannerEmpty: 'Сканердсан баримт байхгүй.',
+        adminSearchPlaceholder: 'ID, хэрэглэгч, файлын төрлөөр хайх...',
+        documentsSearchPlaceholder: 'ID, файлын төрөл, төлөв хайх...',
+        adminShowMore: 'Show more',
+        adminPrev: 'Өмнөх',
+        adminNext: 'Дараах',
         adminPanelError: 'Алдаа',
         statusApproved: 'Батлагдсан',
         statusRejected: 'Татгалзсан',
@@ -982,18 +1057,27 @@ const translations = {
         loginTitle: 'AI-OCR Систем',
         loginSubtitle: 'Нэвтрэх',
         username: 'Хэрэглэгчийн нэр',
+        usernamePlaceholder: 'Хэрэглэгчийн нэр',
         password: 'Нууц үг',
         loginButton: 'Нэвтрэх',
         signupButton: 'Бүртгүүлэх',
         showSignup: 'Бүртгүүлэх',
         showLogin: 'Нэвтрэх',
-        testAccount: 'Туршилтын данс:',
-        testAdmin: 'Админ: admin / admin123',
-        testUser: 'Хэрэглэгч: user / user123',
         needAccount: 'Шинэ данс хэрэгтэй юу?',
         haveAccount: 'Данстай байна уу?',
         pleaseSignUpToScan: 'Баримт скан хийхийн тулд бүртгүүлнэ үү.',
         browseWithoutLogin: 'Нэвтрэлгүйгээр үзэх',
+        signupRoleLabel: 'Эрх',
+        signupRoleUser: 'User',
+        signupRoleAgent: 'Agent',
+        signupAdminPasswordLabel: 'Админ болох нууц түлхүүр',
+        signupPasswordMin: 'Нууц үг хамгийн багадаа 6 тэмдэгт',
+        signupPasswordMismatch: 'Нууц үгнүүд таарахгүй байна',
+        signupUserSuccess: 'Данс үүсгэгдлээ',
+        signupUserPassword: 'Нууц үг',
+        signupUserPasswordHint: 'Хадгалж, нэвтрэнэ үү',
+        signupAgentSecretRequired: 'Agent болохын тулд нууц түлхүүр шаардлагатай.',
+        signupAgentSecretNotConfigured: 'Agent бүртгэл тохируулаагүй байна. Админтай холбогдоно уу.',
         loginSuccess: 'Амжилттай нэвтэрлээ!',
         logoutSuccess: 'Амжилттай гарлаа.',
         navAboutUs: 'Бидний тухай',
@@ -1042,6 +1126,7 @@ const translations = {
         btnNewDoc: '+ Шинэ баримт бичиг',
         docId: 'ID',
         docFileType: 'Файлын төрөл',
+        docUser: 'Данс',
         docStatus: 'Төлөв',
         docConfidence: 'Итгэл',
         docCreated: 'Үүсгэсэн',
@@ -1194,7 +1279,9 @@ const translations = {
         navUpload: '上传',
         navMyPage: '我的页面',
         navAdmin: '管理员',
+        navAgent: '代理',
         adminPanelTitle: '管理员',
+        agentPanelTitle: '代理',
         adminSubscribersTitle: '订阅者（注册用户）',
         adminSubscribersDesc: '注册时填写的信息',
         thSubscriberUsername: '用户名',
@@ -1211,6 +1298,11 @@ const translations = {
         adminSubscribersEmpty: '暂无订阅者。',
         adminSubscribersEmailNote: '邮箱由后端 /auth/users API 提供。',
         adminScannerEmpty: '暂无扫描文档。',
+        adminSearchPlaceholder: '搜索 ID、用户、文件类型...',
+        documentsSearchPlaceholder: '搜索 ID、文件类型、状态...',
+        adminShowMore: 'Show more',
+        adminPrev: '上一页',
+        adminNext: '下一页',
         adminPanelError: '错误',
         statusApproved: '已批准',
         statusRejected: '已拒绝',
@@ -1218,18 +1310,27 @@ const translations = {
         loginTitle: 'AI-OCR 系统',
         loginSubtitle: '登录',
         username: '用户名',
+        usernamePlaceholder: '用户名',
         password: '密码',
         loginButton: '登录',
         signupButton: '注册',
         showSignup: '注册',
         showLogin: '登录',
-        testAccount: '测试账户:',
-        testAdmin: '管理员: admin / admin123',
-        testUser: '用户: user / user123',
         needAccount: '需要新账户？',
         haveAccount: '已有账户？',
         pleaseSignUpToScan: '请注册以扫描文档。',
         browseWithoutLogin: '不登录浏览',
+        signupRoleLabel: '角色',
+        signupRoleUser: 'User',
+        signupRoleAgent: 'Agent',
+        signupAdminPasswordLabel: '成为管理员的密钥',
+        signupPasswordMin: '密码至少6个字符',
+        signupPasswordMismatch: '密码不匹配',
+        signupUserSuccess: '账户已创建',
+        signupUserPassword: '密码',
+        signupUserPasswordHint: '请保存并登录',
+        signupAgentSecretRequired: '注册为 agent 需要密钥。',
+        signupAgentSecretNotConfigured: 'Agent 注册未配置。请联系管理员。',
         loginSuccess: '登录成功！',
         logoutSuccess: '已成功退出。',
         navAboutUs: '关于我们',
@@ -1278,6 +1379,7 @@ const translations = {
         btnNewDoc: '+ 新文档',
         docId: 'ID',
         docFileType: '文件类型',
+        docUser: '账户',
         docStatus: '状态',
         docConfidence: '置信度',
         docCreated: '创建日期',
@@ -1430,7 +1532,9 @@ const translations = {
         navUpload: 'Tải lên',
         navMyPage: 'Trang của tôi',
         navAdmin: 'Quản trị',
+        navAgent: 'Đại lý',
         adminPanelTitle: 'Quản trị',
+        agentPanelTitle: 'Đại lý',
         adminSubscribersTitle: 'Người đăng ký',
         adminSubscribersDesc: 'Thông tin nhập khi đăng ký',
         thSubscriberUsername: 'Tên đăng nhập',
@@ -1447,6 +1551,11 @@ const translations = {
         adminSubscribersEmpty: 'Chưa có người đăng ký.',
         adminSubscribersEmailNote: 'Email do backend API /auth/users cung cấp.',
         adminScannerEmpty: 'Chưa có tài liệu quét.',
+        adminSearchPlaceholder: 'Tìm theo ID, người dùng, loại tệp...',
+        documentsSearchPlaceholder: 'Tìm theo ID, loại tệp, trạng thái...',
+        adminShowMore: 'Show more',
+        adminPrev: 'Trước',
+        adminNext: 'Sau',
         adminPanelError: 'Lỗi',
         statusApproved: 'Đã duyệt',
         statusRejected: 'Từ chối',
@@ -1454,18 +1563,27 @@ const translations = {
         loginTitle: 'Hệ thống AI-OCR',
         loginSubtitle: 'Đăng nhập',
         username: 'Tên người dùng',
+        usernamePlaceholder: 'Tên người dùng',
         password: 'Mật khẩu',
         loginButton: 'Đăng nhập',
         signupButton: 'Đăng ký',
         showSignup: 'Đăng ký',
         showLogin: 'Đăng nhập',
-        testAccount: 'Tài khoản thử nghiệm:',
-        testAdmin: 'Quản trị viên: admin / admin123',
-        testUser: 'Người dùng: user / user123',
         needAccount: 'Cần tài khoản mới?',
         haveAccount: 'Đã có tài khoản?',
         pleaseSignUpToScan: 'Vui lòng đăng ký để quét tài liệu.',
         browseWithoutLogin: 'Duyệt không cần đăng nhập',
+        signupRoleLabel: 'Vai trò',
+        signupRoleUser: 'User',
+        signupRoleAgent: 'Agent',
+        signupAdminPasswordLabel: 'Mật khẩu bí mật để trở thành admin',
+        signupPasswordMin: 'Mật khẩu tối thiểu 6 ký tự',
+        signupPasswordMismatch: 'Mật khẩu không khớp',
+        signupUserSuccess: 'Tài khoản đã được tạo',
+        signupUserPassword: 'Mật khẩu',
+        signupUserPasswordHint: 'Lưu lại và đăng nhập',
+        signupAgentSecretRequired: 'Cần mật khẩu bí mật để đăng ký làm agent.',
+        signupAgentSecretNotConfigured: 'Đăng ký agent chưa được cấu hình. Liên hệ quản trị viên.',
         loginSuccess: 'Đăng nhập thành công!',
         logoutSuccess: 'Đăng xuất thành công.',
         navAboutUs: 'Về chúng tôi',
@@ -1514,6 +1632,7 @@ const translations = {
         btnNewDoc: '+ Tài liệu mới',
         docId: 'ID',
         docFileType: 'Loại tệp',
+        docUser: 'Tài khoản',
         docStatus: 'Trạng thái',
         docConfidence: 'Độ tin cậy',
         docCreated: 'Đã tạo',
@@ -1666,7 +1785,9 @@ const translations = {
         navUpload: 'อัปโหลด',
         navMyPage: 'หน้าของฉัน',
         navAdmin: 'แอดมิน',
+        navAgent: 'เอเจนต์',
         adminPanelTitle: 'แอดมิน',
+        agentPanelTitle: 'เอเจนต์',
         adminSubscribersTitle: 'ผู้สมัครสมาชิก',
         adminSubscribersDesc: 'ข้อมูลที่กรอกเมื่อสมัคร',
         thSubscriberUsername: 'ชื่อผู้ใช้',
@@ -1683,6 +1804,11 @@ const translations = {
         adminSubscribersEmpty: 'ไม่มีผู้สมัครสมาชิก',
         adminSubscribersEmailNote: 'อีเมลมาจาก backend API /auth/users',
         adminScannerEmpty: 'ไม่มีเอกสารสแกน',
+        adminSearchPlaceholder: 'ค้นหา ID, ผู้ใช้, ประเภทไฟล์...',
+        documentsSearchPlaceholder: 'ค้นหา ID, ประเภทไฟล์, สถานะ...',
+        adminShowMore: 'Show more',
+        adminPrev: 'ก่อนหน้า',
+        adminNext: 'ถัดไป',
         adminPanelError: 'ข้อผิดพลาด',
         statusApproved: 'อนุมัติแล้ว',
         statusRejected: 'ปฏิเสธ',
@@ -1690,18 +1816,27 @@ const translations = {
         loginTitle: 'ระบบ AI-OCR',
         loginSubtitle: 'เข้าสู่ระบบ',
         username: 'ชื่อผู้ใช้',
+        usernamePlaceholder: 'ชื่อผู้ใช้',
         password: 'รหัสผ่าน',
         loginButton: 'เข้าสู่ระบบ',
         signupButton: 'สมัครสมาชิก',
         showSignup: 'สมัครสมาชิก',
         showLogin: 'เข้าสู่ระบบ',
-        testAccount: 'บัญชีทดสอบ:',
-        testAdmin: 'ผู้ดูแลระบบ: admin / admin123',
-        testUser: 'ผู้ใช้: user / user123',
         needAccount: 'ต้องการบัญชีใหม่?',
         haveAccount: 'มีบัญชีอยู่แล้ว?',
         pleaseSignUpToScan: 'กรุณาลงทะเบียนเพื่อสแกนเอกสาร',
         browseWithoutLogin: 'ดูโดยไม่เข้าสู่ระบบ',
+        signupRoleLabel: 'บทบาท',
+        signupRoleUser: 'User',
+        signupRoleAgent: 'Agent',
+        signupAdminPasswordLabel: 'รหัสลับเพื่อเป็นแอดมิน',
+        signupPasswordMin: 'รหัสผ่านอย่างน้อย 6 ตัวอักษร',
+        signupPasswordMismatch: 'รหัสผ่านไม่ตรงกัน',
+        signupUserSuccess: 'สร้างบัญชีแล้ว',
+        signupUserPassword: 'รหัสผ่าน',
+        signupUserPasswordHint: 'บันทึกและเข้าสู่ระบบ',
+        signupAgentSecretRequired: 'ต้องใช้รหัสลับเพื่อสมัครเป็น agent',
+        signupAgentSecretNotConfigured: 'การสมัคร agent ยังไม่ได้ตั้งค่า กรุณาติดต่อผู้ดูแลระบบ',
         loginSuccess: 'เข้าสู่ระบบสำเร็จ!',
         logoutSuccess: 'ออกจากระบบสำเร็จ',
         navAboutUs: 'เกี่ยวกับเรา',
@@ -1750,6 +1885,7 @@ const translations = {
         btnNewDoc: '+ เอกสารใหม่',
         docId: 'ID',
         docFileType: 'ประเภทไฟล์',
+        docUser: 'บัญชี',
         docStatus: 'สถานะ',
         docConfidence: 'ความมั่นใจ',
         docCreated: 'สร้างเมื่อ',
@@ -1953,9 +2089,11 @@ function applyTranslations(lang) {
         if (link) link.textContent = t.navMyPage;
     });
     
+    var panelRole = (typeof localStorage !== 'undefined' && localStorage.getItem('user_role') === 'agent') ? 'agent' : 'admin';
+    var panelNavText = panelRole === 'agent' ? (t.navAgent || 'Agent') : (t.navAdmin || 'Admin');
     const adminPanelLinks = document.querySelectorAll('[data-page="adminPanel"]');
     adminPanelLinks.forEach(link => {
-        if (link) link.textContent = t.navAdmin || 'Admin';
+        if (link) link.textContent = panelNavText;
     });
     
     const aboutUsLinks = document.querySelectorAll('[data-page="aboutUs"]');
@@ -1992,6 +2130,10 @@ function applyTranslations(lang) {
     
     const usernameLabel = document.querySelector('#loginForm label[for="username"], #loginForm .form-group:first-child label');
     if (usernameLabel) usernameLabel.textContent = t.username;
+    const loginUsernameInput = document.getElementById('username');
+    if (loginUsernameInput) loginUsernameInput.placeholder = t.usernamePlaceholder || t.username || 'Username';
+    const signupUsernameInput = document.getElementById('signupUsername');
+    if (signupUsernameInput) signupUsernameInput.placeholder = t.usernamePlaceholder || t.username || 'Username';
     
     const passwordLabel = document.querySelector('#loginForm label[for="password"], #loginForm .form-group:nth-child(2) label');
     if (passwordLabel) passwordLabel.textContent = t.password;
@@ -2031,19 +2173,10 @@ function applyTranslations(lang) {
     const signupSubmitBtn = document.querySelector('#signupForm button[type="submit"]');
     if (signupSubmitBtn) signupSubmitBtn.textContent = t.signupButton;
     
-    // Test account hints
-    const testAccountEl = document.querySelector('.login-hint p strong');
-    if (testAccountEl) testAccountEl.textContent = t.testAccount;
-    
-    const testAdminEl = document.querySelector('.login-hint p:nth-child(2)');
-    if (testAdminEl && testAdminEl.textContent.includes('관리자')) {
-        testAdminEl.textContent = t.testAdmin;
-    }
-    
-    const testUserEl = document.querySelector('.login-hint p:nth-child(3)');
-    if (testUserEl && testUserEl.textContent.includes('사용자')) {
-        testUserEl.textContent = t.testUser;
-    }
+    const signupRoleLabel = document.getElementById('signupRoleLabel');
+    if (signupRoleLabel) signupRoleLabel.textContent = t.signupRoleLabel || 'Maqom';
+    const signupAdminPasswordLabel = document.getElementById('signupAdminPasswordLabel');
+    if (signupAdminPasswordLabel) signupAdminPasswordLabel.textContent = t.signupAdminPasswordLabel || 'Admin maxfiy kalit';
     
     // Dashboard page
     const featuredTitle = document.querySelector('.featured-title');
@@ -2108,14 +2241,17 @@ function applyTranslations(lang) {
     const btnNewDoc = document.querySelector('#documentsPage .btn-primary');
     if (btnNewDoc) btnNewDoc.textContent = t.btnNewDoc;
     
+    const documentsSearch = document.getElementById('documentsSearch');
+    if (documentsSearch) documentsSearch.placeholder = t.documentsSearchPlaceholder || 'ID, fayl turi, holat bo\'yicha qidirish...';
     const docHeaders = document.querySelectorAll('#documentsPage thead th');
-    if (docHeaders.length >= 6) {
+    if (docHeaders.length >= 7) {
         docHeaders[0].textContent = t.docId;
         docHeaders[1].textContent = t.docFileType;
-        docHeaders[2].textContent = t.docStatus;
-        docHeaders[3].textContent = t.docConfidence;
-        docHeaders[4].textContent = t.docCreated;
-        docHeaders[5].textContent = t.docAction;
+        docHeaders[2].textContent = t.docUser || 'Account';
+        docHeaders[3].textContent = t.docStatus;
+        docHeaders[4].textContent = t.docConfidence;
+        docHeaders[5].textContent = t.docCreated;
+        docHeaders[6].textContent = t.docAction;
     }
     
     // Upload page
@@ -2178,7 +2314,7 @@ function applyTranslations(lang) {
     
     // Admin Panel page (obunachilar + skaner)
     const adminPanelTitle = document.getElementById('adminPanelTitle');
-    if (adminPanelTitle) adminPanelTitle.textContent = t.adminPanelTitle || 'Admin';
+    if (adminPanelTitle) adminPanelTitle.textContent = (panelRole === 'agent' ? (t.agentPanelTitle || 'Agent') : (t.adminPanelTitle || 'Admin'));
     const adminSubscribersTitle = document.getElementById('adminSubscribersTitle');
     if (adminSubscribersTitle) adminSubscribersTitle.textContent = t.adminSubscribersTitle || 'Obunachilar';
     const adminSubscribersDesc = document.getElementById('adminSubscribersDesc');
@@ -2203,6 +2339,8 @@ function applyTranslations(lang) {
     if (thScannerCreated) thScannerCreated.textContent = t.thScannerCreated || 'Sana';
     const thScannerAction = document.getElementById('thScannerAction');
     if (thScannerAction) thScannerAction.textContent = t.thScannerAction || 'Amal';
+    const adminScannerSearch = document.getElementById('adminScannerSearch');
+    if (adminScannerSearch) adminScannerSearch.placeholder = t.adminSearchPlaceholder || 'ID, foydalanuvchi, fayl turi...';
     
     // Service pages: Branch, Forms, Calculator, Guide, Webfax, Statistics, Chat
     const branchTitle = document.querySelector('#branchPage .page-header h1');

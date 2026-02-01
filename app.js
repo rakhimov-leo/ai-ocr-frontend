@@ -94,7 +94,7 @@ async function handleLogin(e) {
         if (adminNavLinkMobile) {
             adminNavLinkMobile.style.display = 'inline-block';
         }
-        // Admin Panel link'ni faqat admin uchun ko'rsatish
+        // Admin Panel link – faqat admin uchun (agent uchun kerak emas)
         const adminPanelNavLink = document.getElementById('adminPanelNavLink');
         const adminPanelNavLinkMobile = document.getElementById('adminPanelNavLinkMobile');
         if (data.role === 'admin') {
@@ -125,6 +125,8 @@ async function handleLogin(e) {
         
         // Home page'ga o'tish (default)
         showPage('dashboard');
+        // Admin/Agent nav va sahifa sarlavhasini yangilash
+        if (typeof applyTranslations === 'function') applyTranslations(localStorage.getItem('language') || 'ko');
         
     } catch (error) {
         console.error('Login catch xatosi:', error);
@@ -220,54 +222,90 @@ function handleLogout() {
 }
 window.handleLogout = handleLogout;
 
+// Admin/Agent maxfiy kalit – config.local.js dan (GitHub'da yo'q)
+var ADMIN_SECRET_PASSWORD = (typeof CONFIG !== 'undefined' && CONFIG.ADMIN_AGENT_SECRET) ? CONFIG.ADMIN_AGENT_SECRET : '';
+
+// Signup role tanlanganda: Agent = admin maxfiy kalit maydonini ko'rsatish va majburiy qilish
+function updateSignupFormByRole() {
+    var role = (document.getElementById('signupRole') || {}).value || 'user';
+    var adminGroup = document.getElementById('signupAdminPasswordGroup');
+    var adminInput = document.getElementById('signupAdminPassword');
+    if (adminGroup) adminGroup.style.display = role === 'agent' ? 'block' : 'none';
+    if (adminInput) {
+        adminInput.required = role === 'agent';
+        if (role !== 'agent') adminInput.value = '';
+    }
+}
+
 // Signup
 async function handleSignup(e) {
     e.preventDefault();
-    const username = document.getElementById('signupUsername').value;
-    const email = document.getElementById('signupEmail').value;
+    const username = document.getElementById('signupUsername').value.trim();
+    const email = document.getElementById('signupEmail').value.trim();
+    const role = (document.getElementById('signupRole') || {}).value || 'user';
     const password = document.getElementById('signupPassword').value;
     const passwordConfirm = document.getElementById('signupPasswordConfirm').value;
+    const adminPassword = (document.getElementById('signupAdminPassword') || {}).value;
     const errorDiv = document.getElementById('signupError');
     
     errorDiv.style.display = 'none';
     
-    // Password tasdiqlash
+    if (password.length < 6) {
+        errorDiv.textContent = typeof t === 'function' ? t('signupPasswordMin') : 'Parol kamida 6 belgi bo\'lishi kerak';
+        errorDiv.style.display = 'block';
+        return;
+    }
     if (password !== passwordConfirm) {
-        errorDiv.textContent = '비밀번호가 일치하지 않습니다!';
+        errorDiv.textContent = typeof t === 'function' ? t('signupPasswordMismatch') : 'Parollar mos kelmadi';
         errorDiv.style.display = 'block';
         return;
     }
     
-    // Password uzunligi
-    if (password.length < 6) {
-        errorDiv.textContent = '비밀번호는 최소 6자 이상이어야 합니다!';
-        errorDiv.style.display = 'block';
-        return;
+    if (role === 'agent') {
+        if (!ADMIN_SECRET_PASSWORD) {
+            errorDiv.textContent = typeof t === 'function' ? t('signupAgentSecretNotConfigured') : 'Agent signup sozlanmagan. Administrator bilan bog\'laning.';
+            errorDiv.style.display = 'block';
+            return;
+        }
+        if (adminPassword !== ADMIN_SECRET_PASSWORD) {
+            errorDiv.textContent = typeof t === 'function' ? t('signupAgentSecretRequired') : 'Agent sifatida ro\'yxatdan o\'tish uchun maxfiy kalit majburiy.';
+            errorDiv.style.display = 'block';
+            return;
+        }
+    }
+    
+    var finalRole = role;
+    if (role === 'agent' && adminPassword === ADMIN_SECRET_PASSWORD) {
+        finalRole = 'admin';
+    } else if (role === 'agent') {
+        finalRole = 'agent';
     }
     
     try {
         const response = await fetch(`${API_BASE_URL}/auth/signup`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password, email: email || null })
+            body: JSON.stringify({ username, password: password, email: email || null, role: finalRole, admin_password: role === 'agent' ? adminPassword : null })
         });
         
         if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.detail || '회원가입 오류');
+            const errData = await response.json().catch(function() { return {}; });
+            throw new Error(errData.detail || 'Ro\'yxatdan o\'tish xatosi');
         }
         
         const data = await response.json();
         
-        // Muvaffaqiyatli signup - login qilish
-        alert(`회원가입이 완료되었습니다! 이제 로그인하세요.`);
+        var successMsg = typeof t === 'function' ? t('signupSuccess') : 'Ro\'yxatdan o\'tish muvaffaqiyatli! Endi login qiling.';
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({ icon: 'success', title: successMsg, timer: 3000, showConfirmButton: false, toast: true, position: 'top-end' });
+        } else {
+            alert(successMsg);
+        }
         
-        // Login form'ga o'tish
         document.getElementById('signupFormContainer').style.display = 'none';
         document.getElementById('loginFormContainer').style.display = 'block';
         document.getElementById('signupForm').reset();
-        
-        // Username'ni login form'ga qo'yish
+        updateSignupFormByRole();
         document.getElementById('username').value = username;
         
     } catch (error) {
@@ -283,7 +321,10 @@ function getInitialPage() {
     if (!isReload) return 'dashboard';
     var saved = localStorage.getItem('currentPage') || 'dashboard';
     if (saved === 'admin' && !localStorage.getItem('token')) return 'dashboard';
-    if (saved === 'adminPanel' && localStorage.getItem('user_role') !== 'admin') return 'dashboard';
+    if (saved === 'adminPanel') {
+        var r = localStorage.getItem('user_role');
+        if (r !== 'admin') return 'dashboard';
+    }
     var pageEl = document.getElementById(saved + 'Page');
     if (!pageEl) return 'dashboard';
     return saved;
@@ -342,7 +383,7 @@ function checkAuth() {
         if (adminNavLinkMobile) {
             adminNavLinkMobile.style.display = 'inline-block';
         }
-        // Admin Panel link'ni faqat admin uchun ko'rsatish
+        // Admin Panel link – faqat admin uchun (agent uchun kerak emas)
         const adminPanelNavLink = document.getElementById('adminPanelNavLink');
         const adminPanelNavLinkMobile = document.getElementById('adminPanelNavLinkMobile');
         if (role === 'admin') {
@@ -372,6 +413,7 @@ function checkAuth() {
                 if (dashboardPage) dashboardPage.classList.add('active');
             }
             showPage(savedPage);
+            if (typeof applyTranslations === 'function') applyTranslations(localStorage.getItem('language') || 'ko');
         }, 100);
     } else {
         // Token yo'q – saytni login/signup so'ramasdan ko'rsatish (boshqa websitelardek)
@@ -485,8 +527,9 @@ function showPage(pageName) {
         pageName = 'dashboard';
     }
     // Admin Panel faqat admin uchun; boshqalar dashboard'ga
-    if (pageName === 'adminPanel' && localStorage.getItem('user_role') !== 'admin') {
-        pageName = 'dashboard';
+    if (pageName === 'adminPanel') {
+        var r = localStorage.getItem('user_role');
+        if (r !== 'admin') pageName = 'dashboard';
     }
     console.log('📄 showPage called with:', pageName);
     
@@ -851,60 +894,170 @@ async function loadDashboard() {
 
 // ==================== DOCUMENTS ====================
 
+var documentsFullList = [];
+var documentsViewState = 'initial';
+var documentsPageNum = 1;
+var DOCUMENTS_INITIAL = 8;
+var DOCUMENTS_EXPANDED = 30;
+var DOCUMENTS_PAGE_SIZE = 30;
+
+function renderDocumentsRows(list, startIdx, count, useUserNumber, totalDocs) {
+    var viewLabel = typeof t === 'function' ? t('docView') || 'Ko\'rish' : 'Ko\'rish';
+    var slice = list.slice(startIdx, startIdx + count);
+    return slice.map(function (doc, i) {
+        var idx = startIdx + i;
+        var docId = doc.id ?? doc._id;
+        var displayNum = useUserNumber ? (idx + 1) : (totalDocs - idx);
+        var meta = doc.extracted_data && doc.extracted_data.metadata;
+        var status = doc.status || (meta && meta.verified ? 'completed' : meta && meta.rejected ? 'error' : 'processing');
+        var dateStr = doc.created_at ? new Date(doc.created_at).toLocaleDateString('ko-KR') : '-';
+        var createdBy = escapeHtml(doc.created_by_username || '-');
+        return '<tr><td>' + displayNum + '</td><td>' + escapeHtml(doc.file_type || '-') + '</td><td>' + createdBy + '</td><td><span class="status-badge status-' + escapeHtml(status) + '">' + escapeHtml(status) + '</span></td><td>' + (doc.confidence || 0) + '%</td><td>' + escapeHtml(dateStr) + '</td><td><button class="btn-small" onclick="viewDocument(' + (docId != null ? JSON.stringify(docId) : 'null') + ')">' + viewLabel + '</button></td></tr>';
+    }).join('');
+}
+
+function updateDocumentsView(filteredList) {
+    var tbody = document.getElementById('documentsTableBody');
+    var controlsEl = document.getElementById('documentsControls');
+    var showMoreEl = document.getElementById('documentsShowMore');
+    var paginationEl = document.getElementById('documentsPagination');
+    var tableWrap = document.querySelector('.documents-table-wrap');
+    var emptyMsg = typeof t === 'function' ? (t('docNotFound') || '문서를 찾을 수 없습니다') : '문서를 찾을 수 없습니다';
+    var showMoreLabel = typeof t === 'function' ? t('adminShowMore') : 'Show more';
+    var prevLabel = typeof t === 'function' ? t('adminPrev') : 'Oldingi';
+    var nextLabel = typeof t === 'function' ? t('adminNext') : 'Keyingi';
+
+    if (!tbody) return;
+    var total = filteredList.length;
+    var userRole = localStorage.getItem('user_role') || 'user';
+    var useUserNumber = userRole === 'user';
+
+    if (total === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 40px;">' + emptyMsg + '</td></tr>';
+        if (controlsEl) controlsEl.style.display = 'none';
+        return;
+    }
+
+    var start = 0, count = total;
+    if (documentsViewState === 'initial') count = Math.min(DOCUMENTS_INITIAL, total);
+    else if (documentsViewState === 'expanded') count = Math.min(DOCUMENTS_EXPANDED, total);
+    else {
+        start = (documentsPageNum - 1) * DOCUMENTS_PAGE_SIZE;
+        count = Math.min(DOCUMENTS_PAGE_SIZE, total - start);
+    }
+
+    tbody.innerHTML = renderDocumentsRows(filteredList, start, count, useUserNumber, total);
+
+    if (controlsEl) {
+        controlsEl.style.display = 'flex';
+        if (showMoreEl) {
+            if (documentsViewState === 'initial' && total > DOCUMENTS_INITIAL) {
+                showMoreEl.style.display = 'inline-block';
+                showMoreEl.textContent = showMoreLabel;
+                showMoreEl.title = showMoreLabel;
+            } else showMoreEl.style.display = 'none';
+        }
+        if (tableWrap) {
+            tableWrap.classList.remove('expanded');
+            if (documentsViewState === 'expanded' || documentsViewState === 'pagination') tableWrap.classList.add('expanded');
+        }
+        if (paginationEl) {
+            if (documentsViewState === 'pagination' && total > DOCUMENTS_EXPANDED) {
+                paginationEl.style.display = 'flex';
+                var totalPages = Math.ceil(total / DOCUMENTS_PAGE_SIZE);
+                var from = (documentsPageNum - 1) * DOCUMENTS_PAGE_SIZE + 1;
+                var to = Math.min(documentsPageNum * DOCUMENTS_PAGE_SIZE, total);
+                paginationEl.innerHTML = '<span class="pagination-info">' + from + '-' + to + ' / ' + total + '</span>' +
+                    '<button type="button" onclick="documentsGoPage(-1)" ' + (documentsPageNum <= 1 ? 'disabled' : '') + '>' + prevLabel + '</button>' +
+                    '<span class="pagination-info">' + documentsPageNum + ' / ' + totalPages + '</span>' +
+                    '<button type="button" onclick="documentsGoPage(1)" ' + (documentsPageNum >= totalPages ? 'disabled' : '') + '>' + nextLabel + '</button>';
+            } else paginationEl.style.display = 'none';
+        }
+    }
+}
+
+function documentsShowMore() {
+    documentsViewState = 'expanded';
+    var q = (document.getElementById('documentsSearch') || {}).value || '';
+    var filtered = filterDocumentsList(documentsFullList, q);
+    updateDocumentsView(filtered);
+    if (filtered.length > DOCUMENTS_EXPANDED) {
+        documentsViewState = 'pagination';
+        documentsPageNum = 1;
+        updateDocumentsView(filtered);
+    }
+}
+
+function documentsGoPage(delta) {
+    var q = (document.getElementById('documentsSearch') || {}).value || '';
+    var filtered = filterDocumentsList(documentsFullList, q);
+    var totalPages = Math.ceil(filtered.length / DOCUMENTS_PAGE_SIZE);
+    documentsPageNum = Math.max(1, Math.min(totalPages, documentsPageNum + delta));
+    updateDocumentsView(filtered);
+}
+
+function filterDocumentsList(list, query) {
+    if (!query || !query.trim()) return list;
+    var q = query.trim().toLowerCase();
+    return list.filter(function (doc) {
+        var id = String(doc.id || doc._id || '').toLowerCase();
+        var fileType = (doc.file_type || '').toLowerCase();
+        var status = (doc.status || '').toLowerCase();
+        var user = (doc.created_by_username || '').toLowerCase();
+        return id.indexOf(q) >= 0 || fileType.indexOf(q) >= 0 || status.indexOf(q) >= 0 || user.indexOf(q) >= 0;
+    });
+}
+
 async function loadDocuments() {
     const tbody = document.getElementById('documentsTableBody');
     if (!localStorage.getItem('token')) {
         const msg = typeof t === 'function' ? t('pleaseSignUpToScan') : '문서를 보려면 로그인하세요.';
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px;">' + msg + '</td></tr>';
+        if (tbody) tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 40px;">' + msg + '</td></tr>';
         return;
     }
-    tbody.innerHTML = '<tr><td colspan="6" class="loading">로딩 중...</td></tr>';
-    
+    if (tbody) tbody.innerHTML = '<tr><td colspan="7" class="loading">로딩 중...</td></tr>';
+
     try {
         const userRole = localStorage.getItem('user_role') || 'user';
-        const documents = await apiCall(`/ocr/documents?skip=0&limit=100&user_role=${userRole}`);
-        
-        if (documents.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px;">문서를 찾을 수 없습니다</td></tr>';
+        const documents = await apiCall(`/ocr/documents?skip=0&limit=500&user_role=${userRole}`);
+        var list = Array.isArray(documents) ? documents : [];
+
+        if (list.length === 0) {
+            if (tbody) tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 40px;">문서를 찾을 수 없습니다</td></tr>';
             return;
         }
-        
-        // Documentlarni yangi birinchi, eski oxirida bo'lishi uchun teskari tartibda saralash
-        // created_at yoki id bo'yicha teskari tartib (descending) - yangi birinchi
-        const sortedDocuments = [...documents].sort((a, b) => {
-            // Avval created_at bo'yicha tekshirish (yangi birinchi - descending)
-            if (a.created_at && b.created_at) {
-                const dateA = new Date(a.created_at).getTime();
-                const dateB = new Date(b.created_at).getTime();
-                // Teskari tartib: yangi (katta vaqt) birinchi, eski (kichik vaqt) oxirida
-                return dateB - dateA;
-            }
-            // Agar created_at yo'q bo'lsa, id bo'yicha teskari tartib (katta id birinchi - yangi)
-            return (b.id || 0) - (a.id || 0);
+
+        var sorted = list.slice().sort(function (a, b) {
+            if (a.created_at && b.created_at) return new Date(b.created_at) - new Date(a.created_at);
+            return (b.id || b._id || 0) - (a.id || a._id || 0);
         });
-        
-        // Oddiy user: haqiqiy DB id o'rniga shu user yaratgan hujjatlar ichida tartib raqami (1 = eng yangi)
-        const totalDocs = sortedDocuments.length;
-        const useUserNumber = userRole === 'user';
-        tbody.innerHTML = sortedDocuments.map((doc, index) => {
-            const docId = doc.id ?? doc._id;
-            const displayNum = useUserNumber ? (index + 1) : (totalDocs - index);
-            return `
-            <tr>
-                <td>${displayNum}</td>
-                <td>${doc.file_type}</td>
-                <td><span class="status-badge status-${doc.status}">${doc.status}</span></td>
-                <td>${doc.confidence || 0}%</td>
-                <td>${new Date(doc.created_at).toLocaleDateString('ko-KR')}</td>
-                <td>
-                    <button class="btn-small" onclick="viewDocument(${docId != null ? JSON.stringify(docId) : 'null'})">보기</button>
-                </td>
-            </tr>
-        `;
-        }).join('');
-        
+        documentsFullList = sorted;
+        documentsViewState = 'initial';
+        documentsPageNum = 1;
+        var searchEl = document.getElementById('documentsSearch');
+        if (searchEl) searchEl.value = '';
+        var filtered = filterDocumentsList(documentsFullList, '');
+        updateDocumentsView(filtered);
+
+        if (searchEl && !searchEl._docBound) {
+            searchEl._docBound = true;
+            searchEl.addEventListener('input', function () {
+                var q = searchEl.value || '';
+                var f = filterDocumentsList(documentsFullList, q);
+                if (f.length > DOCUMENTS_EXPANDED) documentsViewState = 'pagination', documentsPageNum = 1;
+                else if (f.length > DOCUMENTS_INITIAL) documentsViewState = 'expanded';
+                else documentsViewState = 'initial';
+                updateDocumentsView(f);
+            });
+        }
+        var showMoreEl = document.getElementById('documentsShowMore');
+        if (showMoreEl && !showMoreEl._docBound) {
+            showMoreEl._docBound = true;
+            showMoreEl.addEventListener('mouseenter', documentsShowMore);
+            showMoreEl.addEventListener('focus', documentsShowMore);
+        }
     } catch (error) {
-        tbody.innerHTML = `<tr><td colspan="6" class="error">오류: ${error.message}</td></tr>`;
+        if (tbody) tbody.innerHTML = '<tr><td colspan="7" class="error">오류: ' + (error.message || '') + '</td></tr>';
     }
 }
 
@@ -3794,7 +3947,7 @@ function setupMypageSidebar() {
     const initProfile = document.getElementById('mypageProfileInitial');
     if (nameEl) nameEl.textContent = username;
     if (phoneEl) phoneEl.textContent = phone || '—';
-    if (roleEl) roleEl.textContent = role === 'ADMIN' ? 'ADMIN' : 'USER';
+    if (roleEl) roleEl.textContent = role; /* ADMIN, AGENT, USER */
     if (initSide) initSide.textContent = initial;
     if (initProfile) initProfile.textContent = initial;
     applyMypageAvatar();
@@ -3988,6 +4141,183 @@ async function loadAdminDocuments(filter = 'all') {
     }
 }
 
+// Admin Scanner: 10 dastlab, 30 gacha kengaytirish, pagination. Saqlangan ro'yxat.
+var adminScannerFullList = [];
+var adminScannerViewState = 'initial'; // initial | expanded | pagination
+var adminScannerPage = 1;
+var ADMIN_SCANNER_INITIAL = 8;
+var adminSubscribersFullList = [];
+var adminSubscribersViewState = 'initial';
+var ADMIN_SUBSCRIBERS_INITIAL = 8;
+var ADMIN_SCANNER_EXPANDED = 30;
+var ADMIN_SCANNER_PAGE_SIZE = 30;
+
+function renderAdminScannerRows(docs, startIdx, count) {
+    var statusText = function (doc) {
+        var meta = doc.extracted_data && doc.extracted_data.metadata ? doc.extracted_data.metadata : {};
+        if (meta.verified) return typeof t === 'function' ? t('statusApproved') || 'Tasdiqlangan' : 'Tasdiqlangan';
+        if (meta.rejected) return typeof t === 'function' ? t('statusRejected') || 'Rad etilgan' : 'Rad etilgan';
+        return typeof t === 'function' ? t('statusPending') || 'Kutilmoqda' : 'Kutilmoqda';
+    };
+    var viewLabel = typeof t === 'function' ? t('docView') || 'Ko\'rish' : 'Ko\'rish';
+    var slice = docs.slice(startIdx, startIdx + count);
+    return slice.map(function (doc) {
+        var createdBy = doc.created_by_username || '-';
+        var createdDate = doc.created_at ? new Date(doc.created_at).toLocaleString() : '-';
+        var status = statusText(doc);
+        return '<tr><td>' + (doc.id || '-') + '</td><td>' + escapeHtml(doc.file_type || '-') + '</td><td>' + escapeHtml(createdBy) + '</td><td>' + escapeHtml(status) + '</td><td>' + escapeHtml(createdDate) + '</td><td><a href="#" onclick="viewAdminDocument(' + doc.id + '); return false;">' + viewLabel + '</a></td></tr>';
+    }).join('');
+}
+
+function updateAdminScannerView(filteredList) {
+    var scannerTbody = document.getElementById('adminScannerList');
+    var controlsEl = document.getElementById('adminScannerControls');
+    var showMoreBtn = document.getElementById('adminScannerShowMore');
+    var paginationEl = document.getElementById('adminScannerPagination');
+    var tableWrap = document.querySelector('.admin-scanner-table-wrap');
+    var emptyScanner = typeof t === 'function' ? t('adminScannerEmpty') : 'Skaner hujjatlar yo\'q';
+    var showMoreLabel = typeof t === 'function' ? t('adminShowMore') : 'Show more';
+    var prevLabel = typeof t === 'function' ? t('adminPrev') : 'Oldingi';
+    var nextLabel = typeof t === 'function' ? t('adminNext') : 'Keyingi';
+
+    if (!scannerTbody) return;
+    var total = filteredList.length;
+
+    if (total === 0) {
+        scannerTbody.innerHTML = '<tr><td colspan="6" class="empty">' + emptyScanner + '</td></tr>';
+        if (controlsEl) controlsEl.style.display = 'none';
+        return;
+    }
+
+    var start = 0, count = total;
+    if (adminScannerViewState === 'initial') {
+        count = Math.min(ADMIN_SCANNER_INITIAL, total);
+    } else if (adminScannerViewState === 'expanded') {
+        count = Math.min(ADMIN_SCANNER_EXPANDED, total);
+    } else {
+        start = (adminScannerPage - 1) * ADMIN_SCANNER_PAGE_SIZE;
+        count = Math.min(ADMIN_SCANNER_PAGE_SIZE, total - start);
+    }
+
+    scannerTbody.innerHTML = renderAdminScannerRows(filteredList, start, count);
+
+    if (controlsEl) {
+        controlsEl.style.display = 'flex';
+        if (showMoreBtn) {
+            if (adminScannerViewState === 'initial' && total > ADMIN_SCANNER_INITIAL) {
+                showMoreBtn.style.display = 'inline-block';
+                showMoreBtn.textContent = showMoreLabel;
+                showMoreBtn.title = showMoreLabel;
+            } else {
+                showMoreBtn.style.display = 'none';
+            }
+        }
+        if (tableWrap) {
+            tableWrap.classList.remove('expanded');
+            if (adminScannerViewState === 'expanded' || adminScannerViewState === 'pagination') tableWrap.classList.add('expanded');
+        }
+        if (paginationEl) {
+            if (adminScannerViewState === 'pagination' && total > ADMIN_SCANNER_EXPANDED) {
+                paginationEl.style.display = 'flex';
+                var totalPages = Math.ceil(total / ADMIN_SCANNER_PAGE_SIZE);
+                var from = (adminScannerPage - 1) * ADMIN_SCANNER_PAGE_SIZE + 1;
+                var to = Math.min(adminScannerPage * ADMIN_SCANNER_PAGE_SIZE, total);
+                paginationEl.innerHTML = '<span class="pagination-info">' + from + '-' + to + ' / ' + total + '</span>' +
+                    '<button type="button" onclick="adminScannerGoPage(-1)" ' + (adminScannerPage <= 1 ? 'disabled' : '') + '>' + prevLabel + '</button>' +
+                    '<span class="pagination-info">' + adminScannerPage + ' / ' + totalPages + '</span>' +
+                    '<button type="button" onclick="adminScannerGoPage(1)" ' + (adminScannerPage >= totalPages ? 'disabled' : '') + '>' + nextLabel + '</button>';
+            } else {
+                paginationEl.style.display = 'none';
+            }
+        }
+    }
+}
+
+function adminScannerShowMore() {
+    adminScannerViewState = 'expanded';
+    var q = (document.getElementById('adminScannerSearch') || {}).value || '';
+    var filtered = filterAdminScannerList(adminScannerFullList, q);
+    updateAdminScannerView(filtered);
+    if (filtered.length > ADMIN_SCANNER_EXPANDED) {
+        adminScannerViewState = 'pagination';
+        adminScannerPage = 1;
+        updateAdminScannerView(filtered);
+    }
+}
+
+function adminScannerGoPage(delta) {
+    var q = (document.getElementById('adminScannerSearch') || {}).value || '';
+    var filtered = filterAdminScannerList(adminScannerFullList, q);
+    var totalPages = Math.ceil(filtered.length / ADMIN_SCANNER_PAGE_SIZE);
+    adminScannerPage = Math.max(1, Math.min(totalPages, adminScannerPage + delta));
+    updateAdminScannerView(filtered);
+}
+
+function filterAdminScannerList(list, query) {
+    if (!query || !query.trim()) return list;
+    var q = query.trim().toLowerCase();
+    return list.filter(function (doc) {
+        var id = String(doc.id || '').toLowerCase();
+        var user = (doc.created_by_username || '').toLowerCase();
+        var fileType = (doc.file_type || '').toLowerCase();
+        return id.indexOf(q) >= 0 || user.indexOf(q) >= 0 || fileType.indexOf(q) >= 0;
+    });
+}
+
+function renderSubscribersRows(users, limit) {
+    var take = limit ? Math.min(limit, users.length) : users.length;
+    return users.slice(0, take).map(function (u) {
+        var username = (u.username || u.email || '-');
+        var email = (u.email != null && u.email !== '') ? u.email : '-';
+        var created = u.created_at ? new Date(u.created_at).toLocaleString() : '-';
+        return '<tr><td>' + escapeHtml(username) + '</td><td>' + escapeHtml(email) + '</td><td>' + escapeHtml(created) + '</td></tr>';
+    }).join('');
+}
+
+function updateAdminSubscribersView() {
+    var tbody = document.getElementById('adminSubscribersList');
+    var controlsEl = document.getElementById('adminSubscribersControls');
+    var showMoreEl = document.getElementById('adminSubscribersShowMore');
+    var tableWrap = document.querySelector('.admin-subscribers-table-wrap');
+    var emptySubs = typeof t === 'function' ? t('adminSubscribersEmpty') : 'Obunachilar yo\'q';
+    var showMoreLabel = typeof t === 'function' ? t('adminShowMore') : 'Show more';
+
+    if (!tbody) return;
+    var users = adminSubscribersFullList;
+
+    if (users.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3" class="empty">' + emptySubs + '</td></tr>';
+        if (controlsEl) controlsEl.style.display = 'none';
+        if (tableWrap) tableWrap.classList.remove('expanded');
+        return;
+    }
+
+    var count = adminSubscribersViewState === 'initial' && users.length > ADMIN_SUBSCRIBERS_INITIAL
+        ? ADMIN_SUBSCRIBERS_INITIAL
+        : users.length;
+    tbody.innerHTML = renderSubscribersRows(users, count);
+
+    if (controlsEl) {
+        if (adminSubscribersViewState === 'initial' && users.length > ADMIN_SUBSCRIBERS_INITIAL) {
+            controlsEl.style.display = 'block';
+            if (showMoreEl) {
+                showMoreEl.style.display = 'inline-block';
+                showMoreEl.textContent = showMoreLabel;
+            }
+        } else {
+            controlsEl.style.display = 'none';
+        }
+    }
+    if (tableWrap) {
+        tableWrap.classList.toggle('expanded', adminSubscribersViewState === 'expanded');
+    }
+}
+
+function adminSubscribersShowMore() {
+    adminSubscribersViewState = 'expanded';
+    updateAdminSubscribersView();
+}
+
 // Admin Panel sahifasi: obunachilar ro'yxati + skaner (OCR) hujjatlar
 async function loadAdminPanelPage() {
     const subscribersTbody = document.getElementById('adminSubscribersList');
@@ -4002,26 +4332,33 @@ async function loadAdminPanelPage() {
     if (scannerTbody) scannerTbody.innerHTML = '<tr><td colspan="6" class="loading">' + loadingMsg + '</td></tr>';
 
     const userRole = localStorage.getItem('user_role') || 'admin';
+    var isAdmin = userRole === 'admin';
 
-    // 1) Obunachilar va skaner hujjatlarini parallel yuklash
+    // Agent uchun obunachilar bo'limini yashirish – faqat doc ma'lumotlari
+    var subscribersSection = document.getElementById('adminSubscribersSection');
+    if (subscribersSection) subscribersSection.style.display = isAdmin ? '' : 'none';
+
+    // 1) Obunachilar (faqat admin uchun) va skaner hujjatlarini parallel yuklash
     let users = [];
     let documents = [];
-    try {
-        users = await apiCall('/auth/users');
-        if (!Array.isArray(users)) users = [];
-    } catch (e) {
-        console.warn('Admin: users API not available', e);
-        users = [];
+    if (isAdmin) {
+        try {
+            users = await apiCall('/auth/users');
+            if (!Array.isArray(users)) users = [];
+        } catch (e) {
+            console.warn('Admin: users API not available', e);
+            users = [];
+        }
     }
     try {
-        const docsRaw = await apiCall('/ocr/documents?skip=0&limit=100&user_role=' + userRole);
+        const docsRaw = await apiCall('/ocr/documents?skip=0&limit=500&user_role=' + userRole);
         documents = Array.isArray(docsRaw) ? docsRaw : [];
     } catch (e) {
         console.warn('Admin: documents API error', e);
         documents = [];
     }
 
-    // 2) Agar /auth/users bo'sh bo'lsa – skaner hujjatlaridan foydalanuvchilarni chiqarish (Neo, Leo va b.)
+    // 2) Agar /auth/users bo'sh bo'lsa – skaner hujjatlaridan foydalanuvchilarni chiqarish
     if (users.length === 0 && documents.length > 0) {
         var docSorted = documents.slice().sort(function (a, b) {
             var ta = a.created_at ? new Date(a.created_at).getTime() : 0;
@@ -4046,50 +4383,75 @@ async function loadAdminPanelPage() {
             return db - da;
         });
     }
-
-    if (subscribersTbody) {
-        if (users.length === 0) {
-            subscribersTbody.innerHTML = '<tr><td colspan="3" class="empty">' + emptySubs + '</td></tr>';
-        } else {
-            subscribersTbody.innerHTML = users.map(function (u) {
-                var username = (u.username || u.email || '-');
-                var email = (u.email != null && u.email !== '') ? u.email : '-';
-                var created = u.created_at ? new Date(u.created_at).toLocaleString() : '-';
-                return '<tr><td>' + escapeHtml(username) + '</td><td>' + escapeHtml(email) + '</td><td>' + escapeHtml(created) + '</td></tr>';
-            }).join('');
-        }
+    // 2b) created_at bo'lmasa – hujjatlar orqali to'ldirish (eski signup'lar uchun)
+    if (users.length > 0 && documents.length > 0) {
+        var userFirstDoc = {};
+        documents.forEach(function (doc) {
+            var uname = (doc.created_by_username || '').trim();
+            if (!uname || uname === '-') return;
+            var t = doc.created_at ? new Date(doc.created_at).getTime() : 0;
+            if (!userFirstDoc[uname] || t < userFirstDoc[uname]) userFirstDoc[uname] = doc.created_at;
+        });
+        users.forEach(function (u) {
+            if (!u.created_at && userFirstDoc[u.username]) u.created_at = userFirstDoc[u.username];
+        });
     }
 
-    // 3) Skaner ma'lumotlari – OCR jadvali
-    var list = documents;
-    var sorted = list.slice().sort(function (a, b) {
+    adminSubscribersFullList = users;
+    adminSubscribersViewState = 'initial';
+    updateAdminSubscribersView();
+
+    var subsShowMore = document.getElementById('adminSubscribersShowMore');
+    var subsControls = document.getElementById('adminSubscribersControls');
+    var subsTableWrap = document.querySelector('.admin-subscribers-table-wrap');
+    if (subsShowMore && !subsShowMore._bound) {
+        subsShowMore._bound = true;
+        subsShowMore.addEventListener('mouseenter', adminSubscribersShowMore);
+        subsShowMore.addEventListener('focus', adminSubscribersShowMore);
+    }
+
+    // 3) Skaner ma'lumotlari – 10 dastlab, 30 gacha kengaytirish, pagination
+    var sorted = documents.slice().sort(function (a, b) {
         if (a.created_at && b.created_at) return new Date(b.created_at) - new Date(a.created_at);
         return (b.id || 0) - (a.id || 0);
     });
-    var statusText = function (doc) {
-        var meta = doc.extracted_data && doc.extracted_data.metadata ? doc.extracted_data.metadata : {};
-        if (meta.verified) return typeof t === 'function' ? t('statusApproved') || 'Tasdiqlangan' : 'Tasdiqlangan';
-        if (meta.rejected) return typeof t === 'function' ? t('statusRejected') || 'Rad etilgan' : 'Rad etilgan';
-        return typeof t === 'function' ? t('statusPending') || 'Kutilmoqda' : 'Kutilmoqda';
-    };
-    var viewLabel = typeof t === 'function' ? t('docView') || 'Ko\'rish' : 'Ko\'rish';
-    if (scannerTbody) {
-        if (sorted.length === 0) {
-            scannerTbody.innerHTML = '<tr><td colspan="6" class="empty">' + emptyScanner + '</td></tr>';
-        } else {
-            scannerTbody.innerHTML = sorted.map(function (doc) {
-                var createdBy = doc.created_by_username || '-';
-                var createdDate = doc.created_at ? new Date(doc.created_at).toLocaleString() : '-';
-                var status = statusText(doc);
-                return '<tr><td>' + (doc.id || '-') + '</td><td>' + escapeHtml(doc.file_type || '-') + '</td><td>' + escapeHtml(createdBy) + '</td><td>' + escapeHtml(status) + '</td><td>' + escapeHtml(createdDate) + '</td><td><a href="#" onclick="viewAdminDocument(' + doc.id + '); return false;">' + viewLabel + '</a></td></tr>';
-            }).join('');
-        }
+    adminScannerFullList = sorted;
+    adminScannerViewState = 'initial';
+    adminScannerPage = 1;
+    var searchEl = document.getElementById('adminScannerSearch');
+    if (searchEl) searchEl.value = '';
+    var filtered = filterAdminScannerList(adminScannerFullList, '');
+    updateAdminScannerView(filtered);
+
+    // Search va Show more event listener
+    if (searchEl && !searchEl._adminBound) {
+        searchEl._adminBound = true;
+        searchEl.addEventListener('input', function () {
+            var q = searchEl.value || '';
+            var f = filterAdminScannerList(adminScannerFullList, q);
+            if (f.length > ADMIN_SCANNER_EXPANDED) {
+                adminScannerViewState = 'pagination';
+                adminScannerPage = 1;
+            } else if (f.length > ADMIN_SCANNER_INITIAL) {
+                adminScannerViewState = 'expanded';
+            } else {
+                adminScannerViewState = 'initial';
+            }
+            updateAdminScannerView(f);
+        });
+    }
+    var showMoreBtn = document.getElementById('adminScannerShowMore');
+    if (showMoreBtn && !showMoreBtn._adminBound) {
+        showMoreBtn._adminBound = true;
+        showMoreBtn.addEventListener('mouseenter', adminScannerShowMore);
+        showMoreBtn.addEventListener('focus', adminScannerShowMore);
     }
 
     // Izoh: email faqat backend /auth/users orqali ko'rinadi
     var noteEl = document.getElementById('adminSubscribersNote');
     if (noteEl) {
-        noteEl.textContent = users.length > 0 && !users.some(function (u) { return u.email; }) ? emailNote : '';
+        var subs = adminSubscribersFullList;
+        noteEl.textContent = subs.length > 0 && !subs.some(function (u) { return u.email; }) ? emailNote : '';
         noteEl.style.display = noteEl.textContent ? 'block' : 'none';
     }
 }
@@ -4779,7 +5141,10 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         document.getElementById('loginFormContainer').style.display = 'none';
         document.getElementById('signupFormContainer').style.display = 'block';
+        if (typeof updateSignupFormByRole === 'function') updateSignupFormByRole();
     });
+    var signupRoleEl = document.getElementById('signupRole');
+    if (signupRoleEl) signupRoleEl.addEventListener('change', updateSignupFormByRole);
     
     // Show login form
     document.getElementById('showLogin').addEventListener('click', (e) => {

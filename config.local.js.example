@@ -19,4 +19,5 @@
 
     CONFIG.GEMINI_API_KEY = '';  // https://aistudio.google.com/app/apikey
     CONFIG.GROQ_API_KEY = '';    // https://console.groq.com/ (ixtiyoriy)
+    CONFIG.ADMIN_AGENT_SECRET = '';  // Agent signup uchun maxfiy kalit – faqat siz bilasiz, GitHub'ga yozmang!
 })();

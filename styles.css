@@ -97,11 +97,42 @@ html.dark-mode .welcome-overlay {
     padding: 20px;
 }
 
+/* Login/Signup – gradient ramka (home page bo'limlari kabi) */
+.login-card-gradient-wrap {
+    padding: 3px;
+    border-radius: 16px;
+    background: linear-gradient(90deg, #06b6d4, #8b5cf6, #ec4899, #f59e0b, #06b6d4);
+    background-size: 400% 100%;
+    animation: login-gradient-flow 7s ease-in-out infinite, login-card-in 0.6s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+    box-shadow: 0 0 24px rgba(139, 92, 246, 0.25), 0 0 48px rgba(6, 182, 212, 0.15);
+}
+
+@keyframes login-gradient-flow {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+}
+
+@keyframes login-card-in {
+    from { opacity: 0; transform: translateY(20px) scale(0.96); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
 .login-card {
     background: white;
-    border-radius: 16px;
+    border-radius: 13px;
     padding: 40px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* Login va Signup o'rtasida almashganda silliq chiqish */
+#loginFormContainer,
+#signupFormContainer {
+    animation: login-form-in 0.4s ease-out both;
+}
+
+@keyframes login-form-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 .login-card h1 {
@@ -1871,6 +1902,97 @@ html.dark-mode .welcome-overlay {
     background: #f7fafc;
 }
 
+.documents-page-header {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+.documents-search-wrap { flex-shrink: 0; }
+.documents-search {
+    padding: 10px 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    min-width: 220px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.documents-search:focus {
+    outline: none;
+    border-color: #7c3aed;
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
+}
+.documents-table-wrap {
+    max-height: 420px;
+    overflow: hidden;
+    transition: max-height 1.2s cubic-bezier(0.32, 0.72, 0, 1);
+}
+.documents-table-wrap.expanded {
+    max-height: 1600px;
+    overflow-y: auto;
+    transition: max-height 1.2s cubic-bezier(0.32, 0.72, 0, 1);
+}
+.documents-controls {
+    margin-top: 16px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px;
+}
+.documents-show-more {
+    padding: 14px 24px;
+    color: #4f46e5;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-block;
+    background: #ffffff;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    animation: documents-show-more-rainbow 3s ease-in-out infinite;
+}
+.documents-show-more:hover {
+    text-decoration: underline;
+}
+@keyframes documents-show-more-rainbow {
+    0%, 100% { color: #4f46e5; }
+    20% { color: #7c3aed; }
+    40% { color: #ec4899; }
+    60% { color: #f59e0b; }
+    80% { color: #10b981; }
+}
+.documents-pagination {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.documents-pagination button {
+    padding: 8px 14px;
+    border: 1px solid #e2e8f0;
+    background: #fff;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background 0.2s, border-color 0.2s;
+}
+.documents-pagination button:hover:not(:disabled) {
+    background: #f1f5f9;
+    border-color: #7c3aed;
+}
+.documents-pagination button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+.documents-pagination .pagination-info {
+    font-size: 0.9rem;
+    color: #64748b;
+    margin-right: 8px;
+}
+
 .status-badge {
     display: inline-block;
     padding: 4px 12px;
@@ -2406,6 +2528,29 @@ html.dark-mode .welcome-overlay {
     max-width: 600px;
 }
 
+/* Yuklash tugmasi – aylanuvchi rangli chegarasi */
+.upload-btn-rainbow-wrap {
+    position: relative;
+    padding: 3px;
+    border-radius: 12px;
+    background: linear-gradient(90deg, #4f46e5, #7c3aed, #ec4899, #f59e0b, #10b981, #4f46e5);
+    background-size: 400% 100%;
+    animation: upload-btn-rainbow 3s linear infinite;
+    margin-top: 8px;
+}
+.upload-btn-rainbow-wrap .btn-primary {
+    width: 100%;
+    margin: 0;
+    border: none;
+    position: relative;
+    z-index: 1;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+@keyframes upload-btn-rainbow {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 400% 50%; }
+}
+
 /* Service Pages */
 .service-content {
     background: white;
@@ -2417,7 +2562,8 @@ html.dark-mode .welcome-overlay {
 
 /* About Us page */
 .about-us-content {
-    max-width: 800px;
+    width: 100%;
+    max-width: 100%;
 }
 .about-us-intro {
     font-size: 1.1em;
