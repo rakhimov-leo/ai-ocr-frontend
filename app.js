@@ -1319,8 +1319,11 @@ async function viewDocument(id) {
         
         // Edit va Delete – tasdiqlangan hujjatda Tahrirlash ko‘rsatilmaydi. Oddiy user o‘z hujjatini faqat 4 soat ichida o‘chira oladi.
         const docConfirmed = extractedData.metadata && (extractedData.metadata.confirmed === true || extractedData.metadata.submitted_for_review === true);
-        var canDelete = isAdmin || (doc.created_at && isWithin4Hours(doc.created_at));
-        var createdAtArg = (doc.created_at != null && doc.created_at !== '') ? JSON.stringify(String(doc.created_at)) : '""';
+        // Delete uchun vaqt cheklovi: oddiy user faqat 4 soat ichida o'chira oladi.
+        // Inline JS ichida qo'shtirnoq muammosini oldini olish uchun created_at'ni millisekund (number) ko'rinishida uzatamiz.
+        var createdAtMs = doc.created_at ? new Date(doc.created_at).getTime() : 0;
+        var canDelete = isAdmin || (createdAtMs && isWithin4Hours(createdAtMs));
+        var createdAtArg = createdAtMs || 0;
         html += `
             <div class="document-actions" style="margin-top: 30px; display: flex; gap: 15px; justify-content: space-between; align-items: center; flex-wrap: wrap;">
                 <button type="button" class="btn-secondary" onclick="goBackFromDetail()" style="padding: 10px 20px;">
@@ -3410,20 +3413,21 @@ async function savePassportData() {
 // ==================== DELETE DOCUMENT ====================
 
 // Hujjat yaratilganidan 4 soat o'tmaganmi tekshirish (oddiy user faqat shu vaqt ichida o'chira oladi)
-function isWithin4Hours(createdAtStr) {
-    if (!createdAtStr) return false;
-    var created = new Date(createdAtStr).getTime();
-    if (isNaN(created)) return false;
+// Parametr sifatida string (ISO sana) yoki millisekundlarda number kelishi mumkin.
+function isWithin4Hours(createdAt) {
+    if (!createdAt && createdAt !== 0) return false;
+    var created = typeof createdAt === 'number' ? createdAt : new Date(createdAt).getTime();
+    if (!created || isNaN(created)) return false;
     var now = Date.now();
     return (now - created) <= 4 * 60 * 60 * 1000;
 }
 
-// Global scope'ga qo'shish (onclick event'lar uchun). created_atOptional – oddiy user uchun 4 soat tekshiruvi
-window.deleteDocument = async function(documentId, created_atOptional) {
+// Global scope'ga qo'shish (onclick event'lar uchun). createdAtMsOptional – oddiy user uchun 4 soat tekshiruvi (millisekundlarda)
+window.deleteDocument = async function(documentId, createdAtMsOptional) {
     var userRole = localStorage.getItem('user_role') || 'user';
     // Oddiy user: 4 soatdan oshgan hujjatni o'chirishga ruxsat yo'q
     if (userRole !== 'admin') {
-        if (!created_atOptional || !isWithin4Hours(created_atOptional)) {
+        if (!createdAtMsOptional || !isWithin4Hours(createdAtMsOptional)) {
             var msg = typeof t === 'function' ? t('deleteNotAllowedAfter4Hours') : 'Hujjatni faqat yaratilganidan keyin 4 soat ichida o\'chirish mumkin.';
             alert(msg);
             return;
