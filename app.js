@@ -8,6 +8,17 @@ function t(key) {
     return T[key] != null ? T[key] : (translations && translations.ko ? translations.ko[key] : null) || key;
 }
 
+// Backend dan kelgan vaqtni Koreya vaqtida (KST, Asia/Seoul) ko'rsatish
+function formatDateLocal(isoString) {
+    if (!isoString) return '-';
+    var s = String(isoString).trim();
+    if (!s) return '-';
+    if (!/Z|[+-]\d{2}:?\d{2}$/.test(s)) s = s.replace(/\.\d+$/, '') + 'Z';
+    var d = new Date(s);
+    if (isNaN(d.getTime())) return s;
+    return d.toLocaleString('ko-KR', { timeZone: 'Asia/Seoul', dateStyle: 'short', timeStyle: 'short' });
+}
+
 // State Management
 let currentUser = null;
 let currentPage = 'dashboard';
@@ -222,8 +233,7 @@ function handleLogout() {
 }
 window.handleLogout = handleLogout;
 
-// Admin/Agent maxfiy kalit – config.local.js dan (GitHub'da yo'q)
-var ADMIN_SECRET_PASSWORD = (typeof CONFIG !== 'undefined' && CONFIG.ADMIN_AGENT_SECRET) ? CONFIG.ADMIN_AGENT_SECRET : '';
+// Admin/Agent maxfiy kalit – endi faqat backend .env (ADMIN_SECRET) da. Frontend faqat user kiritgan qiymatni yuboradi, backend tekshiradi.
 
 // Signup role tanlanganda: Agent = admin maxfiy kalit maydonini ko'rsatish va majburiy qilish
 function updateSignupFormByRole() {
@@ -262,30 +272,20 @@ async function handleSignup(e) {
     }
     
     if (role === 'agent') {
-        if (!ADMIN_SECRET_PASSWORD) {
-            errorDiv.textContent = typeof t === 'function' ? t('signupAgentSecretNotConfigured') : 'Agent signup sozlanmagan. Administrator bilan bog\'laning.';
-            errorDiv.style.display = 'block';
-            return;
-        }
-        if (adminPassword !== ADMIN_SECRET_PASSWORD) {
+        if (!adminPassword || !adminPassword.trim()) {
             errorDiv.textContent = typeof t === 'function' ? t('signupAgentSecretRequired') : 'Agent sifatida ro\'yxatdan o\'tish uchun maxfiy kalit majburiy.';
             errorDiv.style.display = 'block';
             return;
         }
     }
-    
-    var finalRole = role;
-    if (role === 'agent' && adminPassword === ADMIN_SECRET_PASSWORD) {
-        finalRole = 'admin';
-    } else if (role === 'agent') {
-        finalRole = 'agent';
-    }
-    
+
+    // finalRole ni backend belgilaydi (admin yoki agent). Frontend faqat role va admin_password yuboradi.
+    var sendRole = role === 'agent' ? 'agent' : role;
     try {
         const response = await fetch(`${API_BASE_URL}/auth/signup`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password: password, email: email || null, role: finalRole, admin_password: role === 'agent' ? adminPassword : null })
+            body: JSON.stringify({ username, password: password, email: email || null, role: sendRole, admin_password: role === 'agent' ? adminPassword : null })
         });
         
         if (!response.ok) {
@@ -910,7 +910,7 @@ function renderDocumentsRows(list, startIdx, count, useUserNumber, totalDocs) {
         var displayNum = useUserNumber ? (idx + 1) : (totalDocs - idx);
         var meta = doc.extracted_data && doc.extracted_data.metadata;
         var status = doc.status || (meta && meta.verified ? 'completed' : meta && meta.rejected ? 'error' : 'processing');
-        var dateStr = doc.created_at ? new Date(doc.created_at).toLocaleDateString('ko-KR') : '-';
+        var dateStr = formatDateLocal(doc.created_at);
         var createdBy = escapeHtml(doc.created_by_username || '-');
         return '<tr><td>' + displayNum + '</td><td>' + escapeHtml(doc.file_type || '-') + '</td><td>' + createdBy + '</td><td><span class="status-badge status-' + escapeHtml(status) + '">' + escapeHtml(status) + '</span></td><td>' + (doc.confidence || 0) + '%</td><td>' + escapeHtml(dateStr) + '</td><td><button class="btn-small" onclick="viewDocument(' + (docId != null ? JSON.stringify(docId) : 'null') + ')">' + viewLabel + '</button></td></tr>';
     }).join('');
@@ -1202,7 +1202,7 @@ async function viewDocument(id) {
                 <p><strong>파일 유형:</strong> ${doc.file_type}</p>
                 <p><strong>상태:</strong> ${doc.status}</p>
                 <p><strong>신뢰도:</strong> ${doc.confidence || 0}%</p>
-                <p><strong>생성일:</strong> ${new Date(doc.created_at).toLocaleString('ko-KR')}</p>
+                <p><strong>생성일:</strong> ${formatDateLocal(doc.created_at)}</p>
             </div>
         `;
         
@@ -1317,13 +1317,27 @@ async function viewDocument(id) {
             `;
         }
         
-        // Edit va Delete – tasdiqlangan hujjatda Tahrirlash ko‘rsatilmaydi. Oddiy user o‘z hujjatini faqat 4 soat ichida o‘chira oladi.
+        // Edit va Delete – tasdiqlangan hujjatda Tahrirlash ko‘rsatilmaydi. Oddiy user: Delete tugmasi faqat 4 soat ichida ko‘rinadi, keyin avtomatik yo‘qoladi.
         const docConfirmed = extractedData.metadata && (extractedData.metadata.confirmed === true || extractedData.metadata.submitted_for_review === true);
-        // Delete uchun vaqt cheklovi: oddiy user faqat 4 soat ichida o'chira oladi.
-        // Inline JS ichida qo'shtirnoq muammosini oldini olish uchun created_at'ni millisekund (number) ko'rinishida uzatamiz.
-        var createdAtMs = doc.created_at ? new Date(doc.created_at).getTime() : 0;
-        var canDelete = isAdmin || (createdAtMs && isWithin4Hours(createdAtMs));
+        // created_at: backend odatda UTC yuboradi, lekin "Z" qo'shmagani uchun brauzer lokal deb hisoblaydi. Vaqt zonasiz bo'lsa UTC deb parse qilamiz.
+        var createdAtMs = 0;
+        if (doc.created_at) {
+            var s = String(doc.created_at).trim();
+            if (s && !/Z|[+-]\d{2}:?\d{2}$/.test(s)) s = s.replace(/\.\d+$/, '') + 'Z';
+            createdAtMs = s ? new Date(s).getTime() : 0;
+        } else if (doc.createdAt) {
+            var s2 = String(doc.createdAt).trim();
+            if (s2 && !/Z|[+-]\d{2}:?\d{2}$/.test(s2)) s2 = s2.replace(/\.\d+$/, '') + 'Z';
+            createdAtMs = s2 ? new Date(s2).getTime() : 0;
+        } else if (doc.file_path) {
+            var m = doc.file_path.match(/(\d{10})(?:\.\d+)?[_\-]/);
+            if (m) createdAtMs = parseInt(m[1], 10) * 1000;
+        }
+        if (!createdAtMs || isNaN(createdAtMs)) createdAtMs = 0;
+        var within4 = !!createdAtMs && isWithin4Hours(createdAtMs);
+        var canDelete = isAdmin || within4;
         var createdAtArg = createdAtMs || 0;
+        if (!isAdmin && doc.created_by_username) console.log('Delete check:', { created_at: doc.created_at, createdAtMs: createdAtMs, within4Hours: within4, canDelete: canDelete });
         html += `
             <div class="document-actions" style="margin-top: 30px; display: flex; gap: 15px; justify-content: space-between; align-items: center; flex-wrap: wrap;">
                 <button type="button" class="btn-secondary" onclick="goBackFromDetail()" style="padding: 10px 20px;">
@@ -3422,10 +3436,9 @@ function isWithin4Hours(createdAt) {
     return (now - created) <= 4 * 60 * 60 * 1000;
 }
 
-// Global scope'ga qo'shish (onclick event'lar uchun). createdAtMsOptional – oddiy user uchun 4 soat tekshiruvi (millisekundlarda)
+// Oddiy user: faqat 4 soat ichida o'chiradi; 4 soatdan keyin tugma yo'qoladi.
 window.deleteDocument = async function(documentId, createdAtMsOptional) {
     var userRole = localStorage.getItem('user_role') || 'user';
-    // Oddiy user: 4 soatdan oshgan hujjatni o'chirishga ruxsat yo'q
     if (userRole !== 'admin') {
         if (!createdAtMsOptional || !isWithin4Hours(createdAtMsOptional)) {
             var msg = typeof t === 'function' ? t('deleteNotAllowedAfter4Hours') : 'Hujjatni faqat yaratilganidan keyin 4 soat ichida o\'chirish mumkin.';
@@ -3440,30 +3453,39 @@ window.deleteDocument = async function(documentId, createdAtMsOptional) {
     
     try {
         const token = localStorage.getItem('token');
+        if (!token) {
+            alert('Login qiling yoki sahifani yangilang.');
+            return;
+        }
         
-        // Soft delete - faqat user uchun yashirish, admin'da ko'rinadi
         const response = await fetch(`${API_BASE_URL}/ocr/documents/${documentId}?user_role=${userRole}`, {
             method: 'DELETE',
             headers: {
-                'Authorization': `Bearer ${token}`
+                'Authorization': 'Bearer ' + token
             }
         });
         
         if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.detail || '삭제 오류');
+            var errMsg = 'O\'chirish amalga oshmadi.';
+            try {
+                var errBody = await response.text();
+                var errJson = errBody ? JSON.parse(errBody) : {};
+                errMsg = errJson.detail || errMsg;
+            } catch (e) {
+                errMsg = response.status === 401 ? 'Sessiya tugadi. Qayta login qiling.' : (response.status === 403 ? 'Bu hujjatni o\'chirish huquqingiz yo\'q.' : errMsg);
+            }
+            if (response.status === 401) errMsg = 'Sessiya tugadi. Qayta login qiling.';
+            if (response.status === 403) errMsg = 'Bu hujjatni o\'chirish huquqingiz yo\'q.';
+            throw new Error(errMsg);
         }
         
-        // Muvaffaqiyatli o'chirildi (user uchun yashirildi)
-        alert('문서가 성공적으로 삭제되었습니다! (관리자에게는 여전히 표시됩니다)');
-        
-        // Documents sahifasiga qaytish
+        alert('Hujjat muvaffaqiyatli o\'chirildi.');
         showPage('documents');
         loadDocuments();
         
     } catch (error) {
-        console.error('삭제 오류:', error);
-        alert('삭제 중 오류가 발생했습니다: ' + error.message);
+        console.error('Delete error:', error);
+        alert(error && error.message ? error.message : 'O\'chirishda xato.');
     }
 };
 
@@ -3668,90 +3690,33 @@ function getKeywordReply(message) {
 }
 
 function getAIReply(message) {
-    var geminiKey = (typeof CONFIG !== 'undefined' && CONFIG.GEMINI_API_KEY) ? CONFIG.GEMINI_API_KEY : (typeof window !== 'undefined' && window.GEMINI_API_KEY) ? window.GEMINI_API_KEY : '';
-    var groqKey = (typeof CONFIG !== 'undefined' && CONFIG.GROQ_API_KEY) ? CONFIG.GROQ_API_KEY : (typeof window !== 'undefined' && window.GROQ_API_KEY) ? window.GROQ_API_KEY : '';
+    var baseUrl = (typeof CONFIG !== 'undefined' && CONFIG.API_BASE_URL) ? CONFIG.API_BASE_URL : '';
+    var t = (typeof translations !== 'undefined' && translations[typeof getCurrentLanguage === 'function' ? getCurrentLanguage() : 'ko']) || {};
+    var fallback = getKeywordReply(message) + AI_CHAT_HINT;
 
-    function callGroq(msg) {
-        if (!groqKey) return Promise.resolve((typeof t !== 'undefined' && t.chatBotOverloaded) ? t.chatBotOverloaded : 'AI modeli hozir band. Bir ozdan keyin qayta urinib ko\'ring.');
-        return fetch('https://api.groq.com/openai/v1/chat/completions', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + groqKey },
-            body: JSON.stringify({
-                messages: [
-                    { role: 'system', content: 'You are a helpful AI assistant for the AI-OCR system (document OCR, pension calculator, NPS branch finder, forms). Answer briefly in the same language as the user.' },
-                    { role: 'user', content: msg }
-                ],
-                model: 'llama-3.1-8b-instant',
-                temperature: 0.7,
-                max_tokens: 500
-            })
+    if (!baseUrl) {
+        return Promise.resolve(fallback);
+    }
+
+    return fetch(baseUrl + '/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: message })
+    })
+        .then(function(r) { return r.json().then(function(data) { return { ok: r.ok, status: r.status, data: data }; }).catch(function() { return { ok: false, status: r.status, data: {} }; }); })
+        .then(function(res) {
+            if (res.ok && res.data && res.data.reply) {
+                return res.data.reply;
+            }
+            if (res.data && res.data.detail) {
+                return res.data.detail;
+            }
+            return fallback;
         })
-            .then(function(r) { return r.json(); })
-            .then(function(data) {
-                var text = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
-                if (text) return text.trim();
-                throw new Error('No text in Groq response');
-            })
-            .catch(function(err) {
-                console.warn('Groq API error:', err);
-                return 'AI javob bermadi. Brauzer Konsol (F12) da xatolikni ko\'ring. Sahifani file:// emas, http:// orqali oching.';
-            });
-    }
-
-    // 1) Gemini API (Google) – 429/503 bo‘lsa Groq ga o‘tadi
-    if (geminiKey) {
-        var systemPrompt = 'You are a helpful AI assistant for the AI-OCR system. The system offers: document upload and OCR, pension calculator, NPS (National Pension Service) branch finder in Korea, forms (passport, pension, ID). Answer briefly and in the same language the user writes.';
-        return fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + encodeURIComponent(geminiKey), {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents: [{ role: 'user', parts: [{ text: systemPrompt + '\n\nUser: ' + message }] }],
-                generationConfig: { maxOutputTokens: 512, temperature: 0.7 }
-            })
-        })
-            .then(function(r) { return r.json(); })
-            .then(function(data) {
-                if (data.error) {
-                    console.warn('Gemini API error:', data.error);
-                    var code = data.error.code;
-                    var status = (data.error.status || '').toUpperCase();
-                    var msgText = data.error.message || '';
-                    var isOverloaded = code === 503 || status === 'UNAVAILABLE' || msgText.indexOf('overloaded') !== -1;
-                    var isQuota = code === 429 || status === 'RESOURCE_EXHAUSTED' || msgText.indexOf('quota') !== -1;
-                    if ((isOverloaded || isQuota) && groqKey) {
-                        return callGroq(message);
-                    }
-                    if (isOverloaded || isQuota) {
-                        return (typeof t !== 'undefined' && t.chatBotOverloaded) ? t.chatBotOverloaded : 'AI modeli hozir band. Bir ozdan keyin qayta urinib ko\'ring.';
-                    }
-                    throw new Error(msgText || 'Gemini error');
-                }
-                var parts = data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts;
-                var text = parts && parts[0] && parts[0].text;
-                if (text) return text.trim();
-                throw new Error('No text in Gemini response');
-            })
-            .catch(function(err) {
-                console.warn('Gemini API error:', err);
-                var errMsg = err && err.message ? err.message : '';
-                var overloadedOrQuota = errMsg.indexOf('overloaded') !== -1 || errMsg.indexOf('503') !== -1 || errMsg.indexOf('quota') !== -1 || errMsg.indexOf('429') !== -1;
-                if (overloadedOrQuota && groqKey) {
-                    return callGroq(message);
-                }
-                if (overloadedOrQuota) {
-                    return (typeof t !== 'undefined' && t.chatBotOverloaded) ? t.chatBotOverloaded : 'AI modeli hozir band. Bir ozdan keyin qayta urinib ko\'ring.';
-                }
-                return 'AI javob bermadi. Brauzer Konsol (F12) da xatolikni ko\'ring. Agar sahifani file:// ochgan bo\'lsangiz, lokal serverdan oching (masalan: Live Server yoki npx serve).';
-            });
-    }
-
-    // 2) Groq API (Locohub dagi kabi – bepul, tez)
-    if (groqKey) {
-        return callGroq(message);
-    }
-
-    // 3) API kaliti yo‘q – kalit-so‘z javob + eslatma
-    return Promise.resolve(getKeywordReply(message) + AI_CHAT_HINT);
+        .catch(function(err) {
+            console.warn('Chat API error:', err);
+            return fallback;
+        });
 }
 
 function handleChatSend() {
@@ -4049,7 +4014,7 @@ async function loadUserMyPageDocuments() {
         adminList.innerHTML = sorted.map((doc, index) => {
             const status = doc.status || (doc.extracted_data?.metadata?.verified ? 'verified' : 'pending');
             const statusCls = status === 'verified' ? 'approved' : status === 'rejected' ? 'rejected' : 'pending';
-            const date = doc.created_at ? new Date(doc.created_at).toLocaleDateString() : '';
+            const date = formatDateLocal(doc.created_at);
             const displayNum = index + 1;
             return `
                 <div class="admin-document-card ${statusCls}" onclick="viewDocument(${doc.id})" style="cursor: pointer;">
@@ -4118,7 +4083,7 @@ async function loadAdminDocuments(filter = 'all') {
             const statusClass = doc.verified ? 'approved' : doc.rejected ? 'rejected' : 'pending';
             const statusText = doc.verified ? '승인됨' : doc.rejected ? '거부됨' : '대기 중';
             const createdBy = doc.created_by_username || 'Unknown';
-            const createdDate = new Date(doc.created_at).toLocaleDateString('ko-KR');
+            const createdDate = formatDateLocal(doc.created_at);
             
             return `
                 <div class="admin-document-card ${statusClass}" onclick="viewAdminDocument(${doc.id})">
@@ -4167,7 +4132,7 @@ function renderAdminScannerRows(docs, startIdx, count) {
     var slice = docs.slice(startIdx, startIdx + count);
     return slice.map(function (doc) {
         var createdBy = doc.created_by_username || '-';
-        var createdDate = doc.created_at ? new Date(doc.created_at).toLocaleString() : '-';
+        var createdDate = formatDateLocal(doc.created_at);
         var status = statusText(doc);
         return '<tr><td>' + (doc.id || '-') + '</td><td>' + escapeHtml(doc.file_type || '-') + '</td><td>' + escapeHtml(createdBy) + '</td><td>' + escapeHtml(status) + '</td><td>' + escapeHtml(createdDate) + '</td><td><a href="#" onclick="viewAdminDocument(' + doc.id + '); return false;">' + viewLabel + '</a></td></tr>';
     }).join('');
@@ -4273,7 +4238,7 @@ function renderSubscribersRows(users, limit) {
     return users.slice(0, take).map(function (u) {
         var username = (u.username || u.email || '-');
         var email = (u.email != null && u.email !== '') ? u.email : '-';
-        var created = u.created_at ? new Date(u.created_at).toLocaleString() : '-';
+        var created = formatDateLocal(u.created_at);
         return '<tr><td>' + escapeHtml(username) + '</td><td>' + escapeHtml(email) + '</td><td>' + escapeHtml(created) + '</td></tr>';
     }).join('');
 }
@@ -4600,7 +4565,7 @@ async function viewAdminDocument(id) {
                     <div class="admin-doc-info-box">
                         <p><strong>문서 ID:</strong> #${doc.id}</p>
                         <p><strong>사용자:</strong> ${doc.created_by_username || 'Unknown'}</p>
-                        <p><strong>생성일:</strong> ${new Date(doc.created_at).toLocaleString('ko-KR')}</p>
+                        <p><strong>생성일:</strong> ${formatDateLocal(doc.created_at)}</p>
                         <p><strong>신뢰도:</strong> ${doc.confidence || 0}%</p>
                         ${doc.is_edited ? '<p style="color: #0066cc; font-weight: 600;"><strong>✏️ 수정됨:</strong> 사용자가 데이터를 수정했습니다</p>' : ''}
                         ${checkDocumentExpired(doc) ? '<p style="color: #ef4444; font-weight: 600;"><strong>⚠️ 만료됨:</strong> 문서 유효기간이 만료되었습니다</p>' : ''}
@@ -4611,7 +4576,7 @@ async function viewAdminDocument(id) {
                         <h4>로그 파일 (Log Files)</h4>
                         <div class="log-item">
                             <span class="log-label">업로드:</span>
-                            <span class="log-value">${new Date(doc.created_at).toLocaleString('ko-KR')}</span>
+                            <span class="log-value">${formatDateLocal(doc.created_at)}</span>
                         </div>
                         <div class="log-item">
                             <span class="log-label">재스캔 횟수:</span>
@@ -4647,7 +4612,7 @@ async function viewAdminDocument(id) {
                                 <span class="verified-icon">✓</span>
                                 <span class="verified-text">이 문서는 승인되었습니다 (This document has been verified)</span>
                             </div>
-                            <p class="verified-info">승인일: ${new Date((doc.metadata && doc.metadata.verified_at) || doc.created_at).toLocaleString('ko-KR')}</p>
+                            <p class="verified-info">승인일: ${formatDateLocal((doc.metadata && doc.metadata.verified_at) || doc.created_at)}</p>
                             <p class="verified-info">승인자: ${(doc.metadata && doc.metadata.verified_by) || 'Admin'}</p>
                         </div>
                     ` : doc.rejected ? `
@@ -4811,7 +4776,7 @@ async function loadUserHistory(username, currentDocId) {
         historyDiv.innerHTML = userDocs.slice(0, 5).map(doc => `
             <div class="history-item">
                 <span class="history-doc-id">문서 #${doc.id}</span>
-                <span class="history-date">${new Date(doc.created_at).toLocaleDateString('ko-KR')}</span>
+                <span class="history-date">${formatDateLocal(doc.created_at)}</span>
                 <span class="history-status status-${doc.verified ? 'approved' : doc.rejected ? 'rejected' : 'pending'}">
                     ${doc.verified ? '승인' : doc.rejected ? '거부' : '대기'}
                 </span>

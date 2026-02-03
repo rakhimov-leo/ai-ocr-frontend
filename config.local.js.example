@@ -1,23 +1,15 @@
-// Bu faylni config.local.js deb nusxalang va kalitlarni kiriting.
+// Bu faylni config.local.js deb nusxalang. Maxfiy kalitlarni BURGA yozmang – ular backend .env da.
 // config.local.js .gitignore da – GitHub'ga push qilinsa ham kalit ko'rinmaydi.
-// Nusxalash: cp config.local.js.example config.local.js  (yoki qo'ldan yarating)
+// Nusxalash: cp config.local.js.example config.local.js
 
 (function() {
     if (typeof CONFIG === 'undefined') return;
 
-    // ----- Develop (localhost) -----
-    // localhost da ochilganda config.js dagi http://localhost:8030/api ishlatiladi.
-    // Backendni lokal 8030 da ishga tushiring: uvicorn main:app --reload --port 8030
-
-    // ----- Production (serverda frontend) -----
-    // Faqat localhost emas bo'lganda API manzilini o'zgartiring, masalan:
-    // var isLocal = (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'));
-    // if (!isLocal) CONFIG.API_BASE_URL = 'https://api.yourdomain.com/api';
-    // CONFIG.API_BASE_URL = 'http://SERVER_IP:8030/api';
-    // CONFIG.API_BASE_URL = '/api';  // agar frontend va API bir domen ostida bo'lsa
-    // CONFIG.API_BASE_URL = 'http://localhost:8030/api';  // serverda backend ham shu mashinada bo'lsa (deploy default)
-
-    CONFIG.GEMINI_API_KEY = '';  // https://aistudio.google.com/app/apikey
-    CONFIG.GROQ_API_KEY = '';    // https://console.groq.com/ (ixtiyoriy)
-    CONFIG.ADMIN_AGENT_SECRET = '';  // Agent signup uchun maxfiy kalit – faqat siz bilasiz, GitHub'ga yozmang!
+    // Develop: localhost da config.js dagi http://localhost:8030/api ishlatiladi.
+    // Production: faqat localhost emas bo'lganda API manzilini o'zgartiring:
+    var isLocal = (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'));
+    if (!isLocal) {
+        CONFIG.API_BASE_URL = 'https://api.yourdomain.com/api';  // yoki SERVER_IP:8030/api
+    }
+    // GEMINI_API_KEY, GROQ_API_KEY, ADMIN_AGENT_SECRET – backend .env da; frontendda yozmang.
 })();
